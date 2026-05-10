@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-05-10-monorepo-split-design.md
+  s_ea957596586703::t_ca25d8d502a103 1-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "0302dd70dc4d7838ea1d685dc46ceffe7dfc4e8b",
+  "prompts": {},
+  "sessions": {
+    "s_ea957596586703": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6aaabf5-0d5a-46ae-a211-806fcbcd26a7",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
