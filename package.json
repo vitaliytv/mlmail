@@ -10,14 +10,14 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "vue": "^3.5.13",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2"
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/plugin-opener": "^2.5.4",
+    "vue": "^3.5.34"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
-    "vite": "^6.0.3",
-    "@tauri-apps/cli": "^2",
-    "@nitra/cursor": "^1.8.221"
+    "@nitra/cursor": "^1.8.221",
+    "@tauri-apps/cli": "^2.11.1",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "vite": "^8.0.11"
   }
 }
