@@ -2,22 +2,8 @@
   "name": "mlmail",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "tauri": "tauri"
-  },
-  "dependencies": {
-    "@tauri-apps/api": "^2.11.0",
-    "@tauri-apps/plugin-opener": "^2.5.4",
-    "vue": "^3.5.34"
-  },
+  "workspaces": ["app"],
   "devDependencies": {
-    "@nitra/cursor": "^1.8.221",
-    "@tauri-apps/cli": "^2.11.1",
-    "@vitejs/plugin-vue": "^6.0.6",
-    "vite": "^8.0.11"
+    "@nitra/cursor": "^1.8.221"
   }
 }

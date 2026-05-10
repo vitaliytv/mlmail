@@ -4,13 +4,19 @@
   "workspaces": {
     "": {
       "name": "mlmail",
+      "devDependencies": {
+        "@nitra/cursor": "^1.8.221",
+      },
+    },
+    "app": {
+      "name": "app",
+      "version": "0.1.0",
       "dependencies": {
         "@tauri-apps/api": "^2.11.0",
         "@tauri-apps/plugin-opener": "^2.5.4",
         "vue": "^3.5.34",
       },
       "devDependencies": {
-        "@nitra/cursor": "^1.8.221",
         "@tauri-apps/cli": "^2.11.1",
         "@vitejs/plugin-vue": "^6.0.6",
         "vite": "^8.0.11",
@@ -161,6 +167,8 @@
     "@vue/server-renderer": ["@vue/server-renderer@3.5.34", "", { "dependencies": { "@vue/compiler-ssr": "3.5.34", "@vue/shared": "3.5.34" }, "peerDependencies": { "vue": "3.5.34" } }, "sha512-nHxmJoTrKsmrkbILRhkC9gY1G3moZbJTqCzDd7DOOzG5KH9oeJ0Unqrff5f9v0pW//jES05ZkJcNtfE8JjOIew=="],
 
     "@vue/shared": ["@vue/shared@3.5.34", "", {}, "sha512-24uqU4OIiX29ryC3MeWid/Xf2fa2EFRUVLb77nRhk+UrTVrh/XiGtFAFmJBAtBRbjwNdsPRP+jj/OL27Eg1NDA=="],
+
+    "app": ["app@workspace:app"],
 
     "csstype": ["csstype@3.2.3", "", {}, "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="],
 
