@@ -1,0 +1,25 @@
+app/package.json
+  s_ea957596586703::t_8df4b7bc6a6804 1-22
+bun.lock
+  ai_agent 7-13,171
+eslint.config.js
+  s_ea957596586703::t_51e10cc5b605ce 5,8
+package.json
+  s_ea957596586703::t_85f99baf1627e9 5,7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "6c35f3784e34d64ab5474c37019990d3abb1a107",
+  "prompts": {},
+  "sessions": {
+    "s_ea957596586703": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6aaabf5-0d5a-46ae-a211-806fcbcd26a7",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
