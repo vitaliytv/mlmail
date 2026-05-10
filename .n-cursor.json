@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/@nitra/cursor/schemas/n-cursor.json",
+  "rules": [
+    "bun",
+    "changelog",
+    "image-avif",
+    "image-compress",
+    "js-lint",
+    "style-lint",
+    "text",
+    "vue"
+  ],
+  "skills": [
+    "fix",
+    "lint",
+    "llm-patch",
+    "publish-telegram",
+    "taze"
+  ]
+}
