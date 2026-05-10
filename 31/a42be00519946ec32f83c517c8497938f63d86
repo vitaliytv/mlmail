@@ -1,0 +1,16 @@
+index.html
+  h_74546f1f1ded3e 1-14
+README.md
+  h_74546f1f1ded3e 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "31a42be00519946ec32f83c517c8497938f63d86",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
