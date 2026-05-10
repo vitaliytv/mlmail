@@ -1,0 +1,38 @@
+{
+  "version": "0.2",
+  "language": "en,uk,ru-ru,nitra",
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/vscode-extension/**",
+    "**/.git/**",
+    ".vscode",
+    "report",
+    "*.svg",
+    "**/k8s/**/*.yaml",
+    "**/dist/**",
+    "**/src-tauri/target/**",
+    "**/src-tauri/gen/**",
+    "bun.lock",
+    "Cargo.lock",
+    "**/.minify-image-cache.tsv",
+    "**/.n-minify-image.tsv",
+    "docs/superpowers/**",
+    "README.md"
+  ],
+  "import": ["@nitra/cspell-dict/cspell-ext.json"],
+  "words": [
+    "Avenir",
+    "bunfig",
+    "cdylib",
+    "devdep",
+    "devdeps",
+    "mlmail",
+    "промпта",
+    "rlib",
+    "serde",
+    "staticlib",
+    "Tauri",
+    "tauri",
+    "taze"
+  ]
+}

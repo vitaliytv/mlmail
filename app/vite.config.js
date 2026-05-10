@@ -1,11 +1,24 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
+import Vue from '@vitejs/plugin-vue'
+import AutoImport from 'unplugin-auto-import/vite'
+import { defineConfig } from 'vite'
+import Layouts from 'vite-plugin-vue-layouts-next'
+import VueMacros from 'vue-macros/vite'
 
-const host = process.env.TAURI_DEV_HOST;
+const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
-export default defineConfig(async () => ({
-  plugins: [vue()],
+export default defineConfig(() => ({
+  plugins: [
+    AutoImport({
+      imports: ['vue', 'vue-router']
+    }),
+    VueMacros({
+      plugins: {
+        vue: Vue()
+      }
+    }),
+    Layouts()
+  ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -18,14 +31,14 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
+          protocol: 'ws',
           host,
-          port: 1421,
+          port: 1421
         }
       : undefined,
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
-    },
-  },
-}));
+      ignored: ['**/src-tauri/**']
+    }
+  }
+}))
