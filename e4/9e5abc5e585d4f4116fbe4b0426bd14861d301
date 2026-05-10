@@ -1,0 +1,80 @@
+.github/workflows/lint-style.yml
+  s_3918258c7ff2d2::t_073c0f39bf019c 1-39
+.v8rignore
+  s_3918258c7ff2d2::t_355d07117b91eb 1-3
+app/src/vite-env.d.ts
+  s_3918258c7ff2d2::t_4f2d63b2cbeb16 1
+.github/workflows/lint-text.yml
+  s_3918258c7ff2d2::t_adbddb46fcb34d 1-53
+app/vite.config.js
+  s_3918258c7ff2d2::t_68a8cf0eef0e42 7,11,21,36,42-44
+  s_3918258c7ff2d2::t_8b5c1838cc4e6d 10
+app/src/App.vue
+  s_3918258c7ff2d2::t_a344b9db740c50 7-9,33
+  s_3918258c7ff2d2::t_62de033bf528ee 2,4-5,12
+  s_3918258c7ff2d2::t_66cde725cdfa13 59,62,113,115,125,152,155
+.jscpd.json
+  s_3918258c7ff2d2::t_90e05099876d33 1-7
+app/package.json
+  s_3918258c7ff2d2::t_d6386ad1ae9cd5 11,22-24
+  s_3918258c7ff2d2::t_62de033bf528ee 4,25-28
+  s_3918258c7ff2d2::t_297adce31eaaa4 21
+.cspell.json
+  s_3918258c7ff2d2::t_0b7f1bd0418e5a 24,26,28-36
+  s_3918258c7ff2d2::t_7aec0a37d830f0 18-20,23,25,27,37
+  s_3918258c7ff2d2::t_a9781d04bbd294 1-17,21-22,38
+.oxfmtrc.json
+  s_3918258c7ff2d2::t_a4c617c6de56fc 1,9-27
+  s_3918258c7ff2d2::t_62de033bf528ee 2-8
+app/src-tauri/capabilities/default.json
+  s_3918258c7ff2d2::t_62de033bf528ee 6
+docs/superpowers/plans/2026-05-10-monorepo-split.md
+  s_3918258c7ff2d2::t_62de033bf528ee 18,22,30,44,75,107,150,182,203,219,263,325
+README.md
+  s_3918258c7ff2d2::t_62de033bf528ee 11
+.n-minify-image.tsv
+  s_3918258c7ff2d2::t_ed3d25c8c9274d 3-17
+app/src/main.js
+  s_3918258c7ff2d2::t_62de033bf528ee 1,3
+app/src-tauri/tauri.conf.json
+  s_3918258c7ff2d2::t_62de033bf528ee 27
+CLAUDE.md
+  s_3918258c7ff2d2::t_62de033bf528ee 3,6
+app/jsconfig.json
+  s_3918258c7ff2d2::t_67dd5344a8c84c 1-16
+.n-cursor.json
+  s_3918258c7ff2d2::t_ed3d25c8c9274d 4,7-8
+package.json
+  s_3918258c7ff2d2::t_fb70e618895fc7 9-12,14,16-22
+  s_3918258c7ff2d2::t_a7e5860dc82db5 13
+  s_3918258c7ff2d2::t_62de033bf528ee 4-8,23-26
+.github/workflows/lint-js.yml
+  s_3918258c7ff2d2::t_67b48eaa3d7974 1-43
+.stylelintignore
+  s_3918258c7ff2d2::t_a0e0643fe99b42 1
+.vscode/extensions.json
+  s_3918258c7ff2d2::t_da6a62da86837e 3-10
+.markdownlint-cli2.jsonc
+  s_3918258c7ff2d2::t_891b406e5f2684 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "e49e5abc5e585d4f4116fbe4b0426bd14861d301",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_3918258c7ff2d2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c29df939-4bfd-4950-9707-59699c4af640",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
