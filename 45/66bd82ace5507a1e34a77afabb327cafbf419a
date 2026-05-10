@@ -1,0 +1,19 @@
+package.json
+  s_ea957596586703::t_3d46302fecb357 13-15,18-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "4566bd82ace5507a1e34a77afabb327cafbf419a",
+  "prompts": {},
+  "sessions": {
+    "s_ea957596586703": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6aaabf5-0d5a-46ae-a211-806fcbcd26a7",
+        "model": "unknown"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
