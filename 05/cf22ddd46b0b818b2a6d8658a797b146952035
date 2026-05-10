@@ -1,0 +1,24 @@
+.n-minify-image.tsv
+  s_ea957596586703::t_74b622abe928df 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "05cf22ddd46b0b818b2a6d8658a797b146952035",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_ea957596586703": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6aaabf5-0d5a-46ae-a211-806fcbcd26a7",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
