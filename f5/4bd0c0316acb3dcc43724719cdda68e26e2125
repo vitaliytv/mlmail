@@ -1,0 +1,30 @@
+README.md
+  h_74546f1f1ded3e 2-11
+bunfig.toml
+  s_0acd4af769aa07::t_007ffc4b3c0cf2 1-2
+eslint.config.js
+  s_0acd4af769aa07::t_f88313732dcfe1 1-10
+.oxlintrc.json
+  s_0acd4af769aa07::t_f885643cf4ff96 1-387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "f54bd0c0316acb3dcc43724719cdda68e26e2125",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_0acd4af769aa07": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5796b6f1-7045-4d82-9079-923bc9a7f951",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
