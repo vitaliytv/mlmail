@@ -1,0 +1,24 @@
+docs/superpowers/plans/2026-05-11-google-auth.md
+  s_11610c2f3fc05a::t_5a91190a3230e4 1-1513
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "71c5c14a4df90108c1f1882373755492118d1032",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_11610c2f3fc05a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5fa476f5-4f5b-482f-8638-165056a13420",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
