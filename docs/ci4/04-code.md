@@ -29,24 +29,21 @@ createApp(App).mount('#app')
 
 ### Файл [app/src/App.vue](../../app/src/App.vue)
 
-Кореневий компонент App Shell MLMaiL. Стартовий вміст — демо-форма для виклику
-Tauri-команди `greet`:
+Кореневий компонент App Shell MLMaiL. Тонка обгортка — рендерить
+`<Login/>` напряму:
 
 ```vue
 <script setup>
-import { invoke } from '@tauri-apps/api/core'
-
-const greetMsg = ref('')
-const name = ref('')
-
-async function greet() {
-  greetMsg.value = await invoke('greet', { name: name.value })
-}
+import Login from './views/Login.vue'
 </script>
+
+<template>
+  <Login />
+</template>
 ```
 
-Демо-код буде **замінений** на корінь маршрутизатора при першій бойовій
-ітерації MLMaiL (видалити шаблонні стилі, логотипи, форму `greet`).
+Стартова демо-форма `greet` видалена разом з командою `greet` у Backend
+(ADR-0006). Router/layouts — окрема ітерація.
 
 ### Файл [app/vite.config.js](../../app/vite.config.js)
 
@@ -74,12 +71,39 @@ Vite-конфіг MLMaiL Frontend. Ключові рішення збірки ML
 
 Виробничі залежності MLMaiL Frontend: `@tauri-apps/api`, `@tauri-apps/plugin-opener`,
 `vue`. Дев-залежності — `@tauri-apps/cli`, `@vitejs/plugin-vue`,
-`unplugin-auto-import`, `vite`, `vite-plugin-vue-layouts-next`, `vue-macros`.
+`@vue/test-utils`, `jsdom`, `unplugin-auto-import`, `vite`,
+`vite-plugin-vue-layouts-next`, `vitest`, `vue-macros`.
+
+Скрипти тестування MLMaiL Frontend: `bun run test` (vitest, single run),
+`bun run test:watch` (watch mode). Vite-конфіг має блок `test` з
+`environment: 'jsdom'` для DOM-залежних компонентних тестів MLMaiL.
 
 ### Файл [app/jsconfig.json](../../app/jsconfig.json)
 
 JS-конфіг IDE для MLMaiL Frontend (path-aliases, `module: ESNext`). Уплив на
 рантайм MLMaiL відсутній — лише підказки редактора.
+
+### Файл [app/src/views/Login.vue](../../app/src/views/Login.vue)
+
+Auth Component MLMaiL — Vue-компонент Login-екрану. Дві гілки шаблону
+(авторизований / не авторизований), обидві українською. Підключає Auth Store
+MLMaiL і Auth Errors i18n MLMaiL. Тестується у
+[app/src/views/Login.test.js](../../app/src/views/Login.test.js) через
+Vitest + `@vue/test-utils` з моком `@tauri-apps/api/core`.
+
+### Файл [app/src/services/auth-store.js](../../app/src/services/auth-store.js)
+
+Auth Store MLMaiL — singleton-composable з реактивними `ref`-ами
+(`email`, `isAuthenticated`, `isLoading`, `errorKind`) і методами
+`initialize`, `login`, `getAccessToken`, `logout`. Кожен метод під капотом
+викликає одну з `auth_*` Tauri-команд. Експортує `_resetForTest()` для
+ізоляції тестів. Тести — [auth-store.test.js](../../app/src/services/auth-store.test.js).
+
+### Файл [app/src/i18n/auth-errors.js](../../app/src/i18n/auth-errors.js)
+
+Auth Errors i18n MLMaiL — словник `kind` → українська строка. Сім ключів,
+fallback `"Невідома помилка."`. Тести —
+[auth-errors.test.js](../../app/src/i18n/auth-errors.test.js).
 
 ### Планова сигнатура: Gmail Client MLMaiL
 
@@ -126,7 +150,13 @@ export async function listNotes(kind /* 'work' | 'home' */) {
   (див. коментар у Cargo.toml MLMaiL);
 - `build-dependencies`: `tauri-build = "2"`;
 - `dependencies`: `tauri = "2"`, `tauri-plugin-opener = "2"`, `serde = "1"`
-  (з `derive`), `serde_json = "1"`.
+  (з `derive`), `serde_json = "1"`, `reqwest = "0.12"` (json + rustls-tls),
+  `tokio = "1"` (net/io-util/time/macros/rt/sync), `base64 = "0.22"`,
+  `rand = "0.9"`, `sha2 = "0.10"`, `log = "0.4"`, `thiserror = "2"`;
+- `[target.'cfg(target_os = "macos")'.dependencies]`: `keyring = "3"` з
+  `apple-native` feature (Apple Keychain через Security framework);
+- `[target.'cfg(target_os = "android")'.dependencies]`: `jni = "0.21"`;
+- `[dev-dependencies]`: `mockito = "1"`, `tokio` з повним runtime для тестів.
 
 ### Файл [app/src-tauri/build.rs](../../app/src-tauri/build.rs)
 
@@ -152,16 +182,26 @@ fn main() {
 Реальна точка ініціалізації MLMaiL Backend. Поточний код:
 
 ```rust
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+pub mod auth;
+
+use std::sync::Mutex;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(Mutex::new(auth::state::AuthState::default()))
+        .setup(|app| {
+            auth::on_startup(&app.handle())?;
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            auth::auth_start_login,
+            auth::auth_get_access_token,
+            auth::auth_is_authenticated,
+            auth::auth_current_email,
+            auth::auth_logout,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -170,11 +210,37 @@ pub fn run() {
 Точки розширення MLMaiL Backend:
 
 - `invoke_handler` — додавати нові Tauri-команди MLMaiL (`save_note`, `list_notes`);
-- `.plugin(...)` — додавати нові Tauri-плагіни MLMaiL (наприклад, плагін для
-  захищеного сховища токенів при бойовій реалізації Auth Store MLMaiL);
+- `.plugin(...)` — додавати нові Tauri-плагіни MLMaiL;
 - `#[cfg_attr(mobile, tauri::mobile_entry_point)]` — та сама функція `run()`
   є точкою входу і для Android-збірки MLMaiL, окремий `main.rs` для mobile
   **не потрібен**.
+
+### Каталог [app/src-tauri/src/auth/](../../app/src-tauri/src/auth/)
+
+Auth Module MLMaiL — реалізація Google OAuth для контейнера MLMaiL Backend.
+Структура файлів:
+
+```text
+auth/
+├── mod.rs              — Tauri commands, on_startup, glue
+├── state.rs            — AuthState
+├── pkce.rs             — PKCE generator
+├── token_exchange.rs   — Google /token POST
+├── id_token.rs         — JWT email extract
+├── error.rs            — AuthError + StorageError
+├── config.rs           — option_env! OAuth client IDs
+├── storage/
+│   ├── mod.rs          — RefreshTokenStorage trait + factory
+│   ├── macos.rs        — Apple Keychain (keyring crate)
+│   ├── android.rs      — JNI до MlmailAuthPlugin
+│   └── in_memory.rs    — тест-only InMemoryStorage
+└── flow/
+    ├── mod.rs
+    ├── macos.rs        — loopback HTTP server + tauri-plugin-opener
+    └── android.rs      — Tauri mobile plugin виклик до Kotlin
+```
+
+Тести — `cargo test --lib auth` (32 unit-тести).
 
 ### Файл [app/src-tauri/tauri.conf.json](../../app/src-tauri/tauri.conf.json)
 
@@ -290,16 +356,23 @@ Hoisted-лінкер потрібен MLMaiL для сумісності з ін
 
 Реалізовано:
 
-- `app/src/main.js`, `app/src/App.vue`, `app/index.html`, `app/vite.config.js`;
-- `app/src-tauri/src/main.rs`, `app/src-tauri/src/lib.rs` з командою `greet`;
+- `app/src/main.js`, `app/src/App.vue`, `app/src/views/Login.vue`,
+  `app/src/services/auth-store.js`, `app/src/i18n/auth-errors.js`,
+  `app/index.html`, `app/vite.config.js`;
+- `app/src-tauri/src/main.rs`, `app/src-tauri/src/lib.rs` з п'ятьма `auth_*`
+  Tauri-командами;
+- `app/src-tauri/src/auth/` (Auth Module MLMaiL, 12 файлів);
+- `app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/`
+  (Kotlin Auth Plugin: 4 файли);
 - `app/src-tauri/tauri.conf.json`, `app/src-tauri/capabilities/default.json`;
-- `app/src-tauri/Cargo.toml`, `app/src-tauri/build.rs`.
+- `app/src-tauri/Cargo.toml`, `app/src-tauri/build.rs`;
+- `app/src-tauri/.env.example`.
 
 Не реалізовано (planned):
 
 - `app/src/services/gmail-client.js`, `app/src/services/notes-bridge.js`;
 - `app/src/services/summary.js`, `app/src/services/speech.js`;
-- `app/src/views/Inbox.vue`, `app/src/views/Reader.vue`, `app/src/views/Login.vue`;
+- `app/src/views/Inbox.vue`, `app/src/views/Reader.vue`;
 - `app/src-tauri/src/notes.rs` та реєстрація `save_note`, `list_notes` у
   `tauri::generate_handler![…]`.
 

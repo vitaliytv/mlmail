@@ -43,12 +43,13 @@ graph TB
     Backend_mac -- "fs read/write<br/>.md заміток" --> FS_mac
     Backend_and -- "fs read/write<br/>.md заміток" --> FS_and
 
-    Frontend_mac -- "HTTPS<br/>OAuth + Gmail + LLM + TTS" --> GoogleIdentity
+    Backend_mac -- "HTTPS token endpoint<br/>auth code/refresh exchange" --> GoogleIdentity
     Frontend_mac --> GmailAPI
     Frontend_mac --> LLM
     Frontend_mac --> TTS
 
-    Frontend_and -- "HTTPS<br/>OAuth + Gmail + LLM + TTS" --> GoogleIdentity
+    Backend_and -- "Credential Manager + Authorization API<br/>через Tauri mobile plugin" --> GoogleIdentity
+    Backend_and -- "HTTPS token endpoint<br/>auth code/refresh exchange" --> GoogleIdentity
     Frontend_and --> GmailAPI
     Frontend_and --> LLM
     Frontend_and --> TTS
@@ -78,13 +79,15 @@ graph TB
 Контейнер MLMaiL Frontend спілкується із:
 
 - контейнером MLMaiL Backend — через Tauri IPC, виклики `invoke('<command>', …)`
-  з `@tauri-apps/api/core`;
-- зовнішнім Google Identity Services і Gmail REST API — HTTPS, прямо з
-  WebView (з URL-дозволами у Tauri capabilities);
-- зовнішнім LLM-провайдером і TTS-провайдером — HTTPS (planned).
+  з `@tauri-apps/api/core` (зокрема `auth_*` команди для логіну і доступу до
+  access token);
+- зовнішніми Gmail REST API, LLM-провайдером і TTS-провайдером — HTTPS, прямо
+  з WebView (planned для Gmail/LLM/TTS).
 
-Альтернативу «проксі через Rust-бекенд для всіх HTTP-викликів» поки не
-обрано — рішення відкладено до ADR з безпеки токенів (див.
+Зв'язок з Google Identity Services проходить **через контейнер MLMaiL Backend**:
+обмін auth code → access/refresh tokens і всі refresh-виклики до
+`https://oauth2.googleapis.com/token` робить Rust через `reqwest`/rustls;
+токени ніколи не покидають Backend. Це закріплено ADR-0006 (див.
 [decisions.md](decisions.md)).
 
 ## Контейнер MLMaiL Backend
@@ -102,15 +105,17 @@ APK.
   застосунку);
 - серіалізація: `serde`, `serde_json`.
 
-Контейнер MLMaiL Backend оголошує Tauri-команди (зараз — лише демо `greet`,
-див. [04-code.md](04-code.md)) і у цільовій реалізації MLMaiL відповідатиме за
-такі обов'язки:
+Контейнер MLMaiL Backend оголошує Tauri-команди і відповідає за такі обов'язки:
 
-- читання/запис `.md`-заміток у локальному сховищі MLMaiL;
-- (можливо) проксі HTTPS-запитів до LLM/TTS-провайдерів, щоб приховати API-ключ
-  від WebView — рішення відкладено до ADR;
-- (можливо) допоміжний крок OAuth flow на десктопі (відкриття системного
-  браузера для логіну) через `tauri-plugin-opener`.
+- **Google OAuth-авторизація** (`auth_start_login`, `auth_get_access_token`,
+  `auth_is_authenticated`, `auth_current_email`, `auth_logout`): запуск
+  loopback-OAuth flow на macOS, виклик Credential Manager + AuthorizationClient
+  на Android, обмін auth code на access/refresh tokens, refresh-on-401,
+  зберігання refresh token у Keychain/EncryptedSharedPreferences. Деталі —
+  ADR-0006 і [03-components.md](03-components.md).
+- (planned) читання/запис `.md`-заміток у локальному сховищі MLMaiL;
+- (planned) можливо, проксі HTTPS-запитів до LLM/TTS-провайдерів — рішення
+  відкладено до окремого ADR.
 
 Конфігурація контейнера MLMaiL Backend живе у `app/src-tauri/tauri.conf.json` і
 `app/src-tauri/capabilities/default.json`. Capability `default` дає головному
@@ -171,18 +176,24 @@ MLMaiL — це Google Identity Services, Gmail REST API і майбутні LLM
 
 Реалізовано:
 
-- контейнер MLMaiL Frontend — стартовий шаблон Vue 3 з демо-формою `greet`
-  ([app/src/App.vue](../../app/src/App.vue));
-- контейнер MLMaiL Backend — стартовий Tauri 2 + одна команда `greet`
-  ([app/src-tauri/src/lib.rs](../../app/src-tauri/src/lib.rs));
+- контейнер MLMaiL Frontend — Vue 3 з Login-екраном
+  ([app/src/views/Login.vue](../../app/src/views/Login.vue)), Auth Store
+  ([app/src/services/auth-store.js](../../app/src/services/auth-store.js)) і
+  i18n-таблицею помилок українською
+  ([app/src/i18n/auth-errors.js](../../app/src/i18n/auth-errors.js));
+- контейнер MLMaiL Backend — Tauri 2 з повною Google OAuth-підсистемою
+  ([app/src-tauri/src/auth/](../../app/src-tauri/src/auth/)), п'ятьма Tauri-командами
+  `auth_*` і 32 Rust unit-тестами;
 - збірка обох контейнерів MLMaiL під macOS і Android (підтверджено
   історією комітів `android` і конфігурацією `tauri.conf.json`).
 
 Не реалізовано (planned):
 
 - контейнер Локальне сховище MLMaiL — тек `notes/work/`, `notes/home/` ще немає;
-- бойова IPC-поверхня контейнера MLMaiL Backend (лишилась тільки демо-команда `greet`);
-- бойова логіка контейнера MLMaiL Frontend (auth, inbox, summary, dispatcher).
+- Gmail-інтеграція (Gmail Client, Inbox List, Mail Reader);
+- LLM/TTS-інтеграція (Summary Service, Speech Service);
+- Reply Drafter (чернетки відповіді на лист);
+- router/layouts у MLMaiL Frontend — App.vue показує лише `<Login/>`.
 
 ## Тести рівня Containers MLMaiL
 

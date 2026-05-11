@@ -15,7 +15,7 @@ graph TB
     Router[Frontend Router MLMaiL<br/>vite-plugin-vue-layouts-next<br/>planned]
     AppShell[App Shell MLMaiL<br/>app/src/App.vue]
 
-    Auth[Auth Component MLMaiL<br/>Google OAuth flow<br/>planned]
+    Auth[Auth Component MLMaiL<br/>Login екран, Google OAuth flow<br/>implemented]
     Inbox[Inbox List Component MLMaiL<br/>список листів Gmail<br/>planned]
     Reader[Mail Reader Component MLMaiL<br/>відкритий лист + саммері + плеєр<br/>planned]
     Actions[Action Bar Component MLMaiL<br/>delete / filter / save / reply<br/>planned]
@@ -24,7 +24,8 @@ graph TB
     SummaryService[Summary Service MLMaiL<br/>виклик LLM-провайдера<br/>planned]
     SpeechService[Speech Service MLMaiL<br/>виклик TTS-провайдера<br/>planned]
     GmailClient[Gmail Client MLMaiL<br/>обгортка Gmail REST API<br/>planned]
-    AuthStore[Auth Store MLMaiL<br/>токени і refresh<br/>planned]
+    AuthStore[Auth Store MLMaiL<br/>фасад над auth_* Tauri-командами<br/>implemented]
+    AuthI18n[Auth Errors i18n MLMaiL<br/>kind → українська строка<br/>implemented]
     NotesBridge[Notes Bridge MLMaiL<br/>invoke Tauri-команд для .md<br/>planned]
 
     Bootstrap --> AppShell
@@ -37,6 +38,7 @@ graph TB
     Actions --> Drafter
 
     Auth --> AuthStore
+    Auth --> AuthI18n
     Inbox --> GmailClient
     Reader --> GmailClient
     Reader --> SummaryService
@@ -76,29 +78,44 @@ App Shell MLMaiL — кореневий Vue-компонент, файл [app/sr
 `<router-view>` + `<layout>`, делегуючи всю поведінку дочірнім компонентам:
 Auth Component MLMaiL, Inbox List Component MLMaiL, Mail Reader Component MLMaiL.
 
-### Компонент Auth Component MLMaiL (planned)
+### Компонент Auth Component MLMaiL (implemented)
 
-Auth Component MLMaiL відповідає за OAuth 2.0 flow з Google Identity Services
-для MLMaiL: запускає Authorization Code flow з PKCE, отримує access і refresh
-токени, передає їх в Auth Store MLMaiL. На macOS Auth Component MLMaiL може
-звертатися до контейнера MLMaiL Backend через `tauri-plugin-opener`, щоб
-відкрити системний браузер; на Android — Custom Tab.
+Auth Component MLMaiL — Vue-компонент Login-екрану MLMaiL
+([app/src/views/Login.vue](../../app/src/views/Login.vue)). Має дві гілки UI:
 
-Залежить від:
+- не авторизовано → кнопка "Увійти через Google" (заблокована поки триває
+  логін, текст змінюється на "Зачекайте…");
+- авторизовано → "Ви увійшли як {email}" і кнопка "Вийти";
+- помилка останньої спроби — український рядок з Auth Errors i18n MLMaiL.
 
-- зовнішнього Google Identity Services (HTTPS);
-- Auth Store MLMaiL (зберігання токенів).
+Auth Component MLMaiL **не торкається токенів** і не знає про OAuth — він
+лише викликає методи Auth Store MLMaiL (`login`, `logout`, `initialize`).
+OAuth-механіка живе у контейнері MLMaiL Backend (Auth Module MLMaiL нижче).
 
-### Компонент Auth Store MLMaiL (planned)
+Залежить від: Auth Store MLMaiL, Auth Errors i18n MLMaiL.
 
-Auth Store MLMaiL — реактивне сховище токенів MLMaiL (composable або pinia-store)
-у контейнері MLMaiL Frontend. Зберігає access token у пам'яті процесу MLMaiL і
-кешує refresh token у захищеному сховищі через IPC-міст до контейнера MLMaiL
-Backend (на macOS — keychain через майбутній Tauri-плагін, на Android —
-EncryptedSharedPreferences).
+### Компонент Auth Store MLMaiL (implemented)
 
-Auth Store MLMaiL відповідає також за **оновлення access token** через refresh
-token, коли Gmail REST API повертає `401`.
+Auth Store MLMaiL — реактивний singleton-composable
+([app/src/services/auth-store.js](../../app/src/services/auth-store.js)). Тримає
+**лише UI-стан** (`email`, `isAuthenticated`, `isLoading`, `errorKind`) у Vue
+`ref`-ах і виставляє readonly-обгортки назовні. Жодних токенів у JS-пам'яті —
+єдиний доступ до access token іде через `getAccessToken()`, який під капотом
+викликає Tauri-команду `auth_get_access_token` і повертає рядок.
+
+Поверхня Auth Store MLMaiL: `initialize`, `login`, `getAccessToken`, `logout` —
+та readonly-`ref`-и стану.
+
+Залежить від: контейнера MLMaiL Backend (через `@tauri-apps/api/core::invoke`).
+
+### Компонент Auth Errors i18n MLMaiL (implemented)
+
+Auth Errors i18n MLMaiL — словник
+([app/src/i18n/auth-errors.js](../../app/src/i18n/auth-errors.js)), що мапить
+англомовний `kind` з Rust `AuthError` у українську строку для UI. Сім ключів
+(`Cancelled`, `Network`, `OAuth`, `Storage`, `ReauthRequired`, `Platform`,
+`Unknown`) — `errorMessage(kind)` повертає українську строку або
+`"Невідома помилка."` для невідомих kind.
 
 ### Компонент Gmail Client MLMaiL (planned)
 
@@ -191,13 +208,13 @@ Notes Bridge MLMaiL — тонка обгортка над IPC у MLMaiL: вик
 graph TB
     EntryMain[Backend Entry main MLMaiL<br/>app/src-tauri/src/main.rs]
     EntryLib[Backend Entry lib MLMaiL<br/>app/src-tauri/src/lib.rs]
-    Greet[Demo Command greet MLMaiL<br/>наявна]
+    AuthMod[Auth Module MLMaiL<br/>app/src-tauri/src/auth/<br/>implemented]
     NotesCmd[Notes Commands MLMaiL<br/>save_note / list_notes<br/>planned]
     Opener[Plugin Opener MLMaiL<br/>tauri-plugin-opener]
     Capabilities[Capabilities default MLMaiL<br/>capabilities/default.json]
 
     EntryMain --> EntryLib
-    EntryLib --> Greet
+    EntryLib --> AuthMod
     EntryLib --> NotesCmd
     EntryLib --> Opener
     Capabilities -. дозволяє .-> EntryLib
@@ -228,20 +245,29 @@ tauri::Builder::default()
 Атрибут `#[cfg_attr(mobile, tauri::mobile_entry_point)]` робить ту саму
 функцію точкою входу для Android-збірки MLMaiL.
 
-### Компонент Demo Command greet MLMaiL
+### Компонент Auth Module MLMaiL (implemented)
 
-Demo Command greet MLMaiL — наявна стартова команда у
-[app/src-tauri/src/lib.rs](../../app/src-tauri/src/lib.rs):
+Auth Module MLMaiL — Rust-підсистема у
+[app/src-tauri/src/auth/](../../app/src-tauri/src/auth/), що реалізує всю
+Google OAuth-механіку MLMaiL. Підкомпоненти:
 
-```rust
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-```
+| Файл | Роль |
+| ---- | ---- |
+| `mod.rs` | П'ять Tauri-команд `auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`; `on_startup` для відновлення сесії при холодному старті |
+| `state.rs` | `AuthState` (in-memory access token + email + expiry); `is_access_token_fresh()` з 30-секундним буфером |
+| `pkce.rs` | Генератор PKCE pair (verifier 43 chars URL-safe, challenge = base64url(SHA-256(verifier))) |
+| `token_exchange.rs` | HTTPS-обмін до `oauth2.googleapis.com/token`: `exchange_code` (auth code → tokens) і `exchange_refresh` (refresh → access); 400 + `invalid_grant` мапиться в `AuthError::ReauthRequired` |
+| `id_token.rs` | Витяг `email` з JWT payload (без верифікації — токен прийшов прямо з Google по HTTPS, потрібен лише для UI) |
+| `error.rs` | `AuthError` enum з serde-серіалізацією `{kind, message}`; `StorageError` |
+| `config.rs` | OAuth client IDs з `option_env!` (compile-time) |
+| `storage/mod.rs` | Trait `RefreshTokenStorage` (save/load/clear) + platform_storage factory |
+| `storage/macos.rs` | Реалізація через crate `keyring` → Apple Keychain (service `com.vitaliytv.mlmail`, окремі entries для email і refresh_token) |
+| `storage/android.rs` | Реалізація через JNI-міст до Kotlin `MlmailAuthPlugin.saveSession/loadSession/clearSession` |
+| `flow/macos.rs` | Loopback HTTP server на `127.0.0.1:RANDOM_PORT` + `tauri-plugin-opener` для системного браузера + 5-хв таймаут + CSRF state перевірка |
+| `flow/android.rs` | Tauri 2 mobile plugin виклик до Kotlin `signInAndAuthorize` (Credential Manager + AuthorizationClient) + token exchange |
 
-Команда `greet` MLMaiL використовується лише на демо-формі у App Shell MLMaiL і
-буде **видалена** при першій бойовій ітерації Notes Commands MLMaiL.
+Покриття тестами: 32 unit-тести (PKCE, ID token, state, token_exchange з
+mockito, InMemoryStorage, parser callback-запиту, URL-кодування).
 
 ### Компонент Notes Commands MLMaiL (planned)
 
