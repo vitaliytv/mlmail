@@ -1,0 +1,12 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "1abfed698caacaefc64dd082b127e119aa3a98c2",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
