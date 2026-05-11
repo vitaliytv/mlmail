@@ -1,0 +1,133 @@
+app/src-tauri/.env.example
+  s_3fbc2717ba2907::t_33366907a634b0 1-3
+app/src-tauri/src/auth/storage/mod.rs
+  s_3fbc2717ba2907::t_3986c899ada67c 15-20,23-32
+  s_3fbc2717ba2907::t_08b269cda48bea 1-14,21-22
+docs/ci4/04-code.md
+  s_3fbc2717ba2907::t_1f726d536f0990 185-187,193-204,213,218-243
+  s_3fbc2717ba2907::t_5efe9084ebeb72 153-159
+  s_3fbc2717ba2907::t_e945a19ecea6c6 74-79
+  s_3fbc2717ba2907::t_d276610582b2fb 359-366,368-369,375
+  s_3fbc2717ba2907::t_6d75e5c5832f97 86-107
+  s_3fbc2717ba2907::t_c62980b3c80a92 32-33,37,39-42,45-46
+.gitignore
+  s_3fbc2717ba2907::t_5acea1b45a137f 15-17
+  s_3fbc2717ba2907::t_59876f434f1283 18-20
+app/src/services/auth-store.test.js
+  s_3fbc2717ba2907::t_3da4051cd4a415 1-101
+app/src-tauri/src/lib.rs
+  s_3fbc2717ba2907::t_1c12d3bc06da90 1
+  s_3fbc2717ba2907::t_bfbd9a020c3f21 3,9-20
+app/src/i18n/auth-errors.js
+  s_3fbc2717ba2907::t_59b919431ef004 1-14
+app/src-tauri/src/auth/error.rs
+  s_3fbc2717ba2907::t_67ff886a7cd930 1-37
+app/src-tauri/src/auth/flow/android.rs
+  s_3fbc2717ba2907::t_f3e4c18ba79d2d 113-122
+  s_3fbc2717ba2907::t_1a5166f3652c7f 1-112,123
+docs/ci4/02-containers.md
+  s_3fbc2717ba2907::t_951b474bebf666 82-90
+  s_3fbc2717ba2907::t_da42ddc828a1e2 108,110-118
+  s_3fbc2717ba2907::t_8a0a0872f9bc86 46,51-52
+app/src-tauri/src/auth/pkce.rs
+  s_3fbc2717ba2907::t_4f3b4615065548 19-65
+  s_3fbc2717ba2907::t_2d6e528489a5f0 1-18
+app/src-tauri/src/auth/mod.rs
+  s_3fbc2717ba2907::t_aca175ee9aa858 40-43,45-46
+  s_3fbc2717ba2907::t_8e9d182157ecbe 3
+  s_3fbc2717ba2907::t_465c450ad7046b 17
+  s_3fbc2717ba2907::t_419e09a786292f 8
+  s_3fbc2717ba2907::t_979f328b563bf0 6
+  s_3fbc2717ba2907::t_46290f341409f2 4
+  s_3fbc2717ba2907::t_302935c7bbd1b9 1,9-16,18-39,44,47-181
+  s_3fbc2717ba2907::t_47cd89bf809546 7
+  s_3fbc2717ba2907::t_b513a01357c6e2 2
+  s_3fbc2717ba2907::t_84f9eae858a6ec 5
+.cspell.json
+  s_3fbc2717ba2907::t_fb566ba21ca18f 29-39,41-42,44-50
+app/src/views/Login.test.js
+  s_3fbc2717ba2907::t_17040eb1c7d00b 1-77
+docs/ci4/decisions.md
+  s_3fbc2717ba2907::t_96c00a438fc832 153-155,157-161
+  s_3fbc2717ba2907::t_b54980259741b3 188-189
+  s_3fbc2717ba2907::t_8e3c17babeb1aa 101-132
+app/src/App.vue
+  s_3fbc2717ba2907::t_da804d6a03bc51 2,6
+app/src/i18n/auth-errors.test.js
+  s_3fbc2717ba2907::t_40097bd219f8f4 1-37
+app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/MlmailAuthPlugin.kt
+  s_3fbc2717ba2907::t_de45e40ea63ea0 1-83
+app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/MainActivity.kt
+  s_3fbc2717ba2907::t_665cbe4886a5d5 10-14
+app/package.json
+  s_3fbc2717ba2907::t_9eee87deca5190 11-13,23-24,28
+app/src-tauri/src/auth/storage/macos.rs
+  s_3fbc2717ba2907::t_f9028398c27caa 1-69
+app/src-tauri/src/auth/flow/mod.rs
+  s_3fbc2717ba2907::t_ab4ac5a1af63fe 1-5
+app/src-tauri/gen/android/app/build.gradle.kts
+  s_3fbc2717ba2907::t_bb3d806c3d87ab 66-72
+app/src-tauri/src/auth/config.rs
+  s_3fbc2717ba2907::t_0db844015dad8b 1-14
+app/src-tauri/src/auth/id_token.rs
+  s_3fbc2717ba2907::t_277d457041f96d 1-8
+  s_3fbc2717ba2907::t_2e11b4d2ce53bb 9-49
+app/src/views/Login.vue
+  s_3fbc2717ba2907::t_48c50fbd51a941 1-58
+docs/adr/ADR-0006-google-oauth.md
+  s_3fbc2717ba2907::t_9534eafacf5abe 1-202
+app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/AuthorizationFlow.kt
+  s_3fbc2717ba2907::t_e74f6a5670d934 1-64
+app/src/services/auth-store.js
+  s_3fbc2717ba2907::t_5d304d99c7f37a 1-60
+app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/SecureStore.kt
+  s_3fbc2717ba2907::t_d07fe191fd9db3 1-46
+docs/ci4/03-components.md
+  s_3fbc2717ba2907::t_a03cbe0e89da32 18,27-28
+  s_3fbc2717ba2907::t_d1dc550f47007d 41
+  s_3fbc2717ba2907::t_913fe3337ec97a 211,217
+  s_3fbc2717ba2907::t_476c76585fcd57 255
+  s_3fbc2717ba2907::t_eb2b1cc99ddc88 81,83-84,86-89,91-93,95,97,99-118
+  s_3fbc2717ba2907::t_ba401f413a464f 248-254,256-270
+app/src-tauri/Cargo.toml
+  s_3fbc2717ba2907::t_c711bf55fd6166 25-31,33-41
+app/src-tauri/src/auth/storage/android.rs
+  s_3fbc2717ba2907::t_9315239f3bc8ce 1-30
+app/src-tauri/src/auth/state.rs
+  s_3fbc2717ba2907::t_d97a4aff06605b 1-23
+  s_3fbc2717ba2907::t_3055ccad3ebc64 24-78
+app/src-tauri/src/auth/token_exchange.rs
+  s_3fbc2717ba2907::t_738ff8bd3a8350 97-117,119-146,148-170,172-190,192-204,206-216,218-229,231-233
+  s_3fbc2717ba2907::t_c5785a7f2a89da 118,147,171,191,205,217,230
+  s_3fbc2717ba2907::t_efeb4cdae7c6ff 1-96
+app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/CredentialManagerFlow.kt
+  s_3fbc2717ba2907::t_2fcaafbb6afb04 1-23
+app/vite.config.js
+  s_3fbc2717ba2907::t_c310f1f6203967 43-48
+app/src-tauri/src/auth/storage/in_memory.rs
+  s_3fbc2717ba2907::t_a85925d7b62b1e 1-44
+  s_3fbc2717ba2907::t_940f7ccff7547e 45-92
+app/src-tauri/src/auth/flow/macos.rs
+  s_3fbc2717ba2907::t_7797cce81c5a9d 1-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "aa35f594fd62a8ed338733c1a0e1e9ded09f1acd",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_3fbc2717ba2907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96687315-6815-4c7b-9668-a1b1af16f23b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
