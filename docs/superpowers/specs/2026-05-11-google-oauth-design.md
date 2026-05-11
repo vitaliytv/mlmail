@@ -106,6 +106,7 @@
 2. Rust `auth_get_access_token`:
    - Якщо `AuthState.is_access_token_fresh()` (експірація >30 секунд) — повертає кешований.
    - Інакше: завантажує `refresh_token` зі сховища → `token_exchange::exchange_refresh(client_id, refresh_token)` → POST до `/token` з `grant_type=refresh_token` → оновлює `AuthState` → повертає новий access_token.
+   - Якщо відповідь містить новий `refresh_token` (Google іноді ротує його при чутливих scope) — Rust перезаписує `refresh_token` у сховищі (`storage.save(email, new_refresh_token)`). Інакше старий лишається.
 3. Якщо `exchange_refresh` повертає HTTP 400 з `invalid_grant`:
    - Rust очищає сховище (`storage.clear()`).
    - Скидає `AuthState`.
