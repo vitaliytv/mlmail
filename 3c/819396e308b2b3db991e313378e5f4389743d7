@@ -1,0 +1,24 @@
+docs/superpowers/specs/2026-05-11-google-oauth-design.md
+  s_3fbc2717ba2907::t_e7abd39d74bc3c 1-941
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "3c819396e308b2b3db991e313378e5f4389743d7",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_3fbc2717ba2907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96687315-6815-4c7b-9668-a1b1af16f23b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
