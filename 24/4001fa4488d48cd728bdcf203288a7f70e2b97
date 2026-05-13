@@ -1,0 +1,14 @@
+app/src-tauri/.env
+  h_74546f1f1ded3e 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "244001fa4488d48cd728bdcf203288a7f70e2b97",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
