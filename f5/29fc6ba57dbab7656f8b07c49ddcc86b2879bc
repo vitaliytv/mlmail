@@ -1,0 +1,49 @@
+app/src-tauri/src/auth/token_exchange.rs
+  s_3fbc2717ba2907::t_f1639797f32bf6 93,96-104,107
+  s_3fbc2717ba2907::t_2b152c625692a3 186,193,202,213,227
+  s_3fbc2717ba2907::t_578542868726d2 86,119
+  s_3fbc2717ba2907::t_4e01451b0d19fb 171
+  s_3fbc2717ba2907::t_e312293590f929 24,30-39
+  s_3fbc2717ba2907::t_fe5e68bd8ad327 79-83,85,87,111-118,120,123-128,130-146
+  s_3fbc2717ba2907::t_b0c8e2e38fc722 260,272,285
+  s_3fbc2717ba2907::t_3336cef8766004 53,68-69
+app/src-tauri/src/auth/flow/android.rs
+  s_3fbc2717ba2907::t_7eb15fcf6e1907 68
+app/src-tauri/.env.secret.example
+  s_3fbc2717ba2907::t_725271b115db49 1-6
+app/src-tauri/.env.example
+  s_3fbc2717ba2907::t_1b991411fa7085 1
+app/src-tauri/src/auth/mod.rs
+  s_3fbc2717ba2907::t_32ffc804613754 84-93
+  s_3fbc2717ba2907::t_2005ae596716f0 140-145
+.gitignore
+  s_3fbc2717ba2907::t_998be52c882ba0 15,17
+  h_74546f1f1ded3e 16
+app/src-tauri/src/auth/flow/macos.rs
+  s_3fbc2717ba2907::t_d4a2be6bd868ac 47
+app/src-tauri/src/auth/config.rs
+  s_3fbc2717ba2907::t_8fe0bb85d9f907 21-26
+  s_3fbc2717ba2907::t_e23a31ecdfb0bf 4,10
+  s_3fbc2717ba2907::t_2261a7227f36ae 35-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "f529fc6ba57dbab7656f8b07c49ddcc86b2879bc",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_3fbc2717ba2907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96687315-6815-4c7b-9668-a1b1af16f23b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
