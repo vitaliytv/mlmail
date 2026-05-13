@@ -1,0 +1,29 @@
+app/src-tauri/Cargo.toml
+  s_3fbc2717ba2907::t_7e4c0343849030 32
+app/src-tauri/src/auth/config.rs
+  s_3fbc2717ba2907::t_db769d463edce9 1-53
+app/src-tauri/src/auth/mod.rs
+  s_3fbc2717ba2907::t_29fb5208ba0719 76,81
+  s_3fbc2717ba2907::t_9cf061a1dbaa30 61,66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.4",
+  "base_commit_sha": "896756743964079ed425e5045c365c0f9ac7d523",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_3fbc2717ba2907": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96687315-6815-4c7b-9668-a1b1af16f23b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
