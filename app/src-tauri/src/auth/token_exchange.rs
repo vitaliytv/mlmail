@@ -21,24 +21,36 @@ pub enum FlowKind {
 
 pub async fn exchange_code(
     client_id: &str,
+    client_secret: Option<&str>,
     code: &str,
     code_verifier: &str,
     redirect_uri: &str,
     flow: FlowKind,
 ) -> Result<TokenResponse, AuthError> {
-    exchange_code_at(GOOGLE_TOKEN_URL, client_id, code, code_verifier, redirect_uri, flow).await
+    exchange_code_at(
+        GOOGLE_TOKEN_URL,
+        client_id,
+        client_secret,
+        code,
+        code_verifier,
+        redirect_uri,
+        flow,
+    )
+    .await
 }
 
 pub async fn exchange_refresh(
     client_id: &str,
+    client_secret: Option<&str>,
     refresh_token: &str,
 ) -> Result<TokenResponse, AuthError> {
-    exchange_refresh_at(GOOGLE_TOKEN_URL, client_id, refresh_token).await
+    exchange_refresh_at(GOOGLE_TOKEN_URL, client_id, client_secret, refresh_token).await
 }
 
 pub(crate) async fn exchange_code_at(
     endpoint: &str,
     client_id: &str,
+    client_secret: Option<&str>,
     code: &str,
     code_verifier: &str,
     redirect_uri: &str,
@@ -53,6 +65,9 @@ pub(crate) async fn exchange_code_at(
     if matches!(flow, FlowKind::Desktop) {
         form.push(("code_verifier", code_verifier));
     }
+    if let Some(secret) = client_secret {
+        form.push(("client_secret", secret));
+    }
 
     let resp = reqwest::Client::new()
         .post(endpoint)
@@ -61,38 +76,74 @@ pub(crate) async fn exchange_code_at(
         .await?;
 
     let status = resp.status();
-    if !status.is_success() {
-        return Err(AuthError::Network(format!("HTTP {status}")));
+    if status.is_success() {
+        return resp
+            .json::<TokenResponse>()
+            .await
+            .map_err(|e| AuthError::OAuth(e.to_string()));
     }
-    resp.json::<TokenResponse>()
-        .await
-        .map_err(|e| AuthError::OAuth(e.to_string()))
+    let body = resp.text().await.unwrap_or_default();
+    eprintln!("Google token endpoint returned {status}: {body}");
+    Err(classify_http_error(status, &body))
 }
 
 pub(crate) async fn exchange_refresh_at(
     endpoint: &str,
     client_id: &str,
+    client_secret: Option<&str>,
     refresh_token: &str,
 ) -> Result<TokenResponse, AuthError> {
+    let mut form: Vec<(&str, &str)> = vec![
+        ("client_id", client_id),
+        ("refresh_token", refresh_token),
+        ("grant_type", "refresh_token"),
+    ];
+    if let Some(secret) = client_secret {
+        form.push(("client_secret", secret));
+    }
+
     let resp = reqwest::Client::new()
         .post(endpoint)
-        .form(&[
-            ("client_id", client_id),
-            ("refresh_token", refresh_token),
-            ("grant_type", "refresh_token"),
-        ])
+        .form(&form)
         .send()
         .await?;
 
-    if resp.status() == reqwest::StatusCode::BAD_REQUEST {
+    let status = resp.status();
+    if status.is_success() {
+        return resp
+            .json::<TokenResponse>()
+            .await
+            .map_err(|e| AuthError::OAuth(e.to_string()));
+    }
+    let body = resp.text().await.unwrap_or_default();
+    eprintln!("Google token endpoint (refresh) returned {status}: {body}");
+    if status == reqwest::StatusCode::BAD_REQUEST && body.contains("invalid_grant") {
         return Err(AuthError::ReauthRequired);
     }
-    if !resp.status().is_success() {
-        return Err(AuthError::Network(format!("HTTP {}", resp.status())));
+    Err(classify_http_error(status, &body))
+}
+
+fn classify_http_error(status: reqwest::StatusCode, body: &str) -> AuthError {
+    if status.is_server_error() {
+        return AuthError::Network(format!("HTTP {status}: {body}"));
     }
-    resp.json::<TokenResponse>()
-        .await
-        .map_err(|e| AuthError::OAuth(e.to_string()))
+    // 4xx — Google returns a JSON object like {"error":"invalid_grant","error_description":"..."}
+    let oauth_error = serde_json::from_str::<serde_json::Value>(body)
+        .ok()
+        .and_then(|v| {
+            let kind = v.get("error").and_then(|e| e.as_str()).unwrap_or("oauth_error");
+            let desc = v
+                .get("error_description")
+                .and_then(|e| e.as_str())
+                .unwrap_or("");
+            Some(if desc.is_empty() {
+                kind.to_string()
+            } else {
+                format!("{kind}: {desc}")
+            })
+        })
+        .unwrap_or_else(|| format!("HTTP {status}: {body}"));
+    AuthError::OAuth(oauth_error)
 }
 
 #[cfg(test)]
@@ -117,6 +168,7 @@ mod tests {
         let r = exchange_code_at(
             &format!("{}/token", server.url()),
             "cid",
+            Some("secret"),
             "code",
             "verifier",
             "http://127.0.0.1:1234/callback",
@@ -131,13 +183,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn exchange_code_desktop_sends_pkce_verifier() {
+    async fn exchange_code_desktop_sends_pkce_verifier_and_client_secret() {
         let mut server = mockito::Server::new_async().await;
         let m = server.mock("POST", "/token")
             .match_body(mockito::Matcher::AllOf(vec![
                 mockito::Matcher::UrlEncoded("code_verifier".into(), "the-verifier".into()),
                 mockito::Matcher::UrlEncoded("grant_type".into(), "authorization_code".into()),
                 mockito::Matcher::UrlEncoded("client_id".into(), "cid".into()),
+                mockito::Matcher::UrlEncoded("client_secret".into(), "the-secret".into()),
             ]))
             .with_status(200)
             .with_body(r#"{"access_token":"AT","expires_in":1}"#)
@@ -146,6 +199,7 @@ mod tests {
         let _ = exchange_code_at(
             &format!("{}/token", server.url()),
             "cid",
+            Some("the-secret"),
             "the-code",
             "the-verifier",
             "http://127.0.0.1:0/callback",
@@ -156,7 +210,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn exchange_code_android_omits_pkce_verifier() {
+    async fn exchange_code_android_omits_pkce_and_client_secret() {
         let mut server = mockito::Server::new_async().await;
         let m = server.mock("POST", "/token")
             .match_body(mockito::Matcher::AllOf(vec![
@@ -170,6 +224,7 @@ mod tests {
         let _ = exchange_code_at(
             &format!("{}/token", server.url()),
             "cid",
+            None,
             "android-code",
             "",
             "",
@@ -188,7 +243,7 @@ mod tests {
             .create_async().await;
 
         let err = exchange_code_at(
-            &format!("{}/token", server.url()), "cid", "code", "v", "http://r", FlowKind::Desktop,
+            &format!("{}/token", server.url()), "cid", Some("s"), "code", "v", "http://r", FlowKind::Desktop,
         ).await.unwrap_err();
 
         assert!(matches!(err, AuthError::Network(_)));
@@ -202,7 +257,7 @@ mod tests {
             .with_body(r#"{"error":"invalid_grant"}"#)
             .create_async().await;
 
-        let err = exchange_refresh_at(&format!("{}/token", server.url()), "cid", "rt").await.unwrap_err();
+        let err = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt").await.unwrap_err();
         assert!(matches!(err, AuthError::ReauthRequired));
     }
 
@@ -214,7 +269,7 @@ mod tests {
             .with_body(r#"{"access_token":"NEW","expires_in":3600}"#)
             .create_async().await;
 
-        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", "rt").await.unwrap();
+        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt").await.unwrap();
         assert_eq!(r.access_token, "NEW");
         assert_eq!(r.refresh_token, None);
     }
@@ -227,7 +282,7 @@ mod tests {
             .with_body(r#"{"access_token":"NEW","expires_in":3600,"refresh_token":"ROT"}"#)
             .create_async().await;
 
-        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", "rt").await.unwrap();
+        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt").await.unwrap();
         assert_eq!(r.refresh_token.as_deref(), Some("ROT"));
     }
 }

@@ -1,11 +1,13 @@
 use std::sync::OnceLock;
 
 const KEY_DESKTOP: &str = "MLMAIL_GOOGLE_DESKTOP_CLIENT_ID";
+const KEY_DESKTOP_SECRET: &str = "MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET";
 const KEY_ANDROID: &str = "MLMAIL_GOOGLE_ANDROID_CLIENT_ID";
 const KEY_ANDROID_WEB: &str = "MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID";
 const PLACEHOLDER: &str = "REPLACE_ME";
 
 static DESKTOP: OnceLock<String> = OnceLock::new();
+static DESKTOP_SECRET: OnceLock<String> = OnceLock::new();
 static ANDROID: OnceLock<String> = OnceLock::new();
 static ANDROID_WEB: OnceLock<String> = OnceLock::new();
 
@@ -16,13 +18,22 @@ static ANDROID_WEB: OnceLock<String> = OnceLock::new();
 fn resolve(key: &str) -> String {
     static LOADED: OnceLock<()> = OnceLock::new();
     LOADED.get_or_init(|| {
-        let _ = dotenvy::dotenv();
+        // Public IDs (tracked in git).
+        let _ = dotenvy::from_filename(".env");
+        // Secrets (gitignored). Loaded second; existing keys (from process env
+        // or .env above) are not overwritten — dotenvy::from_filename only
+        // sets vars that aren't already in the environment.
+        let _ = dotenvy::from_filename(".env.secret");
     });
     std::env::var(key).unwrap_or_else(|_| format!("{PLACEHOLDER}_{key}"))
 }
 
 pub fn desktop_client_id() -> &'static str {
     DESKTOP.get_or_init(|| resolve(KEY_DESKTOP)).as_str()
+}
+
+pub fn desktop_client_secret() -> &'static str {
+    DESKTOP_SECRET.get_or_init(|| resolve(KEY_DESKTOP_SECRET)).as_str()
 }
 
 pub fn android_client_id() -> &'static str {

@@ -81,6 +81,16 @@ fn client_id_for_refresh() -> &'static str {
     config::desktop_client_id()
 }
 
+#[cfg(target_os = "android")]
+fn client_secret_for_refresh() -> Option<&'static str> {
+    None
+}
+
+#[cfg(not(target_os = "android"))]
+fn client_secret_for_refresh() -> Option<&'static str> {
+    Some(config::desktop_client_secret())
+}
+
 #[tauri::command]
 pub async fn auth_start_login(
     app: AppHandle,
@@ -127,7 +137,12 @@ pub async fn auth_get_access_token(
         .load()?
         .ok_or(AuthError::ReauthRequired)?;
 
-    let resp = token_exchange::exchange_refresh(client_id_for_refresh(), &stored.refresh_token).await;
+    let resp = token_exchange::exchange_refresh(
+        client_id_for_refresh(),
+        client_secret_for_refresh(),
+        &stored.refresh_token,
+    )
+    .await;
 
     match resp {
         Ok(resp) => {

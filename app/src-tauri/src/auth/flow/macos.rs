@@ -44,6 +44,7 @@ pub async fn run_login_flow(
 
     token_exchange::exchange_code(
         client_id,
+        Some(crate::auth::config::desktop_client_secret()),
         &code,
         &pair.verifier,
         &redirect_uri,

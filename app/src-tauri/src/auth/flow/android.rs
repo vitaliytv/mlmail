@@ -65,6 +65,7 @@ pub async fn run_login_flow(
 
     token_exchange::exchange_code(
         android_client_id,
+        None,
         &server_auth_code,
         "",
         ANDROID_REDIRECT_URI,
