@@ -58,12 +58,12 @@ fn apply_token_response(state: &mut AuthState, resp: &TokenResponse, email: Opti
 
 #[cfg(target_os = "macos")]
 async fn run_login(app: &AppHandle) -> Result<TokenResponse, AuthError> {
-    flow::macos::run_login_flow(app, config::DESKTOP_CLIENT_ID).await
+    flow::macos::run_login_flow(app, config::desktop_client_id()).await
 }
 
 #[cfg(target_os = "android")]
 async fn run_login(app: &AppHandle) -> Result<TokenResponse, AuthError> {
-    flow::android::run_login_flow(app, config::ANDROID_WEB_CLIENT_ID, config::ANDROID_CLIENT_ID).await
+    flow::android::run_login_flow(app, config::android_web_client_id(), config::android_client_id()).await
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "android")))]
@@ -73,12 +73,12 @@ async fn run_login(_app: &AppHandle) -> Result<TokenResponse, AuthError> {
 
 #[cfg(target_os = "android")]
 fn client_id_for_refresh() -> &'static str {
-    config::ANDROID_CLIENT_ID
+    config::android_client_id()
 }
 
 #[cfg(not(target_os = "android"))]
 fn client_id_for_refresh() -> &'static str {
-    config::DESKTOP_CLIENT_ID
+    config::desktop_client_id()
 }
 
 #[tauri::command]
