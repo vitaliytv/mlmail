@@ -76,3 +76,45 @@ describe('Login.vue', () => {
     expect(w.text()).toContain('Увійти через Google')
   })
 })
+
+describe('Login.vue inbox count', () => {
+  it('renders "Листів у скриньці: 348" after successful initialize', async () => {
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(348)
+      return Promise.resolve(null)
+    })
+    const w = mount(Login)
+    await flushPromises()
+    expect(w.text()).toContain('Листів у скриньці: 348')
+  })
+
+  it('shows placeholder before count loads', async () => {
+    let resolveCount
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return new Promise((r) => { resolveCount = r })
+      return Promise.resolve(null)
+    })
+    const w = mount(Login)
+    await flushPromises()
+    expect(w.text()).toContain('Листів у скриньці: …')
+    resolveCount(7)
+    await flushPromises()
+    expect(w.text()).toContain('Листів у скриньці: 7')
+  })
+
+  it('shows Ukrainian error when Gmail returns Http error', async () => {
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
+      return Promise.resolve(null)
+    })
+    const w = mount(Login)
+    await flushPromises()
+    expect(w.text()).toContain('Gmail повернув помилку. Спробуйте пізніше.')
+  })
+})
