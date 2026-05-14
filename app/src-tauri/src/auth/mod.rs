@@ -201,18 +201,3 @@ pub fn collect_session(app: &AppHandle) -> Result<Option<StoredSession>, AuthErr
     let storage = make_storage(app);
     Ok(storage.load()?)
 }
-
-#[tauri::command]
-pub async fn get_inbox_count(
-    app: AppHandle,
-    state: State<'_, Mutex<AuthState>>,
-) -> Result<u32, AuthError> {
-    let access_token = auth_get_access_token(app, state).await?;
-    let resp = reqwest::Client::new()
-        .get("https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX")
-        .bearer_auth(&access_token)
-        .send()
-        .await?;
-    let json: serde_json::Value = resp.json().await?;
-    Ok(json["messagesTotal"].as_u64().unwrap_or(0) as u32)
-}
