@@ -130,6 +130,28 @@ plugin `app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/`.
 
 ADR оформлений як `docs/adr/ADR-0006-google-oauth.md`.
 
+### Рішення: Кількість листів у скриньці — точне число через `users.labels.get`
+
+Закодовано у [app/src-tauri/src/gmail/](../../app/src-tauri/src/gmail/) і
+[app/src/services/auth-store.js](../../app/src/services/auth-store.js).
+
+Endpoint `GET users/me/labels/INBOX` повертає точне `messagesTotal` одним
+викликом. Альтернативи (`users.getProfile` — рахує всю скриньку, не INBOX;
+`messages.list?labelIds=INBOX` — повертає приблизне `resultSizeEstimate`)
+відкинуто свідомо. HTTPS-виклик живе у Rust, не у WebView fetch — узгоджено з
+ADR-0006 (token surface).
+
+Вплив на C4-модель MLMaiL:
+
+- [03-components.md](03-components.md) — додано Gmail Module MLMaiL (Rust);
+  Auth Store MLMaiL отримав `inboxCount`, `inboxErrorKind`, `refreshInboxCount`;
+  Auth Errors i18n MLMaiL — девʼять ключів (додано `Http`, `Parse`).
+- [04-code.md](04-code.md) — додано секції `app/src-tauri/src/gmail/`,
+  оновлено приклад `invoke_handler!` у `lib.rs`, опис `auth-store.js`.
+
+ADR ще не оформлений; кандидат — `docs/adr/ADR-0007-inbox-count.md`.
+Чернетка інбоксу — у `docs/adr/_inbox/`.
+
 ## Рішення, що очікують ADR для MLMaiL
 
 Нижче перелічено архітектурні питання MLMaiL, які **впливатимуть** на C4-модель
