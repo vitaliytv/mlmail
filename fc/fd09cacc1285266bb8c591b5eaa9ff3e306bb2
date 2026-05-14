@@ -1,0 +1,21 @@
+docs/ci4/decisions.md
+  s_ae8cefc21b0eb6::t_e10acc1844c869 133-154
+docs/adr/_inbox/20260514-221647-inbox-count.md
+  s_ae8cefc21b0eb6::t_1995b2e64fe7ee 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "fcfd09cacc1285266bb8c591b5eaa9ff3e306bb2",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
