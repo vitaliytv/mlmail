@@ -1,0 +1,26 @@
+docs/superpowers/specs/2026-05-14-inbox-count-design.md
+  s_ae8cefc21b0eb6::t_cb1ff50d10ef3b 1-78,80,83,85-96,98-134
+  s_ae8cefc21b0eb6::t_3a41f4a49f87c1 97
+  s_ae8cefc21b0eb6::t_25c66d81affef7 79,81-82,84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "743dab1500dbd78d8ad537bf9065b7afdc3bb4ce",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
