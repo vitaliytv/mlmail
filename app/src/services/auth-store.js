@@ -6,7 +6,20 @@ const _isAuthenticated = ref(false)
 const _isLoading = ref(false)
 const _errorKind = ref(null)
 
+/**
+ * @returns {Promise<string>} access token
+ */
+function getAccessToken() {
+  return invoke('auth_get_access_token')
+}
+
+/**
+ * @returns {object} auth store
+ */
 export function useAuthStore() {
+  /**
+   *
+   */
   async function initialize() {
     const ok = await invoke('auth_is_authenticated')
     _isAuthenticated.value = ok
@@ -15,6 +28,9 @@ export function useAuthStore() {
     }
   }
 
+  /**
+   *
+   */
   async function login() {
     _isLoading.value = true
     _errorKind.value = null
@@ -22,17 +38,16 @@ export function useAuthStore() {
       const session = await invoke('auth_start_login')
       _email.value = session.email
       _isAuthenticated.value = true
-    } catch (err) {
-      _errorKind.value = err && typeof err === 'object' && err.kind ? err.kind : 'Unknown'
+    } catch (error) {
+      _errorKind.value = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
     } finally {
       _isLoading.value = false
     }
   }
 
-  async function getAccessToken() {
-    return invoke('auth_get_access_token')
-  }
-
+  /**
+   *
+   */
   async function logout() {
     await invoke('auth_logout')
     _email.value = null
@@ -52,6 +67,9 @@ export function useAuthStore() {
   }
 }
 
+/**
+ *
+ */
 export function _resetForTest() {
   _email.value = null
   _isAuthenticated.value = false

@@ -8,7 +8,19 @@ const messages = {
   Unknown: 'Невідома помилка.'
 }
 
+/**
+ * @param {string|null} kind error kind code
+ * @returns {string} localized error message
+ */
 export function errorMessage(kind) {
   if (kind === null || kind === undefined) return messages.Unknown
   return messages[kind] ?? messages.Unknown
+}
+
+/**
+ * @param {number} count inbox message count
+ * @returns {string} localized label
+ */
+export function inboxCountLabel(count) {
+  return `${count} листів у скриньці`
 }

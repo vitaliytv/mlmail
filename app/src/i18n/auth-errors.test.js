@@ -32,6 +32,6 @@ describe('errorMessage', () => {
 
   it('falls back to Unknown message for null/undefined', () => {
     expect(errorMessage(null)).toBe('Невідома помилка.')
-    expect(errorMessage(undefined)).toBe('Невідома помилка.')
+    expect(errorMessage()).toBe('Невідома помилка.')
   })
 })

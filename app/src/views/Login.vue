@@ -1,10 +1,18 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useAuthStore } from '../services/auth-store.js'
-import { errorMessage } from '../i18n/auth-errors.js'
+import { useMailboxStore } from '../services/mailbox-store.js'
+import { errorMessage, inboxCountLabel } from '../i18n/auth-errors.js'
 
 const auth = useAuthStore()
-onMounted(() => auth.initialize())
+const mailbox = useMailboxStore()
+
+onMounted(async () => {
+  await auth.initialize()
+  if (auth.isAuthenticated.value) {
+    mailbox.fetchInboxCount()
+  }
+})
 </script>
 
 <template>
@@ -12,13 +20,20 @@ onMounted(() => auth.initialize())
     <h1>MLMaiL</h1>
     <div v-if="auth.isAuthenticated.value" class="signed-in">
       <p>Ви увійшли як {{ auth.email.value }}</p>
-      <button type="button" @click="auth.logout()">Вийти</button>
+      <p v-if="mailbox.isLoading.value" class="inbox-count">…</p>
+      <p v-else-if="mailbox.errorKind.value" class="inbox-count error">
+        {{ errorMessage(mailbox.errorKind.value) }}
+      </p>
+      <p v-else-if="mailbox.inboxCount.value !== null" class="inbox-count">
+        {{ inboxCountLabel(mailbox.inboxCount.value) }}
+      </p>
+      <button @click="auth.logout()" type="button">Вийти</button>
     </div>
     <button
       v-else
+      @click="auth.login()"
       type="button"
       :disabled="auth.isLoading.value"
-      @click="auth.login()"
     >
       {{ auth.isLoading.value ? 'Зачекайте…' : 'Увійти через Google' }}
     </button>

@@ -73,7 +73,7 @@ describe('useAuthStore.logout', () => {
     invokeMock.mockResolvedValueOnce({ email: 'a@b' })
     const store = useAuthStore()
     await store.login()
-    invokeMock.mockResolvedValueOnce(undefined)
+    invokeMock.mockResolvedValueOnce()
     await store.logout()
     expect(store.email.value).toBe(null)
     expect(store.isAuthenticated.value).toBe(false)

@@ -25,6 +25,7 @@ graph TB
     SpeechService[Speech Service MLMaiL<br/>виклик TTS-провайдера<br/>planned]
     GmailClient[Gmail Client MLMaiL<br/>обгортка Gmail REST API<br/>planned]
     AuthStore[Auth Store MLMaiL<br/>фасад над auth_* Tauri-командами<br/>implemented]
+    MailboxStore[Mailbox Store MLMaiL<br/>кількість листів INBOX<br/>implemented]
     AuthI18n[Auth Errors i18n MLMaiL<br/>kind → українська строка<br/>implemented]
     NotesBridge[Notes Bridge MLMaiL<br/>invoke Tauri-команд для .md<br/>planned]
 
@@ -38,6 +39,7 @@ graph TB
     Actions --> Drafter
 
     Auth --> AuthStore
+    Auth --> MailboxStore
     Auth --> AuthI18n
     Inbox --> GmailClient
     Reader --> GmailClient
@@ -85,14 +87,15 @@ Auth Component MLMaiL — Vue-компонент Login-екрану MLMaiL
 
 - не авторизовано → кнопка "Увійти через Google" (заблокована поки триває
   логін, текст змінюється на "Зачекайте…");
-- авторизовано → "Ви увійшли як {email}" і кнопка "Вийти";
+- авторизовано → "Ви увійшли як {email}", кількість листів INBOX (через
+  Mailbox Store MLMaiL), і кнопка "Вийти";
 - помилка останньої спроби — український рядок з Auth Errors i18n MLMaiL.
 
 Auth Component MLMaiL **не торкається токенів** і не знає про OAuth — він
 лише викликає методи Auth Store MLMaiL (`login`, `logout`, `initialize`).
 OAuth-механіка живе у контейнері MLMaiL Backend (Auth Module MLMaiL нижче).
 
-Залежить від: Auth Store MLMaiL, Auth Errors i18n MLMaiL.
+Залежить від: Auth Store MLMaiL, Mailbox Store MLMaiL, Auth Errors i18n MLMaiL.
 
 ### Компонент Auth Store MLMaiL (implemented)
 
@@ -108,6 +111,21 @@ Auth Store MLMaiL — реактивний singleton-composable
 
 Залежить від: контейнера MLMaiL Backend (через `@tauri-apps/api/core::invoke`).
 
+### Компонент Mailbox Store MLMaiL (implemented)
+
+Mailbox Store MLMaiL — реактивний singleton-composable
+([app/src/services/mailbox-store.js](../../app/src/services/mailbox-store.js)).
+Викликає Tauri-команду `get_inbox_count` і тримає результат у `inboxCount` ref.
+
+| Поле / метод | Тип | Опис |
+| --- | --- | --- |
+| `inboxCount` | `Ref<number\|null>` | Кількість листів у INBOX або `null` |
+| `isLoading` | `Ref<boolean>` | Чи виконується запит |
+| `errorKind` | `Ref<string\|null>` | Код помилки або `null` |
+| `fetchInboxCount()` | `async fn` | Отримати актуальну кількість |
+
+Залежить від: контейнера MLMaiL Backend (через `get_inbox_count`).
+
 ### Компонент Auth Errors i18n MLMaiL (implemented)
 
 Auth Errors i18n MLMaiL — словник
@@ -115,7 +133,8 @@ Auth Errors i18n MLMaiL — словник
 англомовний `kind` з Rust `AuthError` у українську строку для UI. Сім ключів
 (`Cancelled`, `Network`, `OAuth`, `Storage`, `ReauthRequired`, `Platform`,
 `Unknown`) — `errorMessage(kind)` повертає українську строку або
-`"Невідома помилка."` для невідомих kind.
+`"Невідома помилка."` для невідомих kind. Функція `inboxCountLabel(count)`
+формує рядок "N листів у скриньці" для Auth Component MLMaiL.
 
 ### Компонент Gmail Client MLMaiL (planned)
 
@@ -253,7 +272,7 @@ Google OAuth-механіку MLMaiL. Підкомпоненти:
 
 | Файл | Роль |
 | ---- | ---- |
-| `mod.rs` | П'ять Tauri-команд `auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`; `on_startup` для відновлення сесії при холодному старті |
+| `mod.rs` | Шість Tauri-команд: `auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`, `get_inbox_count`; `on_startup` для відновлення сесії при холодному старті |
 | `state.rs` | `AuthState` (in-memory access token + email + expiry); `is_access_token_fresh()` з 30-секундним буфером |
 | `pkce.rs` | Генератор PKCE pair (verifier 43 chars URL-safe, challenge = base64url(SHA-256(verifier))) |
 | `token_exchange.rs` | HTTPS-обмін до `oauth2.googleapis.com/token`: `exchange_code` (auth code → tokens) і `exchange_refresh` (refresh → access); 400 + `invalid_grant` мапиться в `AuthError::ReauthRequired` |

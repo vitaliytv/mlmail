@@ -2,7 +2,7 @@ import { getConfig } from '@nitra/eslint-config'
 
 export default [
   {
-    ignores: ['**/auto-imports.d.ts', 'app/src-tauri/**', 'app/dist/**']
+    ignores: ['**/auto-imports.d.ts', 'app/src-tauri/**', 'app/dist/**', 'docs/**']
   },
   ...getConfig({
     vue: ['app']

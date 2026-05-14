@@ -5,7 +5,8 @@ const invokeMock = vi.fn()
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
 
 const { _resetForTest } = await import('../services/auth-store.js')
-const Login = (await import('./Login.vue')).default
+const loginModule = await import('./Login.vue')
+const Login = loginModule.default
 
 beforeEach(() => {
   invokeMock.mockReset()
@@ -35,7 +36,7 @@ describe('Login.vue', () => {
   it('shows Ukrainian error after failed login', async () => {
     invokeMock.mockImplementation((cmd) => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
-      if (cmd === 'auth_start_login') return Promise.reject({ kind: 'Network' })
+      if (cmd === 'auth_start_login') return Promise.reject(Object.assign(new Error('Network'), { kind: 'Network' }))
       return Promise.resolve(null)
     })
     const w = mount(Login)

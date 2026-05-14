@@ -17,6 +17,7 @@
     "**/.minify-image-cache.tsv",
     "**/.n-minify-image.tsv",
     "docs/superpowers/**",
+    "docs/adr/_inbox/**",
     "README.md"
   ],
   "import": ["@nitra/cspell-dict/cspell-ext.json"],
@@ -77,6 +78,21 @@
     "staticlib",
     "Tauri",
     "tauri",
-    "taze"
+    "dotenvy",
+    "initialised",
+    "Prefs",
+    "taze",
+    "авторизаційної",
+    "білді",
+    "Кросплатформений",
+    "кросплатформеного",
+    "логінів",
+    "мапить",
+    "мапиться",
+    "моком",
+    "підкомпонентів",
+    "Підкомпоненти",
+    "платформенними",
+    "рефрешить"
   ]
 }
