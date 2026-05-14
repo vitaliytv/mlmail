@@ -120,10 +120,9 @@ pub async fn auth_start_login(
     Ok(AuthSession { email })
 }
 
-#[tauri::command]
-pub async fn auth_get_access_token(
-    app: AppHandle,
-    state: State<'_, Mutex<AuthState>>,
+pub async fn acquire_access_token(
+    app: &AppHandle,
+    state: &State<'_, Mutex<AuthState>>,
 ) -> Result<String, AuthError> {
     {
         let s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
@@ -132,7 +131,7 @@ pub async fn auth_get_access_token(
         }
     }
 
-    let storage = make_storage(&app);
+    let storage = make_storage(app);
     let stored = storage
         .load()?
         .ok_or(AuthError::ReauthRequired)?;
@@ -163,6 +162,14 @@ pub async fn auth_get_access_token(
         }
         Err(e) => Err(e),
     }
+}
+
+#[tauri::command]
+pub async fn auth_get_access_token(
+    app: AppHandle,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<String, AuthError> {
+    acquire_access_token(&app, &state).await
 }
 
 #[tauri::command]
