@@ -94,25 +94,50 @@ Vitest + `@vue/test-utils` з моком `@tauri-apps/api/core`.
 ### Файл [app/src/services/auth-store.js](../../app/src/services/auth-store.js)
 
 Auth Store MLMaiL — singleton-composable з реактивними `ref`-ами
-(`email`, `isAuthenticated`, `isLoading`, `errorKind`) і методами
-`initialize`, `login`, `getAccessToken`, `logout`. Кожен метод під капотом
-викликає одну з `auth_*` Tauri-команд. Експортує `_resetForTest()` для
-ізоляції тестів. Тести — [auth-store.test.js](../../app/src/services/auth-store.test.js).
+(`email`, `isAuthenticated`, `isLoading`, `errorKind`, `inboxCount`,
+`inboxErrorKind`) і методами `initialize`, `login`, `getAccessToken`, `logout`,
+`refreshInboxCount`. `initialize()` і `login()` після успіху самі викликають
+`refreshInboxCount()`, що під капотом дзвонить Tauri-команду `gmail_inbox_count`.
+На `ReauthRequired` стор сам скидає `email`/`isAuthenticated`. Експортує
+`_resetForTest()` для ізоляції тестів. Тести —
+[auth-store.test.js](../../app/src/services/auth-store.test.js).
 
 ### Файл [app/src/i18n/auth-errors.js](../../app/src/i18n/auth-errors.js)
 
-Auth Errors i18n MLMaiL — словник `kind` → українська строка. Сім ключів,
-fallback `"Невідома помилка."`. Тести —
+Auth Errors i18n MLMaiL — словник `kind` → українська строка. Девʼять ключів
+(`Cancelled`, `Network`, `OAuth`, `Storage`, `ReauthRequired`, `Platform`,
+`Http`, `Parse`, `Unknown`), fallback `"Невідома помилка."`. Тести —
 [auth-errors.test.js](../../app/src/i18n/auth-errors.test.js).
 
 ### Планова сигнатура: Gmail Client MLMaiL
 
 ```js
 // app/src/services/gmail-client.js — planned
+/**
+ *
+ * @param maxResults
+ */
 export async function listInbox(maxResults = 25) { /* ... */ }
+/**
+ *
+ * @param id
+ */
 export async function getMessage(id) { /* ... */ }
+/**
+ *
+ * @param id
+ */
 export async function trashMessage(id) { /* ... */ }
+/**
+ *
+ * @param criteria
+ * @param action
+ */
 export async function createFilter(criteria, action) { /* ... */ }
+/**
+ *
+ * @param message
+ */
 export async function createDraft(message) { /* ... */ }
 ```
 
@@ -125,10 +150,19 @@ export async function createDraft(message) { /* ... */ }
 // app/src/services/notes-bridge.js — planned
 import { invoke } from '@tauri-apps/api/core'
 
+/**
+ *
+ * @param kind
+ * @param message
+ */
 export async function saveNote(kind /* 'work' | 'home' */, message) {
   return invoke('save_note', { kind, message })
 }
 
+/**
+ *
+ * @param kind
+ */
 export async function listNotes(kind /* 'work' | 'home' */) {
   return invoke('list_notes', { kind })
 }
@@ -183,6 +217,7 @@ fn main() {
 
 ```rust
 pub mod auth;
+pub mod gmail;
 
 use std::sync::Mutex;
 
@@ -201,6 +236,7 @@ pub fn run() {
             auth::auth_is_authenticated,
             auth::auth_current_email,
             auth::auth_logout,
+            gmail::gmail_inbox_count,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -241,6 +277,41 @@ auth/
 ```
 
 Тести — `cargo test --lib auth` (32 unit-тести).
+
+### Каталог [app/src-tauri/src/gmail/](../../app/src-tauri/src/gmail/)
+
+Gmail Module MLMaiL — Rust-підсистема для Gmail REST API. Структура:
+
+```text
+gmail/
+├── mod.rs   — Tauri command gmail_inbox_count + fetch_inbox_count_at + parse_messages_total
+└── error.rs — GmailError + From-конверсії з reqwest::Error і AuthError
+```
+
+Команда `gmail_inbox_count`:
+
+```rust
+#[tauri::command]
+pub async fn gmail_inbox_count(
+    app: AppHandle,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<u64, GmailError> {
+    let token = auth::acquire_access_token(&app, &state).await?;
+    fetch_inbox_count_at(GMAIL_LABEL_INBOX_URL, &token).await
+}
+```
+
+`fetch_inbox_count_at(endpoint, access_token)` — приватний helper із URL-параметром
+для unit-тестів через `mockito`. Status-маппінг: 401 → `GmailError::ReauthRequired`;
+інші не-2xx → `GmailError::Http { status, body }`; JSON-помилки →
+`GmailError::Parse`; `reqwest::Error` → `GmailError::Network`.
+
+`GmailError` має `#[serde(tag = "kind", content = "message")]` — frontend дістає
+`err.kind` так само, як для `AuthError`. Конверсія `From<AuthError>` мапить
+`AuthError::ReauthRequired` у `GmailError::ReauthRequired`, тож і refresh-помилка,
+і Gmail-401 виглядають однаково для UI.
+
+Тести — `cargo test --lib gmail` (11 unit-тестів).
 
 ### Файл [app/src-tauri/tauri.conf.json](../../app/src-tauri/tauri.conf.json)
 
