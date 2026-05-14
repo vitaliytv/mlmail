@@ -1,0 +1,31 @@
+docs/ci4/04-code.md
+  s_ae8cefc21b0eb6::t_22d4db4cb2e9be 291-294
+app/src/services/auth-store.test.js
+  s_ae8cefc21b0eb6::t_cae7bd2361150b 145
+  s_ae8cefc21b0eb6::t_9db0cf806f0ac8 157
+  s_ae8cefc21b0eb6::t_4fe762b84151f7 132
+app/src/views/Login.test.js
+  s_ae8cefc21b0eb6::t_ded66a1f3d942e 100
+  s_ae8cefc21b0eb6::t_aebc3ce110c2d7 95
+  s_ae8cefc21b0eb6::t_812777e557cd3b 96
+app/src/views/Login.vue
+  s_ae8cefc21b0eb6::t_1ce9be398d33cb 22,26
+.cspell.json
+  s_ae8cefc21b0eb6::t_9e96b302212be0 96-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "5c6d4b4dfc26798eaa152431462c4f25f3b5c3d6",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
