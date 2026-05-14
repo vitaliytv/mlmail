@@ -35,3 +35,13 @@ describe('errorMessage', () => {
     expect(errorMessage()).toBe('Невідома помилка.')
   })
 })
+
+describe('errorMessage Gmail kinds', () => {
+  it('returns Ukrainian text for Http kind', () => {
+    expect(errorMessage('Http')).toBe('Gmail повернув помилку. Спробуйте пізніше.')
+  })
+
+  it('returns Ukrainian text for Parse kind', () => {
+    expect(errorMessage('Parse')).toBe('Несподівана відповідь від Gmail.')
+  })
+})
