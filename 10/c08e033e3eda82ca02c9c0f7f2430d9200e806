@@ -1,0 +1,24 @@
+docs/ci4/03-components.md
+  s_ae8cefc21b0eb6::t_7ef9593195e9bf 88-92
+  s_ae8cefc21b0eb6::t_2fa32e0178416b 27
+  s_ae8cefc21b0eb6::t_dfcee40613fa13 98
+  s_ae8cefc21b0eb6::t_f802dc383b1abc 104-111,113-114,116-117,123-127
+  s_ae8cefc21b0eb6::t_302379e10f28e9 221,228,231
+  s_ae8cefc21b0eb6::t_c6188b76cf5ad3 284-309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "10c08e033e3eda82ca02c9c0f7f2430d9200e806",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
