@@ -19,13 +19,13 @@ onMounted(() => auth.initialize())
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </p>
       <p v-else class="inbox-count muted">Листів у скриньці: …</p>
-      <button type="button" @click="auth.logout()">Вийти</button>
+      <button @click="auth.logout()" type="button">Вийти</button>
     </div>
     <button
       v-else
+      @click="auth.login()"
       type="button"
       :disabled="auth.isLoading.value"
-      @click="auth.login()"
     >
       {{ auth.isLoading.value ? 'Зачекайте…' : 'Увійти через Google' }}
     </button>

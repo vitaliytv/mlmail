@@ -129,7 +129,7 @@ describe('useAuthStore inbox count', () => {
     invokeMock.mockImplementation((cmd) => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count') return Promise.reject({ kind: 'Http' })
+      if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
       return Promise.resolve(null)
     })
     const store = useAuthStore()
@@ -142,7 +142,7 @@ describe('useAuthStore inbox count', () => {
     invokeMock.mockImplementation((cmd) => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count') return Promise.reject('boom')
+      if (cmd === 'gmail_inbox_count') return Promise.reject(new Error('boom'))
       return Promise.resolve(null)
     })
     const store = useAuthStore()
@@ -154,7 +154,7 @@ describe('useAuthStore inbox count', () => {
     invokeMock.mockImplementation((cmd) => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count') return Promise.reject({ kind: 'ReauthRequired' })
+      if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
       return Promise.resolve(null)
     })
     const store = useAuthStore()

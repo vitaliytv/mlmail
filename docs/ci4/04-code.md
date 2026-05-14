@@ -288,18 +288,10 @@ gmail/
 └── error.rs — GmailError + From-конверсії з reqwest::Error і AuthError
 ```
 
-Команда `gmail_inbox_count`:
-
-```rust
-#[tauri::command]
-pub async fn gmail_inbox_count(
-    app: AppHandle,
-    state: State<'_, Mutex<AuthState>>,
-) -> Result<u64, GmailError> {
-    let token = auth::acquire_access_token(&app, &state).await?;
-    fetch_inbox_count_at(GMAIL_LABEL_INBOX_URL, &token).await
-}
-```
+Команда `gmail_inbox_count(app, state) -> Result<u64, GmailError>` під капотом
+викликає `auth::acquire_access_token` (спільний шлях рефрешу токена) і
+`fetch_inbox_count_at(GMAIL_LABEL_INBOX_URL, &token)`. Тіло — два рядки;
+див. [mod.rs](../../app/src-tauri/src/gmail/mod.rs).
 
 `fetch_inbox_count_at(endpoint, access_token)` — приватний helper із URL-параметром
 для unit-тестів через `mockito`. Status-маппінг: 401 → `GmailError::ReauthRequired`;

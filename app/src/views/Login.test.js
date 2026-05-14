@@ -92,10 +92,12 @@ describe('Login.vue inbox count', () => {
 
   it('shows placeholder before count loads', async () => {
     let resolveCount
+    // oxlint-disable-next-line promise/avoid-new
+    const pending = new Promise((resolve) => { resolveCount = resolve })
     invokeMock.mockImplementation((cmd) => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count') return new Promise((r) => { resolveCount = r })
+      if (cmd === 'gmail_inbox_count') return pending
       return Promise.resolve(null)
     })
     const w = mount(Login)
