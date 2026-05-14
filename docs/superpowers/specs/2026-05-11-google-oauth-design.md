@@ -183,7 +183,13 @@ const _isAuthenticated = ref(false)
 const _isLoading = ref(false)
 const _errorKind = ref(null)
 
+/**
+ *
+ */
 export function useAuthStore() {
+  /**
+   *
+   */
   async function initialize() {
     _isAuthenticated.value = await invoke('auth_is_authenticated')
     if (_isAuthenticated.value) {
@@ -191,6 +197,9 @@ export function useAuthStore() {
     }
   }
 
+  /**
+   *
+   */
   async function login() {
     _isLoading.value = true
     _errorKind.value = null
@@ -198,17 +207,23 @@ export function useAuthStore() {
       const session = await invoke('auth_start_login')
       _email.value = session.email
       _isAuthenticated.value = true
-    } catch (err) {
-      _errorKind.value = err?.kind ?? 'Unknown'
+    } catch (error) {
+      _errorKind.value = error?.kind ?? 'Unknown'
     } finally {
       _isLoading.value = false
     }
   }
 
+  /**
+   *
+   */
   async function getAccessToken() {
     return invoke('auth_get_access_token')
   }
 
+  /**
+   *
+   */
   async function logout() {
     await invoke('auth_logout')
     _email.value = null
@@ -240,6 +255,10 @@ const messages = {
   Unknown:        'Невідома помилка.',
 }
 
+/**
+ *
+ * @param kind
+ */
 export function errorMessage(kind) { return messages[kind] ?? messages.Unknown }
 ```
 

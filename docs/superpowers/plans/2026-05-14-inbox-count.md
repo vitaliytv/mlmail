@@ -45,6 +45,7 @@
 ## Task 1: Refactor `auth_get_access_token` to expose `acquire_access_token` helper
 
 **Files:**
+
 - Modify: `app/src-tauri/src/auth/mod.rs:123-166`
 
 **Why first:** Інший модуль (`gmail`) має отримати валідний access token однаковим шляхом (з рефрешем при потребі, з тим самим обробленням `ReauthRequired`). Винесення в helper — це чистий рефакторинг, наявні поведінкові тести Auth не повинні впасти.
@@ -142,6 +143,7 @@ EOF
 ## Task 2: Create `GmailError` enum
 
 **Files:**
+
 - Create: `app/src-tauri/src/gmail/error.rs`
 
 - [ ] **Step 1: Write the error module**
@@ -241,6 +243,7 @@ EOF
 ## Task 3: Create `gmail/mod.rs` with `fetch_inbox_count_at` + parse helper + status mapping (TDD with mockito)
 
 **Files:**
+
 - Create: `app/src-tauri/src/gmail/mod.rs`
 
 - [ ] **Step 1: Write the failing tests first**
@@ -463,6 +466,7 @@ EOF
 ## Task 4: Register `gmail_inbox_count` Tauri command in `lib.rs::run()`
 
 **Files:**
+
 - Modify: `app/src-tauri/src/lib.rs:14-21`
 
 - [ ] **Step 1: Append handler**
@@ -509,6 +513,7 @@ EOF
 ## Task 5: Extend `auth-store.js` with `inboxCount` / `inboxErrorKind` / `refreshInboxCount` (TDD)
 
 **Files:**
+
 - Modify: `app/src/services/auth-store.js`
 - Modify: `app/src/services/auth-store.test.js`
 
@@ -630,14 +635,20 @@ const _errorKind = ref(null)
 const _inboxCount = ref(null)
 const _inboxErrorKind = ref(null)
 
+/**
+ *
+ */
 export function useAuthStore() {
+  /**
+   *
+   */
   async function refreshInboxCount() {
     if (!_isAuthenticated.value) return
     try {
       _inboxCount.value = await invoke('gmail_inbox_count')
       _inboxErrorKind.value = null
-    } catch (err) {
-      const kind = err && typeof err === 'object' && err.kind ? err.kind : 'Unknown'
+    } catch (error) {
+      const kind = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
       _inboxCount.value = null
       _inboxErrorKind.value = kind
       if (kind === 'ReauthRequired') {
@@ -647,6 +658,9 @@ export function useAuthStore() {
     }
   }
 
+  /**
+   *
+   */
   async function initialize() {
     const ok = await invoke('auth_is_authenticated')
     _isAuthenticated.value = ok
@@ -656,6 +670,9 @@ export function useAuthStore() {
     }
   }
 
+  /**
+   *
+   */
   async function login() {
     _isLoading.value = true
     _errorKind.value = null
@@ -664,17 +681,23 @@ export function useAuthStore() {
       _email.value = session.email
       _isAuthenticated.value = true
       await refreshInboxCount()
-    } catch (err) {
-      _errorKind.value = err && typeof err === 'object' && err.kind ? err.kind : 'Unknown'
+    } catch (error) {
+      _errorKind.value = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
     } finally {
       _isLoading.value = false
     }
   }
 
+  /**
+   *
+   */
   async function getAccessToken() {
     return invoke('auth_get_access_token')
   }
 
+  /**
+   *
+   */
   async function logout() {
     await invoke('auth_logout')
     _email.value = null
@@ -699,6 +722,9 @@ export function useAuthStore() {
   }
 }
 
+/**
+ *
+ */
 export function _resetForTest() {
   _email.value = null
   _isAuthenticated.value = false
@@ -735,6 +761,7 @@ EOF
 ## Task 6: Update i18n with `Http` and `Parse` kinds (TDD)
 
 **Files:**
+
 - Modify: `app/src/i18n/auth-errors.js`
 - Modify: `app/src/i18n/auth-errors.test.js`
 
@@ -781,6 +808,10 @@ const messages = {
   Unknown: 'Невідома помилка.'
 }
 
+/**
+ *
+ * @param kind
+ */
 export function errorMessage(kind) {
   if (kind === null || kind === undefined) return messages.Unknown
   return messages[kind] ?? messages.Unknown
@@ -809,6 +840,7 @@ EOF
 ## Task 7: Render inbox count on `Login.vue` (TDD)
 
 **Files:**
+
 - Modify: `app/src/views/Login.vue`
 - Modify: `app/src/views/Login.test.js`
 
@@ -971,6 +1003,7 @@ EOF
 ## Task 8: Update `docs/ci4/03-components.md`
 
 **Files:**
+
 - Modify: `docs/ci4/03-components.md`
 
 - [ ] **Step 1: Add Gmail Module MLMaiL block + mark Auth Store/Component features**
@@ -1049,6 +1082,7 @@ EOF
 ## Task 9: Update `docs/ci4/04-code.md`
 
 **Files:**
+
 - Modify: `docs/ci4/04-code.md`
 
 - [ ] **Step 1: Add code sections for `gmail/`**
@@ -1082,6 +1116,7 @@ Status-мапінг: 401 → `GmailError::ReauthRequired`; інші не-2xx →
 `GmailError` із `#[serde(tag = "kind", content = "message")]` — frontend дістає
 `err.kind` так само, як для `AuthError`. Має `From<reqwest::Error>` та
 `From<AuthError>` (зокрема `AuthError::ReauthRequired → GmailError::ReauthRequired`).
+
 ```
 
 У блоці «Файл [app/src/services/auth-store.js]» оновити список ref-ів і метод-сурфейс: додати `inboxCount`, `inboxErrorKind`, `refreshInboxCount`.
@@ -1107,6 +1142,7 @@ EOF
 ## Task 10: Update `docs/ci4/decisions.md` + create ADR-inbox note
 
 **Files:**
+
 - Modify: `docs/ci4/decisions.md`
 - Create: `docs/adr/_inbox/<YYYYMMDD-HHMMSS-<hex8>>-inbox-count.md`
 
@@ -1215,6 +1251,7 @@ Expected: SUCCESS.
 5. знову залогінитися → число знову зʼявляється.
 
 Поведінка під час помилки (вимкнути мережу перед `tauri dev`):
+
 - після логіну має зʼявитись «Не вдалося з'єднатися з Google. Перевірте мережу.» замість числа.
 
 ---
