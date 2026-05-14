@@ -1,0 +1,57 @@
+app/src-tauri/src/lib.rs
+  s_a13f2da611e731::t_c8485923b13c6b 20
+app/src-tauri/src/auth/mod.rs
+  s_a13f2da611e731::t_9abe08b9d7bd51 197-204,206-209,211
+  s_a13f2da611e731::t_76d60114638eaf 205,210
+eslint.config.js
+  s_a13f2da611e731::t_9ce1ce0c21272c 5
+app/src/i18n/auth-errors.test.js
+  s_a13f2da611e731::t_c8485923b13c6b 35
+app/src/views/Login.test.js
+  s_a13f2da611e731::t_c91f92240c3d67 39
+  s_a13f2da611e731::t_b57a1ec51801bc 8-9
+docs/adr/_inbox/20260514-214337-76bfcf1f.md
+  s_a13f2da611e731::t_ececfd781b6d20 1-21
+app/src/services/auth-store.test.js
+  s_a13f2da611e731::t_c8485923b13c6b 76
+docs/ci4/03-components.md
+  s_a13f2da611e731::t_6d9fcbd696ad35 114-128,136-137
+  s_a13f2da611e731::t_02d82a0d9d1ed4 42
+  s_a13f2da611e731::t_9f4f29e84f6392 28
+  s_a13f2da611e731::t_d541f2ffcac921 275
+  s_a13f2da611e731::t_0bb9973da3e14c 90-91,98
+app/src/views/Login.vue
+  s_a13f2da611e731::t_99a933b47c7473 4-5,8-15
+  s_a13f2da611e731::t_9c4a4c1bb6843b 23-29
+app/src/i18n/auth-errors.js
+  s_a13f2da611e731::t_4ed28cd47b30ce 12-13,21-22
+  s_a13f2da611e731::t_92c668312ab970 19-20,23-26
+app/src/services/mailbox-store.js
+  s_a13f2da611e731::t_e23639a5c4a1ca 1-7,11-33
+  s_a13f2da611e731::t_17945a6ba1f864 9
+.cspell.json
+  s_a13f2da611e731::t_21b0480ad26585 81-83
+  s_a13f2da611e731::t_f559beb734f103 20
+  s_a13f2da611e731::t_2120b6ac934097 84-96
+.markdownlint-cli2.jsonc
+  s_a13f2da611e731::t_d0867231618d22 3
+app/src/services/auth-store.js
+  s_a13f2da611e731::t_174142cf07b8d0 17
+  s_a13f2da611e731::t_3156210d04f8f0 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "7d6f4e1c4f38f7ed07e226d81c7cf210e3ed6b3b",
+  "prompts": {},
+  "sessions": {
+    "s_a13f2da611e731": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1c75dbea-25ae-46be-91c5-f02d86aa30e8",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
