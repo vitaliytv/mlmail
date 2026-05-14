@@ -18,6 +18,7 @@ pub fn run() {
             auth::auth_is_authenticated,
             auth::auth_current_email,
             auth::auth_logout,
+            gmail::gmail_inbox_count,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
