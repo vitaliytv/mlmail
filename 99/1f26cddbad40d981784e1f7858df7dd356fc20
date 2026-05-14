@@ -1,0 +1,21 @@
+app/src/views/Login.test.js
+  s_ae8cefc21b0eb6::t_1df1a62dd29cba 79-120
+app/src/views/Login.vue
+  s_ae8cefc21b0eb6::t_c86e66337d72b6 4,7,15-16,18-19,21-22,28,62-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "991f26cddbad40d981784e1f7858df7dd356fc20",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
