@@ -1,0 +1,21 @@
+app/src/i18n/auth-errors.js
+  s_ae8cefc21b0eb6::t_f90a8be25d902c 8-9
+app/src/i18n/auth-errors.test.js
+  s_ae8cefc21b0eb6::t_b313db63400668 38-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "7f4b036163c07fb77eb9f966d6ac19bdc2fa4a7c",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
