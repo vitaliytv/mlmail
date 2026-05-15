@@ -152,6 +152,32 @@ ADR-0006 (token surface).
 ADR ще не оформлений; кандидат — `docs/adr/ADR-0007-inbox-count.md`.
 Чернетка інбоксу — у `docs/adr/_inbox/`.
 
+### Рішення: Випадковий лист на стартовому екрані — sample з перших 100
+
+Закодовано у [app/src-tauri/src/gmail/](../../app/src-tauri/src/gmail/) і
+[app/src/services/auth-store.js](../../app/src/services/auth-store.js).
+
+Команда `gmail_random_message` обирає випадковий id серед перших 100 листів
+INBOX (`messages.list?maxResults=100&fields=messages/id`). «Чесний» рандом
+по всьому INBOX потребує курсор-пагінації (Gmail API не підтримує offset),
+що для скриньки в 5K листів = 50+ послідовних викликів — overkill для UX
+«покажи якийсь лист».
+
+Plain-text body extraction: пріоритет `text/plain` part, fallback на
+`text/html` зі стрипом тегів через `regex` + `html-escape`. HTML-рендер у
+sandboxed iframe — окрема ітерація.
+
+Вплив на C4-модель MLMaiL:
+
+- [03-components.md](03-components.md) — Gmail Module MLMaiL отримав другу
+  команду; Auth Store — `currentMessage`/`messageErrorKind`/`isMessageLoading`
+  і метод `loadRandomMessage`; Auth Errors i18n — ключ `Empty`.
+- [04-code.md](04-code.md) — нова секція для `gmail/message.rs`, оновлено
+  список handler-ів у `lib.rs`.
+
+ADR ще не оформлений; кандидат — `docs/adr/ADR-0008-random-message.md`.
+Чернетка інбоксу — у `docs/adr/_inbox/`.
+
 ## Рішення, що очікують ADR для MLMaiL
 
 Нижче перелічено архітектурні питання MLMaiL, які **впливатимуть** на C4-модель
