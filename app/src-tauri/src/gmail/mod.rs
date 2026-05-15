@@ -1,4 +1,5 @@
 pub mod error;
+pub mod message;
 
 use crate::auth::{self, state::AuthState};
 use crate::gmail::error::GmailError;
