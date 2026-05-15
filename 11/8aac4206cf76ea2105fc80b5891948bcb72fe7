@@ -1,0 +1,21 @@
+docs/adr/_inbox/20260515-221525-random-message.md
+  s_ae8cefc21b0eb6::t_544e2113a6dd56 1-20
+docs/ci4/decisions.md
+  s_ae8cefc21b0eb6::t_6150b234809b3e 155-179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "118aac4206cf76ea2105fc80b5891948bcb72fe7",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
