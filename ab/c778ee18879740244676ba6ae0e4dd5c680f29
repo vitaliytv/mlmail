@@ -1,0 +1,20 @@
+app/src-tauri/src/gmail/error.rs
+  s_ae8cefc21b0eb6::t_6329c4306df741 65-71
+  s_ae8cefc21b0eb6::t_e68ddee9729450 18-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "abc778ee18879740244676ba6ae0e4dd5c680f29",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
