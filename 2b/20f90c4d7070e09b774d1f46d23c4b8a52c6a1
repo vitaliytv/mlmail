@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-05-15-random-message-design.md
+  s_ae8cefc21b0eb6::t_bf52ef154b4a37 1-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "2b20f90c4d7070e09b774d1f46d23c4b8a52c6a1",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
