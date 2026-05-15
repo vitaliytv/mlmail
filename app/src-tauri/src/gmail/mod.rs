@@ -56,6 +56,54 @@ pub async fn gmail_inbox_count(
     fetch_inbox_count_at(GMAIL_LABEL_INBOX_URL, &token).await
 }
 
+pub const GMAIL_MESSAGES_LIST_URL: &str =
+    "https://gmail.googleapis.com/gmail/v1/users/me/messages";
+
+pub(crate) async fn list_inbox_ids_at(
+    endpoint: &str,
+    access_token: &str,
+) -> Result<Vec<String>, GmailError> {
+    let resp = reqwest::Client::new()
+        .get(endpoint)
+        .bearer_auth(access_token)
+        .query(&[
+            ("labelIds", "INBOX"),
+            ("maxResults", "100"),
+            ("fields", "messages/id"),
+        ])
+        .send()
+        .await?;
+
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let arr = match v.get("messages").and_then(|m| m.as_array()) {
+        Some(a) => a,
+        None => return Ok(Vec::new()),
+    };
+    let mut ids = Vec::with_capacity(arr.len());
+    for m in arr {
+        let id = m
+            .get("id")
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| GmailError::Parse("message without id".into()))?;
+        ids.push(id.to_string());
+    }
+    Ok(ids)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,5 +214,81 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(err, GmailError::Parse(_)));
+    }
+
+    #[tokio::test]
+    async fn list_inbox_ids_returns_ids_on_200() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("labelIds".into(), "INBOX".into()),
+                mockito::Matcher::UrlEncoded("maxResults".into(), "100".into()),
+                mockito::Matcher::UrlEncoded("fields".into(), "messages/id".into()),
+            ]))
+            .match_header("authorization", "Bearer AT-1")
+            .with_status(200)
+            .with_body(r#"{"messages":[{"id":"a"},{"id":"b"},{"id":"c"}]}"#)
+            .create_async()
+            .await;
+
+        let ids = list_inbox_ids_at(&format!("{}/messages", server.url()), "AT-1")
+            .await
+            .unwrap();
+        assert_eq!(ids, vec!["a", "b", "c"]);
+    }
+
+    #[tokio::test]
+    async fn list_inbox_ids_returns_empty_when_no_messages_field() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_body(r#"{"resultSizeEstimate":0}"#)
+            .create_async()
+            .await;
+
+        let ids = list_inbox_ids_at(&format!("{}/messages", server.url()), "AT-1")
+            .await
+            .unwrap();
+        assert!(ids.is_empty());
+    }
+
+    #[tokio::test]
+    async fn list_inbox_ids_maps_401_to_reauth() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages")
+            .match_query(mockito::Matcher::Any)
+            .with_status(401)
+            .with_body("nope")
+            .create_async()
+            .await;
+
+        let err = list_inbox_ids_at(&format!("{}/messages", server.url()), "AT-1")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::ReauthRequired));
+    }
+
+    #[tokio::test]
+    async fn list_inbox_ids_maps_5xx_to_http() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages")
+            .match_query(mockito::Matcher::Any)
+            .with_status(503)
+            .with_body("boom")
+            .create_async()
+            .await;
+
+        let err = list_inbox_ids_at(&format!("{}/messages", server.url()), "AT-1")
+            .await
+            .unwrap_err();
+        match err {
+            GmailError::Http { status, .. } => assert_eq!(status, 503),
+            other => panic!("expected Http, got {other:?}"),
+        }
     }
 }
