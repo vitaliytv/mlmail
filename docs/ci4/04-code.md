@@ -215,36 +215,12 @@ fn main() {
 
 ### Файл [app/src-tauri/src/lib.rs](../../app/src-tauri/src/lib.rs)
 
-Реальна точка ініціалізації MLMaiL Backend. Поточний код:
-
-```rust
-pub mod auth;
-pub mod gmail;
-
-use std::sync::Mutex;
-
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .manage(Mutex::new(auth::state::AuthState::default()))
-        .setup(|app| {
-            auth::on_startup(&app.handle())?;
-            Ok(())
-        })
-        .invoke_handler(tauri::generate_handler![
-            auth::auth_start_login,
-            auth::auth_get_access_token,
-            auth::auth_is_authenticated,
-            auth::auth_current_email,
-            auth::auth_logout,
-            gmail::gmail_inbox_count,
-            gmail::gmail_random_message,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
-```
+Реальна точка ініціалізації MLMaiL Backend. Декларує `pub mod auth;` та
+`pub mod gmail;`, керує `Mutex<AuthState>` через `.manage(...)`, на старті
+викликає `auth::on_startup(&app.handle())` і реєструє у `invoke_handler!`
+сім команд: пʼять `auth_*` (див. вище), `gmail::gmail_inbox_count`,
+`gmail::gmail_random_message`. Точне тіло — у
+[lib.rs](../../app/src-tauri/src/lib.rs).
 
 Точки розширення MLMaiL Backend:
 

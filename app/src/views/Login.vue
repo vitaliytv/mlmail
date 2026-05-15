@@ -32,9 +32,9 @@ onMounted(() => auth.initialize())
         {{ errorMessage(auth.messageErrorKind.value) }}
       </p>
       <button
+        @click="auth.loadRandomMessage()"
         type="button"
         :disabled="auth.isMessageLoading.value"
-        @click="auth.loadRandomMessage()"
       >
         Показати інший
       </button>
@@ -96,7 +96,7 @@ onMounted(() => auth.initialize())
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 0.8em 1em;
-  background: rgba(0, 0, 0, 0.02);
+  background: rgb(0 0 0 / 2%);
 }
 
 .message-head p {
@@ -105,7 +105,7 @@ onMounted(() => auth.initialize())
 
 .message-body {
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   margin: 0.6em 0 0;
   font-family: inherit;
 }
