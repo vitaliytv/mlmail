@@ -7,6 +7,9 @@ const _isLoading = ref(false)
 const _errorKind = ref(null)
 const _inboxCount = ref(null)
 const _inboxErrorKind = ref(null)
+const _currentMessage = ref(null)
+const _messageErrorKind = ref(null)
+const _isMessageLoading = ref(false)
 
 /**
  * @returns {Promise<string>} access token
@@ -41,12 +44,35 @@ export function useAuthStore() {
   /**
    *
    */
+  async function loadRandomMessage() {
+    if (!_isAuthenticated.value) return
+    _isMessageLoading.value = true
+    _messageErrorKind.value = null
+    try {
+      _currentMessage.value = await invoke('gmail_random_message')
+    } catch (error) {
+      const kind = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
+      _currentMessage.value = null
+      _messageErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    } finally {
+      _isMessageLoading.value = false
+    }
+  }
+
+  /**
+   *
+   */
   async function initialize() {
     const ok = await invoke('auth_is_authenticated')
     _isAuthenticated.value = ok
     if (ok) {
       _email.value = await invoke('auth_current_email')
       await refreshInboxCount()
+      await loadRandomMessage()
     }
   }
 
@@ -61,6 +87,7 @@ export function useAuthStore() {
       _email.value = session.email
       _isAuthenticated.value = true
       await refreshInboxCount()
+      await loadRandomMessage()
     } catch (error) {
       _errorKind.value = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
     } finally {
@@ -78,6 +105,9 @@ export function useAuthStore() {
     _errorKind.value = null
     _inboxCount.value = null
     _inboxErrorKind.value = null
+    _currentMessage.value = null
+    _messageErrorKind.value = null
+    _isMessageLoading.value = false
   }
 
   return {
@@ -87,11 +117,15 @@ export function useAuthStore() {
     errorKind: readonly(_errorKind),
     inboxCount: readonly(_inboxCount),
     inboxErrorKind: readonly(_inboxErrorKind),
+    currentMessage: readonly(_currentMessage),
+    messageErrorKind: readonly(_messageErrorKind),
+    isMessageLoading: readonly(_isMessageLoading),
     initialize,
     login,
     getAccessToken,
     logout,
-    refreshInboxCount
+    refreshInboxCount,
+    loadRandomMessage
   }
 }
 
@@ -105,4 +139,7 @@ export function _resetForTest() {
   _errorKind.value = null
   _inboxCount.value = null
   _inboxErrorKind.value = null
+  _currentMessage.value = null
+  _messageErrorKind.value = null
+  _isMessageLoading.value = false
 }
