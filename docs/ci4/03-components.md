@@ -85,10 +85,9 @@ Auth Component MLMaiL — Vue-компонент Login-екрану MLMaiL
 
 - не авторизовано → кнопка "Увійти через Google" (заблокована поки триває
   логін, текст змінюється на "Зачекайте…");
-- авторизовано → "Ви увійшли як {email}", рядок "Листів у скриньці: N"
-  (число з Auth Store MLMaiL `inboxCount`; поки число вантажиться —
-  плейсхолдер "Листів у скриньці: …"; при помилці Gmail — український
-  рядок з Auth Errors i18n MLMaiL) і кнопка "Вийти";
+- авторизовано → "Ви увійшли як {email}", рядок "Листів у скриньці: N",
+  картка випадкового листа (Від/Тема/Дата + тіло у `<pre>`) і кнопка
+  "Показати інший", яка обирає інший випадковий лист; внизу кнопка "Вийти";
 - помилка останньої спроби логіну — український рядок з Auth Errors i18n MLMaiL.
 
 Auth Component MLMaiL **не торкається токенів** і не знає про OAuth — він
@@ -102,29 +101,31 @@ OAuth-механіка живе у контейнері MLMaiL Backend (Auth Mod
 Auth Store MLMaiL — реактивний singleton-composable
 ([app/src/services/auth-store.js](../../app/src/services/auth-store.js)). Тримає
 **лише UI-стан** (`email`, `isAuthenticated`, `isLoading`, `errorKind`,
-`inboxCount`, `inboxErrorKind`) у Vue `ref`-ах і виставляє readonly-обгортки
-назовні. Жодних токенів у JS-пам'яті — єдиний доступ до access token іде через
+`inboxCount`, `inboxErrorKind`, `currentMessage`, `messageErrorKind`,
+`isMessageLoading`) у Vue `ref`-ах і виставляє readonly-обгортки назовні.
+Жодних токенів у JS-пам'яті — єдиний доступ до access token іде через
 `getAccessToken()`, який під капотом викликає Tauri-команду
-`auth_get_access_token` і повертає рядок. Поле `inboxCount` оновлюється методом
-`refreshInboxCount()`, що автоматично викликається після `initialize()` і
-`login()`; при отриманні `ReauthRequired` з Gmail стор сам переводить юзера у
-стан «не залогінений».
+`auth_get_access_token` і повертає рядок. `inboxCount` оновлюється методом
+`refreshInboxCount()`, а `currentMessage` — методом `loadRandomMessage()`.
+Обидва автоматично викликаються після `initialize()` і `login()`; при
+отриманні `ReauthRequired` від Gmail стор сам переводить юзера у стан
+«не залогінений».
 
 Поверхня Auth Store MLMaiL: `initialize`, `login`, `getAccessToken`, `logout`,
-`refreshInboxCount` — та readonly-`ref`-и стану.
+`refreshInboxCount`, `loadRandomMessage` — та readonly-`ref`-и стану.
 
 Залежить від: контейнера MLMaiL Backend (через `@tauri-apps/api/core::invoke`,
-команди `auth_*` та `gmail_inbox_count`).
+команди `auth_*`, `gmail_inbox_count`, `gmail_random_message`).
 
 ### Компонент Auth Errors i18n MLMaiL (implemented)
 
 Auth Errors i18n MLMaiL — словник
 ([app/src/i18n/auth-errors.js](../../app/src/i18n/auth-errors.js)), що мапить
 англомовний `kind` з Rust `AuthError`/`GmailError` у українську строку для UI.
-Девʼять ключів (`Cancelled`, `Network`, `OAuth`, `Storage`, `ReauthRequired`,
-`Platform`, `Http`, `Parse`, `Unknown`) — `errorMessage(kind)` повертає
-українську строку або `"Невідома помилка."` для невідомих kind. `Http` і
-`Parse` — для помилок Gmail-шару.
+Десять ключів (`Cancelled`, `Network`, `OAuth`, `Storage`, `ReauthRequired`,
+`Platform`, `Http`, `Parse`, `Empty`, `Unknown`) — `errorMessage(kind)`
+повертає українську строку або `"Невідома помилка."` для невідомих kind.
+`Http`/`Parse`/`Empty` — для помилок Gmail-шару.
 
 ### Компонент Gmail Client MLMaiL (planned)
 
@@ -293,16 +294,23 @@ HTTPS-виклики до Gmail REST API від імені MLMaiL Backend. У ц
   кличе `auth::acquire_access_token` (спільний шлях рефрешу токена). На 401 від
   Gmail повертає `ReauthRequired` — Auth Store MLMaiL переводить UI у стан «не
   залогінений».
+- `gmail_random_message() -> Result<GmailMessage, GmailError>` — обирає
+  випадковий id серед перших 100 листів INBOX (`messages.list?maxResults=100`),
+  тягне `messages.get?format=full`, парсить headers (From/Subject/Date) і body
+  (через `extract_plain_text`). На порожню скриньку повертає `GmailError::Empty`.
 
 Підкомпоненти:
 
 | Файл | Роль |
 | ---- | ---- |
-| `mod.rs` | Tauri-команда `gmail_inbox_count`, `fetch_inbox_count_at` (URL — параметр для unit-тестів через `mockito`), `parse_messages_total` |
-| `error.rs` | `GmailError { Network, Http{status,body}, Parse, ReauthRequired, Platform }` + конверсії з `reqwest::Error` і `AuthError` |
+| `mod.rs` | Tauri-команди `gmail_inbox_count` / `gmail_random_message`; HTTP helpers `fetch_inbox_count_at` / `list_inbox_ids_at` / `get_message_at` (URL — параметр для unit-тестів через `mockito`); `parse_messages_total` |
+| `message.rs` | `GmailMessage` DTO (`id, from, subject, date, body`), `extract_header` (case-insensitive header lookup), `extract_plain_text` (рекурсивний обхід `payload.parts` з пріоритетом `text/plain` і fallback на `text/html` зі стрипом тегів через `regex` + `html-escape`) |
+| `error.rs` | `GmailError { Network, Http{status,body}, Parse, ReauthRequired, Platform, Empty }` + конверсії з `reqwest::Error` і `AuthError` |
 
-Покриття тестами: 11 unit-тестів (парсинг JSON, status-маппінг 200/401/403/503,
-serde-формат `kind/message`).
+Покриття тестами: 30 unit-тестів (parse_messages_total, fetch_inbox_count_at,
+list_inbox_ids_at, get_message_at з mockito; extract_header,
+extract_plain_text для plain/html/multipart-alternative/nested/empty;
+GmailError serde + конверсії).
 
 Залежить від: Auth Module MLMaiL (через `acquire_access_token`), `reqwest`,
 `serde_json`.
