@@ -44,4 +44,8 @@ describe('errorMessage Gmail kinds', () => {
   it('returns Ukrainian text for Parse kind', () => {
     expect(errorMessage('Parse')).toBe('Несподівана відповідь від Gmail.')
   })
+
+  it('returns Ukrainian text for Empty kind', () => {
+    expect(errorMessage('Empty')).toBe('Скринька порожня.')
+  })
 })
