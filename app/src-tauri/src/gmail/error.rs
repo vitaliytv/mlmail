@@ -15,6 +15,8 @@ pub enum GmailError {
     ReauthRequired,
     #[error("platform error: {0}")]
     Platform(String),
+    #[error("inbox is empty")]
+    Empty,
 }
 
 impl From<reqwest::Error> for GmailError {
@@ -59,5 +61,12 @@ mod tests {
         let s = serde_json::to_string(&e).unwrap();
         assert!(s.contains("\"kind\":\"Http\""));
         assert!(s.contains("\"status\":503"));
+    }
+
+    #[test]
+    fn empty_serializes_with_tagged_kind() {
+        let e = GmailError::Empty;
+        let s = serde_json::to_string(&e).unwrap();
+        assert!(s.contains("\"kind\":\"Empty\""), "serialized: {s}");
     }
 }
