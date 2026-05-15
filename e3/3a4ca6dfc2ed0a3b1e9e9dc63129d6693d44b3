@@ -1,0 +1,21 @@
+docs/ci4/04-code.md
+  s_ae8cefc21b0eb6::t_b6127bc8b31e7d 98-104,109,111
+  s_ae8cefc21b0eb6::t_823922d66ea6b0 290-292
+  s_ae8cefc21b0eb6::t_66709d973b9b59 300-309,320
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "e33a4ca6dfc2ed0a3b1e9e9dc63129d6693d44b3",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
