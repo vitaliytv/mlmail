@@ -1,0 +1,21 @@
+app/src/services/auth-store.test.js
+  s_ae8cefc21b0eb6::t_66635c8d580333 194-303
+app/src/services/auth-store.js
+  s_ae8cefc21b0eb6::t_644a2b829e2a54 10-12,44-65,75,90,108-110,120-122,127-128,142-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "2cc5822758580e988d8e571ab25c55afe6608aca",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
