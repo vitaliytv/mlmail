@@ -104,6 +104,56 @@ pub(crate) async fn list_inbox_ids_at(
     Ok(ids)
 }
 
+use crate::gmail::message::{extract_header, extract_plain_text, GmailMessage};
+
+pub(crate) async fn get_message_at(
+    base_endpoint: &str,
+    access_token: &str,
+    id: &str,
+) -> Result<GmailMessage, GmailError> {
+    let resp = reqwest::Client::new()
+        .get(format!("{base_endpoint}/{id}"))
+        .bearer_auth(access_token)
+        .query(&[("format", "full")])
+        .send()
+        .await?;
+
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let payload = v
+        .get("payload")
+        .ok_or_else(|| GmailError::Parse("message has no payload".into()))?;
+    let empty_headers: Vec<serde_json::Value> = Vec::new();
+    let headers = payload
+        .get("headers")
+        .and_then(|h| h.as_array())
+        .unwrap_or(&empty_headers);
+
+    let body_text = extract_plain_text(payload);
+    let body_truncated: String = body_text.chars().take(10_000).collect();
+
+    Ok(GmailMessage {
+        id: id.to_string(),
+        from: extract_header(headers, "From"),
+        subject: extract_header(headers, "Subject"),
+        date: extract_header(headers, "Date"),
+        body: body_truncated,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -290,5 +340,90 @@ mod tests {
             GmailError::Http { status, .. } => assert_eq!(status, 503),
             other => panic!("expected Http, got {other:?}"),
         }
+    }
+
+    #[tokio::test]
+    async fn get_message_returns_parsed_gmail_message() {
+        use base64::Engine;
+        let body_data = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(b"hello body");
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1")
+            .match_query(mockito::Matcher::UrlEncoded("format".into(), "full".into()))
+            .match_header("authorization", "Bearer AT-1")
+            .with_status(200)
+            .with_body(
+                serde_json::json!({
+                    "id": "m1",
+                    "payload": {
+                        "mimeType": "text/plain",
+                        "headers": [
+                            {"name": "From",    "value": "alice@example.com"},
+                            {"name": "Subject", "value": "Greetings"},
+                            {"name": "Date",    "value": "Mon, 15 May 2026 10:00:00 +0300"}
+                        ],
+                        "body": {"data": body_data}
+                    }
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let msg = get_message_at(&format!("{}/messages", server.url()), "AT-1", "m1")
+            .await
+            .unwrap();
+        assert_eq!(msg.id, "m1");
+        assert_eq!(msg.from, "alice@example.com");
+        assert_eq!(msg.subject, "Greetings");
+        assert_eq!(msg.date, "Mon, 15 May 2026 10:00:00 +0300");
+        assert_eq!(msg.body, "hello body");
+    }
+
+    #[tokio::test]
+    async fn get_message_maps_401_to_reauth() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1")
+            .match_query(mockito::Matcher::Any)
+            .with_status(401)
+            .with_body("nope")
+            .create_async()
+            .await;
+
+        let err = get_message_at(&format!("{}/messages", server.url()), "AT-1", "m1")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::ReauthRequired));
+    }
+
+    #[tokio::test]
+    async fn get_message_truncates_long_body() {
+        use base64::Engine;
+        let long = "x".repeat(11_000);
+        let data = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(long.as_bytes());
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_body(
+                serde_json::json!({
+                    "id": "m1",
+                    "payload": {
+                        "mimeType": "text/plain",
+                        "headers": [],
+                        "body": {"data": data}
+                    }
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let msg = get_message_at(&format!("{}/messages", server.url()), "AT-1", "m1")
+            .await
+            .unwrap();
+        assert_eq!(msg.body.chars().count(), 10_000);
     }
 }
