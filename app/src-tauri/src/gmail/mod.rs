@@ -154,6 +154,20 @@ pub(crate) async fn get_message_at(
     })
 }
 
+#[tauri::command]
+pub async fn gmail_random_message(
+    app: AppHandle,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<GmailMessage, GmailError> {
+    let token = auth::acquire_access_token(&app, &state).await?;
+    let ids = list_inbox_ids_at(GMAIL_MESSAGES_LIST_URL, &token).await?;
+    if ids.is_empty() {
+        return Err(GmailError::Empty);
+    }
+    let i = rand::random::<u64>() as usize % ids.len();
+    get_message_at(GMAIL_MESSAGES_LIST_URL, &token, &ids[i]).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
