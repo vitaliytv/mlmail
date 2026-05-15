@@ -19,6 +19,25 @@ onMounted(() => auth.initialize())
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </p>
       <p v-else class="inbox-count muted">Листів у скриньці: …</p>
+      <section v-if="auth.currentMessage.value" class="message">
+        <header class="message-head">
+          <p><strong>Від:</strong> {{ auth.currentMessage.value.from }}</p>
+          <p><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</p>
+          <p><strong>Дата:</strong> {{ auth.currentMessage.value.date }}</p>
+        </header>
+        <pre class="message-body">{{ auth.currentMessage.value.body }}</pre>
+      </section>
+      <p v-else-if="auth.isMessageLoading.value" class="muted">Завантаження…</p>
+      <p v-else-if="auth.messageErrorKind.value" class="error">
+        {{ errorMessage(auth.messageErrorKind.value) }}
+      </p>
+      <button
+        type="button"
+        :disabled="auth.isMessageLoading.value"
+        @click="auth.loadRandomMessage()"
+      >
+        Показати інший
+      </button>
       <button @click="auth.logout()" type="button">Вийти</button>
     </div>
     <button
@@ -69,5 +88,29 @@ onMounted(() => auth.initialize())
 
 .error {
   color: #b00020;
+}
+
+.message {
+  max-width: 60ch;
+  text-align: left;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.8em 1em;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.message-head p {
+  margin: 0.1em 0;
+}
+
+.message-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0.6em 0 0;
+  font-family: inherit;
+}
+
+.muted {
+  opacity: 0.6;
 }
 </style>

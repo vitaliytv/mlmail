@@ -120,3 +120,66 @@ describe('Login.vue inbox count', () => {
     expect(w.text()).toContain('Gmail повернув помилку. Спробуйте пізніше.')
   })
 })
+
+describe('Login.vue random message', () => {
+  const sampleMessage = {
+    id: 'm1',
+    from: 'alice@example.com',
+    subject: 'Greetings',
+    date: 'Mon, 15 May 2026 10:00:00 +0300',
+    body: 'hello body'
+  }
+
+  it('renders the message card after initialize', async () => {
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      return Promise.resolve(null)
+    })
+    const w = mount(Login)
+    await flushPromises()
+    expect(w.text()).toContain('alice@example.com')
+    expect(w.text()).toContain('Greetings')
+    expect(w.text()).toContain('Mon, 15 May 2026 10:00:00 +0300')
+    expect(w.text()).toContain('hello body')
+  })
+
+  it('shows "Скринька порожня." when Gmail returns Empty', async () => {
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
+      if (cmd === 'gmail_random_message')
+        return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
+      return Promise.resolve(null)
+    })
+    const w = mount(Login)
+    await flushPromises()
+    expect(w.text()).toContain('Скринька порожня.')
+  })
+
+  it('clicking "Показати інший" re-invokes gmail_random_message', async () => {
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      return Promise.resolve(null)
+    })
+    const w = mount(Login)
+    await flushPromises()
+    invokeMock.mockClear()
+    invokeMock.mockImplementation((cmd) => {
+      if (cmd === 'gmail_random_message')
+        return Promise.resolve({ ...sampleMessage, id: 'm2', subject: 'Next one' })
+      return Promise.resolve(null)
+    })
+    const btn = w.findAll('button').find((b) => b.text() === 'Показати інший')
+    await btn.trigger('click')
+    await flushPromises()
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')
+    expect(w.text()).toContain('Next one')
+  })
+})
