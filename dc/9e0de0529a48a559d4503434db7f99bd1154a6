@@ -1,0 +1,19 @@
+docs/superpowers/plans/2026-05-15-random-message.md
+  s_ae8cefc21b0eb6::t_8d5b5da2a4c0b4 1-1717
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "dc9e0de0529a48a559d4503434db7f99bd1154a6",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
