@@ -1,0 +1,30 @@
+app/src/test-utils/quasar.js
+  s_ae8cefc21b0eb6::t_c11fe7bde16520 2-3,5-9,11-18,22-23
+  s_009b2a638b8557::t_23dc9b9b8ae317 21
+app/vite.config.js
+  s_009b2a638b8557::t_23dc9b9b8ae317 10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "dbc25d5395c456676dc95b91e9633ad4e06b504e",
+  "prompts": {},
+  "sessions": {
+    "s_009b2a638b8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1098a922-6a72-4a73-9224-19cec4744fd4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
