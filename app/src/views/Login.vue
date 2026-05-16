@@ -22,7 +22,6 @@ onMounted(() => auth.initialize())
       >
         Листів у скриньці: {{ auth.inboxCount.value }}
       </q-chip>
-      <q-skeleton v-else-if="auth.isLoading.value" type="QChip" width="180px" />
       <q-banner
         v-else-if="auth.inboxErrorKind.value"
         class="bg-red-1 text-red-9"
@@ -31,6 +30,7 @@ onMounted(() => auth.initialize())
       >
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </q-banner>
+      <q-skeleton v-else type="QChip" width="180px" />
 
       <template v-if="auth.currentMessage.value">
         <q-card flat bordered style="max-width: 60ch; width: 100%">
