@@ -407,10 +407,7 @@ export function mountWithQuasar(component, options = {}) {
     ...options,
     global: {
       ...(options.global || {}),
-      plugins: [
-        ...userPlugins,
-        [Quasar, { config: { dark: false } }]
-      ]
+      plugins: [...userPlugins, [Quasar, { config: { dark: false } }]]
     }
   })
 }
@@ -465,20 +462,10 @@ onMounted(() => auth.initialize())
     <template v-if="auth.isAuthenticated.value">
       <div class="text-body1">Ви увійшли як {{ auth.email.value }}</div>
 
-      <q-chip
-        v-if="auth.inboxCount.value !== null"
-        icon="mail"
-        color="primary"
-        text-color="white"
-      >
+      <q-chip v-if="auth.inboxCount.value !== null" icon="mail" color="primary" text-color="white">
         Листів у скриньці: {{ auth.inboxCount.value }}
       </q-chip>
-      <q-banner
-        v-else-if="auth.inboxErrorKind.value"
-        class="bg-red-1 text-red-9"
-        rounded
-        dense
-      >
+      <q-banner v-else-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </q-banner>
       <q-skeleton v-else type="QChip" width="180px" />
@@ -500,47 +487,24 @@ onMounted(() => auth.initialize())
         <q-skeleton type="text" width="50%" />
         <q-skeleton type="rect" height="80px" />
       </div>
-      <q-banner
-        v-else-if="auth.messageErrorKind.value"
-        class="bg-red-1 text-red-9"
-        rounded
-        dense
-      >
+      <q-banner v-else-if="auth.messageErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.messageErrorKind.value) }}
       </q-banner>
 
       <div class="row q-gutter-sm">
-        <q-btn
-          color="primary"
-          icon="refresh"
-          :loading="auth.isMessageLoading.value"
-          @click="auth.loadRandomMessage()"
-        >
+        <q-btn color="primary" icon="refresh" :loading="auth.isMessageLoading.value" @click="auth.loadRandomMessage()">
           Показати інший
         </q-btn>
-        <q-btn flat color="grey-8" icon="logout" @click="auth.logout()">
-          Вийти
-        </q-btn>
+        <q-btn flat color="grey-8" icon="logout" @click="auth.logout()"> Вийти </q-btn>
       </div>
     </template>
 
-    <q-btn
-      v-else
-      color="primary"
-      icon-right="login"
-      :loading="auth.isLoading.value"
-      @click="auth.login()"
-    >
+    <q-btn v-else color="primary" icon-right="login" :loading="auth.isLoading.value" @click="auth.login()">
       Увійти через Google
       <template #loading>Зачекайте…</template>
     </q-btn>
 
-    <q-banner
-      v-if="auth.errorKind.value"
-      class="bg-red-1 text-red-9"
-      rounded
-      dense
-    >
+    <q-banner v-if="auth.errorKind.value" class="bg-red-1 text-red-9" rounded dense>
       {{ errorMessage(auth.errorKind.value) }}
     </q-banner>
   </q-page>
@@ -624,7 +588,9 @@ describe('Login.vue Quasar UX', () => {
   it('shows QSkeleton instead of inbox count while loading', async () => {
     let resolveCount
     // oxlint-disable-next-line promise/avoid-new
-    const pending = new Promise(resolve => { resolveCount = resolve })
+    const pending = new Promise(resolve => {
+      resolveCount = resolve
+    })
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
@@ -643,8 +609,7 @@ describe('Login.vue Quasar UX', () => {
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count')
-        return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
+      if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
       return Promise.resolve(null)
     })
     const w = mountWithQuasar(Login)
@@ -1063,27 +1028,27 @@ Expected: усі PASS (64 тести), без змін.
 
 **Spec coverage:**
 
-| Spec requirement | Covered by |
-| --- | --- |
-| Quasar deps + sass | Task 1 |
-| `quasar-variables.sass` із macOS-look | Task 2 |
-| `@quasar/vite-plugin` integration | Task 3 |
-| `main.js` Quasar registration | Task 4 |
-| `App.vue` → `q-layout` | Task 5 |
-| `mountWithQuasar` helper | Task 6 |
-| `Login.vue` Quasar rewrite | Task 7 |
-| `Login.test.js` адаптація + новий q-skeleton тест | Task 8 |
-| Material Symbols Outlined іконки | Task 4 (CSS imports) |
-| Dark mode auto | Task 4 (config.dark) |
-| UX без зміни (logout одразу, inline banners) | Task 7 (немає $q.dialog/$q.notify) |
-| `auth-store` без змін | (нічого не торкає) |
-| `auth-store.test.js` без змін | (нічого не торкає) |
-| `auth-errors.js` без змін | (нічого не торкає) |
-| docs 03-components.md | Task 10 |
-| docs 04-code.md | Task 11 |
-| docs decisions.md + ADR-inbox | Task 12 |
-| Поза scope (drawer, $q.notify, pull-to-refresh) | не реалізуємо (свідомо) |
-| `.cspell.json` оновлення реактивно | Task 9 |
+| Spec requirement                                  | Covered by                         |
+| ------------------------------------------------- | ---------------------------------- |
+| Quasar deps + sass                                | Task 1                             |
+| `quasar-variables.sass` із macOS-look             | Task 2                             |
+| `@quasar/vite-plugin` integration                 | Task 3                             |
+| `main.js` Quasar registration                     | Task 4                             |
+| `App.vue` → `q-layout`                            | Task 5                             |
+| `mountWithQuasar` helper                          | Task 6                             |
+| `Login.vue` Quasar rewrite                        | Task 7                             |
+| `Login.test.js` адаптація + новий q-skeleton тест | Task 8                             |
+| Material Symbols Outlined іконки                  | Task 4 (CSS imports)               |
+| Dark mode auto                                    | Task 4 (config.dark)               |
+| UX без зміни (logout одразу, inline banners)      | Task 7 (немає $q.dialog/$q.notify) |
+| `auth-store` без змін                             | (нічого не торкає)                 |
+| `auth-store.test.js` без змін                     | (нічого не торкає)                 |
+| `auth-errors.js` без змін                         | (нічого не торкає)                 |
+| docs 03-components.md                             | Task 10                            |
+| docs 04-code.md                                   | Task 11                            |
+| docs decisions.md + ADR-inbox                     | Task 12                            |
+| Поза scope (drawer, $q.notify, pull-to-refresh)   | не реалізуємо (свідомо)            |
+| `.cspell.json` оновлення реактивно                | Task 9                             |
 
 Прогалин не знайдено.
 

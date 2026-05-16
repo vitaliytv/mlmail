@@ -14,20 +14,10 @@ onMounted(() => auth.initialize())
     <template v-if="auth.isAuthenticated.value">
       <div class="text-body1">Ви увійшли як {{ auth.email.value }}</div>
 
-      <q-chip
-        v-if="auth.inboxCount.value !== null"
-        icon="mail"
-        color="primary"
-        text-color="white"
-      >
+      <q-chip v-if="auth.inboxCount.value !== null" icon="mail" color="primary" text-color="white">
         Листів у скриньці: {{ auth.inboxCount.value }}
       </q-chip>
-      <q-banner
-        v-else-if="auth.inboxErrorKind.value"
-        class="bg-red-1 text-red-9"
-        rounded
-        dense
-      >
+      <q-banner v-else-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </q-banner>
       <q-skeleton v-else type="QChip" width="180px" />
@@ -60,51 +50,25 @@ onMounted(() => auth.initialize())
           </q-card-section>
         </q-card>
       </template>
-      <q-banner
-        v-else-if="auth.messageErrorKind.value"
-        class="bg-red-1 text-red-9"
-        rounded
-        dense
-      >
+      <q-banner v-else-if="auth.messageErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.messageErrorKind.value) }}
       </q-banner>
-      <q-banner v-else class="bg-grey-2" rounded dense>
-        Скринька порожня.
-      </q-banner>
+      <q-banner v-else class="bg-grey-2" rounded dense> Скринька порожня. </q-banner>
 
       <div class="row q-gutter-sm">
-        <q-btn
-          @click="auth.loadRandomMessage()"
-          color="primary"
-          icon="refresh"
-          :loading="auth.isMessageLoading.value"
-        >
+        <q-btn @click="auth.loadRandomMessage()" color="primary" icon="refresh" :loading="auth.isMessageLoading.value">
           Показати інший
         </q-btn>
-        <q-btn @click="auth.logout()" flat color="grey-8" icon="logout">
-          Вийти
-        </q-btn>
+        <q-btn @click="auth.logout()" flat color="grey-8" icon="logout"> Вийти </q-btn>
       </div>
     </template>
 
-    <q-btn
-      v-else
-      @click="auth.login()"
-      color="primary"
-      icon-right="login"
-      size="md"
-      :loading="auth.isLoading.value"
-    >
+    <q-btn v-else @click="auth.login()" color="primary" icon-right="login" size="md" :loading="auth.isLoading.value">
       <template v-if="!auth.isLoading.value">Увійти через Google</template>
       <template v-else>Зачекайте…</template>
     </q-btn>
 
-    <q-banner
-      v-if="auth.errorKind.value"
-      class="bg-red-1 text-red-9"
-      rounded
-      dense
-    >
+    <q-banner v-if="auth.errorKind.value" class="bg-red-1 text-red-9" rounded dense>
       {{ errorMessage(auth.errorKind.value) }}
     </q-banner>
   </q-page>
