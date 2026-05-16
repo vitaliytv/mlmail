@@ -1,0 +1,30 @@
+app/src/main.js
+  s_009b2a638b8557::t_4bfb019d8bac45 1-3,6-13
+app/vite.config.js
+  s_ae8cefc21b0eb6::t_4e2754cca6b921 25
+  s_ae8cefc21b0eb6::t_d216c88a1fba30 1,10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "f016f774995b71a3ff717e2e1cd891ebbeb97b95",
+  "prompts": {},
+  "sessions": {
+    "s_009b2a638b8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1098a922-6a72-4a73-9224-19cec4744fd4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
