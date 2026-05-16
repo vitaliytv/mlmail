@@ -1,0 +1,19 @@
+docs/adr/_inbox/20260516-160045-quasar-ui.md
+  s_ae8cefc21b0eb6::t_e1cf5fd1de74cf 1-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "0894b6610f0303136b870c51968c6d2e9157862a",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
