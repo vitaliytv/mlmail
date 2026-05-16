@@ -524,7 +524,7 @@ Append to `app/src/services/auth-store.test.js`:
 ```js
 describe('useAuthStore inbox count', () => {
   it('refreshInboxCount sets inboxCount on success', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(348)
@@ -537,7 +537,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('login also refreshes inbox count', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_start_login') return Promise.resolve({ email: 'u@e' })
       if (cmd === 'gmail_inbox_count') return Promise.resolve(12)
       return Promise.resolve(null)
@@ -548,7 +548,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('captures error.kind on Gmail failure (Http)', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject({ kind: 'Http' })
@@ -561,7 +561,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('falls back to Unknown when Gmail error has no kind', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject('boom')
@@ -573,7 +573,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('ReauthRequired from Gmail forces logout state', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject({ kind: 'ReauthRequired' })
@@ -587,7 +587,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('logout clears inboxCount and inboxErrorKind', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(9)
@@ -603,7 +603,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('does not call gmail_inbox_count when not authenticated', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       return Promise.resolve(null)
     })
@@ -851,7 +851,7 @@ Append to `app/src/views/Login.test.js`:
 ```js
 describe('Login.vue inbox count', () => {
   it('renders "Листів у скриньці: 348" after successful initialize', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(348)
@@ -864,10 +864,13 @@ describe('Login.vue inbox count', () => {
 
   it('shows placeholder before count loads', async () => {
     let resolveCount
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count') return new Promise((r) => { resolveCount = r })
+      if (cmd === 'gmail_inbox_count')
+        return new Promise(r => {
+          resolveCount = r
+        })
       return Promise.resolve(null)
     })
     const w = mount(Login)
@@ -879,7 +882,7 @@ describe('Login.vue inbox count', () => {
   })
 
   it('shows Ukrainian error when Gmail returns Http error', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject({ kind: 'Http' })
@@ -916,21 +919,14 @@ onMounted(() => auth.initialize())
     <h1>MLMaiL</h1>
     <div v-if="auth.isAuthenticated.value" class="signed-in">
       <p>Ви увійшли як {{ auth.email.value }}</p>
-      <p v-if="auth.inboxCount.value !== null" class="inbox-count">
-        Листів у скриньці: {{ auth.inboxCount.value }}
-      </p>
+      <p v-if="auth.inboxCount.value !== null" class="inbox-count">Листів у скриньці: {{ auth.inboxCount.value }}</p>
       <p v-else-if="auth.inboxErrorKind.value" class="error">
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </p>
       <p v-else class="inbox-count muted">Листів у скриньці: …</p>
       <button type="button" @click="auth.logout()">Вийти</button>
     </div>
-    <button
-      v-else
-      type="button"
-      :disabled="auth.isLoading.value"
-      @click="auth.login()"
-    >
+    <button v-else type="button" :disabled="auth.isLoading.value" @click="auth.login()">
       {{ auth.isLoading.value ? 'Зачекайте…' : 'Увійти через Google' }}
     </button>
     <p v-if="auth.errorKind.value" class="error">
@@ -1038,10 +1034,10 @@ HTTPS-виклики до Gmail REST API від імені MLMaiL Backend. У ц
 
 Підкомпоненти:
 
-| Файл | Роль |
-| ---- | ---- |
-| `mod.rs` | Tauri-команда `gmail_inbox_count`, `fetch_inbox_count_at` (URL-параметр для тестів через `mockito`), `parse_messages_total` |
-| `error.rs` | `GmailError { Network, Http{status,body}, Parse, ReauthRequired, Platform }` + конверсії з `reqwest::Error` і `AuthError` |
+| Файл       | Роль                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `mod.rs`   | Tauri-команда `gmail_inbox_count`, `fetch_inbox_count_at` (URL-параметр для тестів через `mockito`), `parse_messages_total` |
+| `error.rs` | `GmailError { Network, Http{status,body}, Parse, ReauthRequired, Platform }` + конверсії з `reqwest::Error` і `AuthError`   |
 
 Залежить від: Auth Module MLMaiL (через `acquire_access_token`), `reqwest`,
 `serde_json`.
@@ -1089,7 +1085,7 @@ EOF
 
 Після секції «Файл [app/src-tauri/src/auth/…]» (там, де закінчується опис auth-модуля) додати новий блок:
 
-```markdown
+````markdown
 ### Файл [app/src-tauri/src/gmail/mod.rs](../../app/src-tauri/src/gmail/mod.rs)
 
 Gmail Module MLMaiL — точка входу. Експортує константу `GMAIL_LABEL_INBOX_URL`,
@@ -1108,6 +1104,7 @@ pub async fn gmail_inbox_count(
     fetch_inbox_count_at(GMAIL_LABEL_INBOX_URL, &token).await
 }
 ```
+````
 
 Status-мапінг: 401 → `GmailError::ReauthRequired`; інші не-2xx → `GmailError::Http { status, body }`; JSON-помилки → `GmailError::Parse`; `reqwest::Error` → `GmailError::Network`.
 
@@ -1117,7 +1114,7 @@ Status-мапінг: 401 → `GmailError::ReauthRequired`; інші не-2xx →
 `err.kind` так само, як для `AuthError`. Має `From<reqwest::Error>` та
 `From<AuthError>` (зокрема `AuthError::ReauthRequired → GmailError::ReauthRequired`).
 
-```
+````
 
 У блоці «Файл [app/src/services/auth-store.js]» оновити список ref-ів і метод-сурфейс: додати `inboxCount`, `inboxErrorKind`, `refreshInboxCount`.
 
@@ -1135,7 +1132,7 @@ docs(ci4): code-level — додати gmail/ модуль і оновити aut
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 EOF
 )"
-```
+````
 
 ---
 
@@ -1194,6 +1191,7 @@ captured: 2026-05-14
 **Обґрунтування:** Один HTTP-запит, точне число (а не estimate), мінімальний scope (вже мається `gmail.modify`).
 
 **Розглянуті альтернативи:**
+
 - `users.getProfile` — рахує всю поштову скриньку, не лише INBOX. Відкинуто.
 - `messages.list?labelIds=INBOX` + `resultSizeEstimate` — приблизне, не точне. Відкинуто.
 
@@ -1260,26 +1258,26 @@ Expected: SUCCESS.
 
 **Spec coverage check (читаючи спеку `2026-05-14-inbox-count-design.md` поряд):**
 
-| Spec requirement | Covered by |
-| --- | --- |
-| Endpoint `users/me/labels/INBOX` | Task 3 (`GMAIL_LABEL_INBOX_URL`) |
-| `messagesTotal` як єдина цифра | Task 3 (`parse_messages_total`) |
-| HTTPS-виклик у Rust | Task 3 (`fetch_inbox_count_at`) |
-| Refresh-on-demand через спільний helper | Task 1 (`acquire_access_token`) |
-| 401 → `ReauthRequired` | Task 3 (status mapping test) |
-| Non-2xx → `Http{status,body}` | Task 3 (5xx + 403 tests) |
-| JSON parse fail → `Parse` | Task 3 (parse test) |
-| `inboxCount` / `inboxErrorKind` у store | Task 5 |
-| Auto-fetch у `initialize()` і `login()` | Task 5 (тести покривають обидва) |
-| `logout()` ресетить count і error | Task 5 (тест logout) |
-| `ReauthRequired` від Gmail знімає логін | Task 5 (тест ReauthRequired) |
-| UI: «Листів у скриньці: N» / плейсхолдер / помилка | Task 7 (три тести) |
-| Українські повідомлення `Http`, `Parse` | Task 6 |
-| `Network` повторно використовується (вже є) | Task 6 (без змін рядка) |
-| Docs: `03-components.md` | Task 8 |
-| Docs: `04-code.md` | Task 9 |
-| Docs: `decisions.md` + ADR-inbox | Task 10 |
-| Поза scope: лічильник unread, кнопка оновити, кеш | не реалізуємо (свідомо) |
+| Spec requirement                                   | Covered by                       |
+| -------------------------------------------------- | -------------------------------- |
+| Endpoint `users/me/labels/INBOX`                   | Task 3 (`GMAIL_LABEL_INBOX_URL`) |
+| `messagesTotal` як єдина цифра                     | Task 3 (`parse_messages_total`)  |
+| HTTPS-виклик у Rust                                | Task 3 (`fetch_inbox_count_at`)  |
+| Refresh-on-demand через спільний helper            | Task 1 (`acquire_access_token`)  |
+| 401 → `ReauthRequired`                             | Task 3 (status mapping test)     |
+| Non-2xx → `Http{status,body}`                      | Task 3 (5xx + 403 tests)         |
+| JSON parse fail → `Parse`                          | Task 3 (parse test)              |
+| `inboxCount` / `inboxErrorKind` у store            | Task 5                           |
+| Auto-fetch у `initialize()` і `login()`            | Task 5 (тести покривають обидва) |
+| `logout()` ресетить count і error                  | Task 5 (тест logout)             |
+| `ReauthRequired` від Gmail знімає логін            | Task 5 (тест ReauthRequired)     |
+| UI: «Листів у скриньці: N» / плейсхолдер / помилка | Task 7 (три тести)               |
+| Українські повідомлення `Http`, `Parse`            | Task 6                           |
+| `Network` повторно використовується (вже є)        | Task 6 (без змін рядка)          |
+| Docs: `03-components.md`                           | Task 8                           |
+| Docs: `04-code.md`                                 | Task 9                           |
+| Docs: `decisions.md` + ADR-inbox                   | Task 10                          |
+| Поза scope: лічильник unread, кнопка оновити, кеш  | не реалізуємо (свідомо)          |
 
 Прогалин не знайдено.
 

@@ -12,7 +12,7 @@ beforeEach(() => {
 
 describe('useAuthStore.initialize', () => {
   it('sets isAuthenticated=false when backend has no session', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       return Promise.resolve(null)
     })
@@ -23,7 +23,7 @@ describe('useAuthStore.initialize', () => {
   })
 
   it('hydrates email when backend reports authenticated', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('user@example.com')
       return Promise.resolve(null)
@@ -102,7 +102,7 @@ describe('useAuthStore singleton', () => {
 
 describe('useAuthStore inbox count', () => {
   it('refreshInboxCount sets inboxCount on success', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(348)
@@ -115,7 +115,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('login also refreshes inbox count', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_start_login') return Promise.resolve({ email: 'u@e' })
       if (cmd === 'gmail_inbox_count') return Promise.resolve(12)
       return Promise.resolve(null)
@@ -126,7 +126,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('captures error.kind on Gmail failure (Http)', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
@@ -139,7 +139,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('falls back to Unknown when Gmail error has no kind', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject(new Error('boom'))
@@ -151,10 +151,11 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('ReauthRequired from Gmail forces logout state', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
-      if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
+      if (cmd === 'gmail_inbox_count')
+        return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
       return Promise.resolve(null)
     })
     const store = useAuthStore()
@@ -165,7 +166,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('logout clears inboxCount and inboxErrorKind', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(9)
@@ -181,7 +182,7 @@ describe('useAuthStore inbox count', () => {
   })
 
   it('does not call gmail_inbox_count when not authenticated', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       return Promise.resolve(null)
     })
@@ -196,7 +197,7 @@ describe('useAuthStore random message', () => {
   const sampleMessage = { id: 'm1', from: 'a@e', subject: 's', date: 'd', body: 'b' }
 
   it('initialize loads currentMessage after successful auth', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -211,7 +212,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('login also loads currentMessage', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_start_login') return Promise.resolve({ email: 'u@e' })
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
       if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
@@ -224,7 +225,7 @@ describe('useAuthStore random message', () => {
 
   it('loadRandomMessage replaces currentMessage', async () => {
     let call = 0
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -242,12 +243,11 @@ describe('useAuthStore random message', () => {
   })
 
   it('captures Empty kind from Gmail', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
-      if (cmd === 'gmail_random_message')
-        return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
+      if (cmd === 'gmail_random_message') return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
       return Promise.resolve(null)
     })
     const store = useAuthStore()
@@ -257,7 +257,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('ReauthRequired from random message forces logout state', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -273,7 +273,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('logout clears currentMessage and messageErrorKind', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -291,7 +291,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('does not call gmail_random_message when not authenticated', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       return Promise.resolve(null)
     })

@@ -22,7 +22,7 @@ describe('Login.vue', () => {
   })
 
   it('renders "Ви увійшли як ..." and "Вийти" when authenticated', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('me@example.com')
       return Promise.resolve(null)
@@ -34,7 +34,7 @@ describe('Login.vue', () => {
   })
 
   it('shows Ukrainian error after failed login', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       if (cmd === 'auth_start_login') return Promise.reject(Object.assign(new Error('Network'), { kind: 'Network' }))
       return Promise.resolve(null)
@@ -47,7 +47,7 @@ describe('Login.vue', () => {
   })
 
   it('calls auth_start_login when sign-in button clicked', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       if (cmd === 'auth_start_login') return Promise.resolve({ email: 'x@y' })
       return Promise.resolve(null)
@@ -60,7 +60,7 @@ describe('Login.vue', () => {
   })
 
   it('calls auth_logout when sign-out button clicked', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('m@e')
       if (cmd === 'auth_logout') return Promise.resolve()
@@ -69,7 +69,7 @@ describe('Login.vue', () => {
     const w = mount(Login)
     await flushPromises()
     const buttons = w.findAll('button')
-    const logoutBtn = buttons.find((b) => b.text() === 'Вийти')
+    const logoutBtn = buttons.find(b => b.text() === 'Вийти')
     await logoutBtn.trigger('click')
     await flushPromises()
     expect(invokeMock).toHaveBeenCalledWith('auth_logout')
@@ -79,7 +79,7 @@ describe('Login.vue', () => {
 
 describe('Login.vue inbox count', () => {
   it('renders "Листів у скриньці: 348" after successful initialize', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(348)
@@ -93,8 +93,10 @@ describe('Login.vue inbox count', () => {
   it('shows placeholder before count loads', async () => {
     let resolveCount
     // oxlint-disable-next-line promise/avoid-new
-    const pending = new Promise((resolve) => { resolveCount = resolve })
-    invokeMock.mockImplementation((cmd) => {
+    const pending = new Promise(resolve => {
+      resolveCount = resolve
+    })
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return pending
@@ -109,7 +111,7 @@ describe('Login.vue inbox count', () => {
   })
 
   it('shows Ukrainian error when Gmail returns Http error', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
@@ -131,7 +133,7 @@ describe('Login.vue random message', () => {
   }
 
   it('renders the message card after initialize', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -147,12 +149,11 @@ describe('Login.vue random message', () => {
   })
 
   it('shows "Скринька порожня." when Gmail returns Empty', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
-      if (cmd === 'gmail_random_message')
-        return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
+      if (cmd === 'gmail_random_message') return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
       return Promise.resolve(null)
     })
     const w = mount(Login)
@@ -161,7 +162,7 @@ describe('Login.vue random message', () => {
   })
 
   it('clicking "Показати інший" re-invokes gmail_random_message', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -171,12 +172,11 @@ describe('Login.vue random message', () => {
     const w = mount(Login)
     await flushPromises()
     invokeMock.mockClear()
-    invokeMock.mockImplementation((cmd) => {
-      if (cmd === 'gmail_random_message')
-        return Promise.resolve({ ...sampleMessage, id: 'm2', subject: 'Next one' })
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'gmail_random_message') return Promise.resolve({ ...sampleMessage, id: 'm2', subject: 'Next one' })
       return Promise.resolve(null)
     })
-    const btn = w.findAll('button').find((b) => b.text() === 'Показати інший')
+    const btn = w.findAll('button').find(b => b.text() === 'Показати інший')
     await btn.trigger('click')
     await flushPromises()
     expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')

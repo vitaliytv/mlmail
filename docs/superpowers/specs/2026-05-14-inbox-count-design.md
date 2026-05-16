@@ -93,13 +93,13 @@ gmail/
 
 ## Помилки
 
-| Сценарій | Rust kind | UI |
-| --- | --- | --- |
-| Немає мережі / DNS / TLS | `Network` | Червоний рядок з повідомленням `Gmail.Network` |
-| 401 від Gmail | `ReauthRequired` | Повертаємось на екран «Увійти через Google» (показуємо `ReauthRequired` як у auth) |
-| 403/429/5xx | `Http` | Червоний рядок з повідомленням `Gmail.Http` |
-| `messagesTotal` відсутнє / не число | `Parse` | Червоний рядок з повідомленням `Gmail.Parse` |
-| Refresh упав під час `acquire_access_token` | `ReauthRequired` | Повертаємось на екран входу |
+| Сценарій                                    | Rust kind        | UI                                                                                 |
+| ------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- |
+| Немає мережі / DNS / TLS                    | `Network`        | Червоний рядок з повідомленням `Gmail.Network`                                     |
+| 401 від Gmail                               | `ReauthRequired` | Повертаємось на екран «Увійти через Google» (показуємо `ReauthRequired` як у auth) |
+| 403/429/5xx                                 | `Http`           | Червоний рядок з повідомленням `Gmail.Http`                                        |
+| `messagesTotal` відсутнє / не число         | `Parse`          | Червоний рядок з повідомленням `Gmail.Parse`                                       |
+| Refresh упав під час `acquire_access_token` | `ReauthRequired` | Повертаємось на екран входу                                                        |
 
 ## Тести
 

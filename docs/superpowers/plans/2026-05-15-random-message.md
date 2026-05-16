@@ -862,7 +862,7 @@ describe('useAuthStore random message', () => {
   const sampleMessage = { id: 'm1', from: 'a@e', subject: 's', date: 'd', body: 'b' }
 
   it('initialize loads currentMessage after successful auth', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -877,7 +877,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('login also loads currentMessage', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_start_login') return Promise.resolve({ email: 'u@e' })
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
       if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
@@ -890,7 +890,7 @@ describe('useAuthStore random message', () => {
 
   it('loadRandomMessage replaces currentMessage', async () => {
     let call = 0
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -908,12 +908,11 @@ describe('useAuthStore random message', () => {
   })
 
   it('captures Empty kind from Gmail', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
-      if (cmd === 'gmail_random_message')
-        return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
+      if (cmd === 'gmail_random_message') return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
       return Promise.resolve(null)
     })
     const store = useAuthStore()
@@ -923,7 +922,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('ReauthRequired from random message forces logout state', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -939,7 +938,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('logout clears currentMessage and messageErrorKind', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -957,7 +956,7 @@ describe('useAuthStore random message', () => {
   })
 
   it('does not call gmail_random_message when not authenticated', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
       return Promise.resolve(null)
     })
@@ -1160,9 +1159,9 @@ EOF
 Append inside `describe('errorMessage Gmail kinds', () => { ... })` block of `app/src/i18n/auth-errors.test.js` (right before its closing `})`):
 
 ```js
-  it('returns Ukrainian text for Empty kind', () => {
-    expect(errorMessage('Empty')).toBe('Скринька порожня.')
-  })
+it('returns Ukrainian text for Empty kind', () => {
+  expect(errorMessage('Empty')).toBe('Скринька порожня.')
+})
 ```
 
 - [ ] **Step 2: Run — expect failure**
@@ -1222,7 +1221,7 @@ describe('Login.vue random message', () => {
   }
 
   it('renders the message card after initialize', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -1238,12 +1237,11 @@ describe('Login.vue random message', () => {
   })
 
   it('shows "Скринька порожня." when Gmail returns Empty', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
-      if (cmd === 'gmail_random_message')
-        return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
+      if (cmd === 'gmail_random_message') return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
       return Promise.resolve(null)
     })
     const w = mount(Login)
@@ -1252,7 +1250,7 @@ describe('Login.vue random message', () => {
   })
 
   it('clicking "Показати інший" re-invokes gmail_random_message', async () => {
-    invokeMock.mockImplementation((cmd) => {
+    invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
       if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
@@ -1262,12 +1260,11 @@ describe('Login.vue random message', () => {
     const w = mount(Login)
     await flushPromises()
     invokeMock.mockClear()
-    invokeMock.mockImplementation((cmd) => {
-      if (cmd === 'gmail_random_message')
-        return Promise.resolve({ ...sampleMessage, id: 'm2', subject: 'Next one' })
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'gmail_random_message') return Promise.resolve({ ...sampleMessage, id: 'm2', subject: 'Next one' })
       return Promise.resolve(null)
     })
-    const btn = w.findAll('button').find((b) => b.text() === 'Показати інший')
+    const btn = w.findAll('button').find(b => b.text() === 'Показати інший')
     await btn.trigger('click')
     await flushPromises()
     expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')
@@ -1286,7 +1283,7 @@ Expected: 3 нові FAIL (елементи не існують).
 Open `app/src/views/Login.vue`. Inside the `<div v-if="auth.isAuthenticated.value" class="signed-in">` block, after the inbox-count `<p>` lines (the `<p v-else class="inbox-count muted">Листів у скриньці: …</p>` line) and **before** the `<button type="button" @click="auth.logout()">Вийти</button>`, insert:
 
 ```vue
-      <section v-if="auth.currentMessage.value" class="message">
+<section v-if="auth.currentMessage.value" class="message">
         <header class="message-head">
           <p><strong>Від:</strong> {{ auth.currentMessage.value.from }}</p>
           <p><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</p>
@@ -1294,15 +1291,11 @@ Open `app/src/views/Login.vue`. Inside the `<div v-if="auth.isAuthenticated.valu
         </header>
         <pre class="message-body">{{ auth.currentMessage.value.body }}</pre>
       </section>
-      <p v-else-if="auth.isMessageLoading.value" class="muted">Завантаження…</p>
-      <p v-else-if="auth.messageErrorKind.value" class="error">
+<p v-else-if="auth.isMessageLoading.value" class="muted">Завантаження…</p>
+<p v-else-if="auth.messageErrorKind.value" class="error">
         {{ errorMessage(auth.messageErrorKind.value) }}
       </p>
-      <button
-        type="button"
-        :disabled="auth.isMessageLoading.value"
-        @click="auth.loadRandomMessage()"
-      >
+<button type="button" :disabled="auth.isMessageLoading.value" @click="auth.loadRandomMessage()">
         Показати інший
       </button>
 ```
@@ -1680,25 +1673,25 @@ EOF
 
 **Spec coverage:**
 
-| Spec requirement | Covered by |
-| --- | --- |
-| Випадковий лист серед 100 останніх INBOX | Task 5 (`list_inbox_ids_at` з maxResults=100) + Task 7 (`% ids.len()`) |
-| Два Gmail-виклики (list + get) | Task 5, Task 6 |
-| `text/plain` first, `text/html` fallback зі стрипом | Task 4 (`extract_plain_text`) |
-| Body truncate до 10K символів | Task 6 (тест + код) |
-| Порожній INBOX → `Empty` | Task 2 (variant) + Task 7 (повернення Empty) + Task 9 (i18n) |
-| Auto-fetch після `initialize`/`login` | Task 8 (тести + код) |
-| Кнопка «Показати інший» | Task 10 (тест + UI + click→loadRandomMessage) |
-| Скидання у `logout`/`_resetForTest` | Task 8 (тест + код) |
-| ReauthRequired знімає логін | Task 8 (тест) |
-| Plain-text only, без HTML-рендеру | Task 10 (`<pre>` + `white-space: pre-wrap`) |
-| 401 → ReauthRequired, 5xx → Http | Task 5, Task 6 (tests) |
-| New dependencies (regex, html-escape) | Task 1 |
-| Docs 03-components.md | Task 11 |
-| Docs 04-code.md | Task 12 |
-| Docs decisions.md + ADR-inbox | Task 13 |
-| Empty kind у i18n | Task 9 |
-| Поза scope (HTML рендер, mail reader, кеш) | не реалізуємо (свідомо) |
+| Spec requirement                                    | Covered by                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| Випадковий лист серед 100 останніх INBOX            | Task 5 (`list_inbox_ids_at` з maxResults=100) + Task 7 (`% ids.len()`) |
+| Два Gmail-виклики (list + get)                      | Task 5, Task 6                                                         |
+| `text/plain` first, `text/html` fallback зі стрипом | Task 4 (`extract_plain_text`)                                          |
+| Body truncate до 10K символів                       | Task 6 (тест + код)                                                    |
+| Порожній INBOX → `Empty`                            | Task 2 (variant) + Task 7 (повернення Empty) + Task 9 (i18n)           |
+| Auto-fetch після `initialize`/`login`               | Task 8 (тести + код)                                                   |
+| Кнопка «Показати інший»                             | Task 10 (тест + UI + click→loadRandomMessage)                          |
+| Скидання у `logout`/`_resetForTest`                 | Task 8 (тест + код)                                                    |
+| ReauthRequired знімає логін                         | Task 8 (тест)                                                          |
+| Plain-text only, без HTML-рендеру                   | Task 10 (`<pre>` + `white-space: pre-wrap`)                            |
+| 401 → ReauthRequired, 5xx → Http                    | Task 5, Task 6 (tests)                                                 |
+| New dependencies (regex, html-escape)               | Task 1                                                                 |
+| Docs 03-components.md                               | Task 11                                                                |
+| Docs 04-code.md                                     | Task 12                                                                |
+| Docs decisions.md + ADR-inbox                       | Task 13                                                                |
+| Empty kind у i18n                                   | Task 9                                                                 |
+| Поза scope (HTML рендер, mail reader, кеш)          | не реалізуємо (свідомо)                                                |
 
 Прогалин не знайдено.
 

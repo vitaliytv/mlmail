@@ -119,28 +119,38 @@ Auth Errors i18n MLMaiL — словник `kind` → українська ст�
  *
  * @param maxResults
  */
-export async function listInbox(maxResults = 25) { /* ... */ }
+export async function listInbox(maxResults = 25) {
+  /* ... */
+}
 /**
  *
  * @param id
  */
-export async function getMessage(id) { /* ... */ }
+export async function getMessage(id) {
+  /* ... */
+}
 /**
  *
  * @param id
  */
-export async function trashMessage(id) { /* ... */ }
+export async function trashMessage(id) {
+  /* ... */
+}
 /**
  *
  * @param criteria
  * @param action
  */
-export async function createFilter(criteria, action) { /* ... */ }
+export async function createFilter(criteria, action) {
+  /* ... */
+}
 /**
  *
  * @param message
  */
-export async function createDraft(message) { /* ... */ }
+export async function createDraft(message) {
+  /* ... */
+}
 ```
 
 Файл `app/src/services/gmail-client.js` ще не існує (planned). Сигнатури вище —

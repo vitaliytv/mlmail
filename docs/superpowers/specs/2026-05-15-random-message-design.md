@@ -94,11 +94,7 @@ gmail/
 <p v-else-if="auth.messageErrorKind.value" class="error">
   {{ errorMessage(auth.messageErrorKind.value) }}
 </p>
-<button
-  type="button"
-  :disabled="auth.isMessageLoading.value"
-  @click="auth.loadRandomMessage()"
->
+<button type="button" :disabled="auth.isMessageLoading.value" @click="auth.loadRandomMessage()">
   Показати інший
 </button>
 ```
@@ -117,14 +113,14 @@ gmail/
 
 ## Помилки
 
-| Сценарій | Rust kind | UI |
-| --- | --- | --- |
-| Немає мережі | `Network` | Червоний рядок з повідомленням `Network` |
-| 401 від Gmail на list або get | `ReauthRequired` | Назад до «Увійти через Google» |
-| INBOX порожній (`list` повернув `messages: null`/`[]`) | `Empty` | «Скринька порожня.» |
-| 4xx/5xx | `Http{status,body}` | «Gmail повернув помилку. Спробуйте пізніше.» |
-| Невалідний JSON / brakey base64 / нема `payload` | `Parse` | «Несподівана відповідь від Gmail.» |
-| Знайшли лист, але body порожнє після strip | `Parse` | (фактично порожній лист) → показати картку з порожнім тілом — НЕ помилка |
+| Сценарій                                               | Rust kind           | UI                                                                       |
+| ------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------ |
+| Немає мережі                                           | `Network`           | Червоний рядок з повідомленням `Network`                                 |
+| 401 від Gmail на list або get                          | `ReauthRequired`    | Назад до «Увійти через Google»                                           |
+| INBOX порожній (`list` повернув `messages: null`/`[]`) | `Empty`             | «Скринька порожня.»                                                      |
+| 4xx/5xx                                                | `Http{status,body}` | «Gmail повернув помилку. Спробуйте пізніше.»                             |
+| Невалідний JSON / brakey base64 / нема `payload`       | `Parse`             | «Несподівана відповідь від Gmail.»                                       |
+| Знайшли лист, але body порожнє після strip             | `Parse`             | (фактично порожній лист) → показати картку з порожнім тілом — НЕ помилка |
 
 ## Тести
 

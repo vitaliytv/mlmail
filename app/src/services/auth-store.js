@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/core'
-import { readonly, ref } from 'vue'
 
 const _email = ref(null)
 const _isAuthenticated = ref(false)

@@ -41,44 +41,44 @@
 
 ### Нові компоненти
 
-| Шар | Файл / шлях | Призначення |
-|-----|-------------|-------------|
-| Vue Frontend | `app/src/views/Login.vue` | Login екран MLMaiL — кнопка "Увійти через Google", email + "Вийти" коли залогінено, повідомлення про помилку |
-| Vue Frontend | `app/src/services/auth-store.js` | Composable-фасад над `auth_*` Tauri-командами. Реактивні поля `email`, `isAuthenticated`, `isLoading`, `errorKind` |
-| Vue Frontend | `app/src/i18n/auth-errors.js` | Локалізація `kind` → українська строка |
-| Rust Backend | `app/src-tauri/src/auth/mod.rs` | Публічні Tauri-команди `auth_*`, реєстрація |
-| Rust Backend | `app/src-tauri/src/auth/state.rs` | `AuthState` (in-memory access token + email + expiry) |
-| Rust Backend | `app/src-tauri/src/auth/pkce.rs` | Генерація `code_verifier` і `code_challenge` |
-| Rust Backend | `app/src-tauri/src/auth/token_exchange.rs` | HTTPS POST до Google token endpoint |
-| Rust Backend | `app/src-tauri/src/auth/id_token.rs` | Парсинг email з JWT payload |
-| Rust Backend | `app/src-tauri/src/auth/config.rs` | OAuth client IDs (з `option_env!`) |
-| Rust Backend | `app/src-tauri/src/auth/storage/mod.rs` | Trait `RefreshTokenStorage`, factory |
-| Rust Backend (macOS) | `app/src-tauri/src/auth/storage/macos.rs` | Keychain через `keyring` crate |
-| Rust Backend (Android) | `app/src-tauri/src/auth/storage/android.rs` | JNI до `MlmailAuth.saveSession/loadSession/clearSession` |
-| Rust Backend (macOS) | `app/src-tauri/src/auth/flow/macos.rs` | Loopback + системний браузер + token exchange |
-| Rust Backend (Android) | `app/src-tauri/src/auth/flow/android.rs` | JNI до `MlmailAuth.signInAndAuthorize` + token exchange |
-| Kotlin (Android) | `app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/MlmailAuth.kt` | Public JNI entry points |
-| Kotlin (Android) | `…/auth/CredentialManagerFlow.kt` | Sign-in етап (ID token) |
-| Kotlin (Android) | `…/auth/AuthorizationFlow.kt` | Scope authorization (server auth code) |
-| Kotlin (Android) | `…/auth/SecureStore.kt` | EncryptedSharedPreferences wrapper |
-| Тести Rust | `app/src-tauri/src/auth/*::tests` | Unit-тести (PKCE, ID token, token exchange з `mockito`, state, in-memory storage) |
-| Тести JS | `app/src/services/auth-store.test.js`, `app/src/views/Login.test.js`, `app/src/i18n/auth-errors.test.js` | Vitest + `@vue/test-utils` |
+| Шар                    | Файл / шлях                                                                                              | Призначення                                                                                                        |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Vue Frontend           | `app/src/views/Login.vue`                                                                                | Login екран MLMaiL — кнопка "Увійти через Google", email + "Вийти" коли залогінено, повідомлення про помилку       |
+| Vue Frontend           | `app/src/services/auth-store.js`                                                                         | Composable-фасад над `auth_*` Tauri-командами. Реактивні поля `email`, `isAuthenticated`, `isLoading`, `errorKind` |
+| Vue Frontend           | `app/src/i18n/auth-errors.js`                                                                            | Локалізація `kind` → українська строка                                                                             |
+| Rust Backend           | `app/src-tauri/src/auth/mod.rs`                                                                          | Публічні Tauri-команди `auth_*`, реєстрація                                                                        |
+| Rust Backend           | `app/src-tauri/src/auth/state.rs`                                                                        | `AuthState` (in-memory access token + email + expiry)                                                              |
+| Rust Backend           | `app/src-tauri/src/auth/pkce.rs`                                                                         | Генерація `code_verifier` і `code_challenge`                                                                       |
+| Rust Backend           | `app/src-tauri/src/auth/token_exchange.rs`                                                               | HTTPS POST до Google token endpoint                                                                                |
+| Rust Backend           | `app/src-tauri/src/auth/id_token.rs`                                                                     | Парсинг email з JWT payload                                                                                        |
+| Rust Backend           | `app/src-tauri/src/auth/config.rs`                                                                       | OAuth client IDs (з `option_env!`)                                                                                 |
+| Rust Backend           | `app/src-tauri/src/auth/storage/mod.rs`                                                                  | Trait `RefreshTokenStorage`, factory                                                                               |
+| Rust Backend (macOS)   | `app/src-tauri/src/auth/storage/macos.rs`                                                                | Keychain через `keyring` crate                                                                                     |
+| Rust Backend (Android) | `app/src-tauri/src/auth/storage/android.rs`                                                              | JNI до `MlmailAuth.saveSession/loadSession/clearSession`                                                           |
+| Rust Backend (macOS)   | `app/src-tauri/src/auth/flow/macos.rs`                                                                   | Loopback + системний браузер + token exchange                                                                      |
+| Rust Backend (Android) | `app/src-tauri/src/auth/flow/android.rs`                                                                 | JNI до `MlmailAuth.signInAndAuthorize` + token exchange                                                            |
+| Kotlin (Android)       | `app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/MlmailAuth.kt`                    | Public JNI entry points                                                                                            |
+| Kotlin (Android)       | `…/auth/CredentialManagerFlow.kt`                                                                        | Sign-in етап (ID token)                                                                                            |
+| Kotlin (Android)       | `…/auth/AuthorizationFlow.kt`                                                                            | Scope authorization (server auth code)                                                                             |
+| Kotlin (Android)       | `…/auth/SecureStore.kt`                                                                                  | EncryptedSharedPreferences wrapper                                                                                 |
+| Тести Rust             | `app/src-tauri/src/auth/*::tests`                                                                        | Unit-тести (PKCE, ID token, token exchange з `mockito`, state, in-memory storage)                                  |
+| Тести JS               | `app/src/services/auth-store.test.js`, `app/src/views/Login.test.js`, `app/src/i18n/auth-errors.test.js` | Vitest + `@vue/test-utils`                                                                                         |
 
 ### Зміни до існуючих файлів
 
-| Файл | Зміна |
-|------|-------|
-| `app/src-tauri/src/lib.rs` | Видалити команду `greet`; реєстрація нових `auth_*` команд; `.manage(Mutex::new(AuthState::default()))`; `.setup(\|app\| auth::on_startup(app.handle()))` |
-| `app/src/App.vue` | Замінити демо-форму `greet` на `<Login/>`. Видалити пов'язані стилі логотипів і input/button styles, що належали тільки демці. |
-| `app/src-tauri/Cargo.toml` | Нові залежності (нижче) |
-| `app/src-tauri/gen/android/app/build.gradle.kts` | Нові Android dependencies (нижче) |
-| `app/package.json` | Додати `vitest`, `@vue/test-utils`, `jsdom` у devDependencies; новий скрипт `test` |
-| `.cspell.json` | Додати нові англомовні технічні терміни (нижче) |
-| `docs/ci4/02-containers.md` | Стрілки HTTPS до Google Identity Services — від Backend, не Frontend |
-| `docs/ci4/03-components.md` | Auth Component / Auth Store — `implemented`, додати Auth Module (Rust) з підкомпонентами |
-| `docs/ci4/04-code.md` | Нова секція code для `app/src-tauri/src/auth/*`; оновлений Backend Entry lib без `greet` |
-| `docs/ci4/decisions.md` | Закрити три відкритих ADR-питання (token storage, HTTPS-виклики, частина secrets), додати посилання на ADR-0006 |
-| `docs/adr/ADR-0006-google-oauth.md` | Новий ADR — три тісно пов'язаних рішення (flow, storage, token surface) |
+| Файл                                             | Зміна                                                                                                                                                     |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/src-tauri/src/lib.rs`                       | Видалити команду `greet`; реєстрація нових `auth_*` команд; `.manage(Mutex::new(AuthState::default()))`; `.setup(\|app\| auth::on_startup(app.handle()))` |
+| `app/src/App.vue`                                | Замінити демо-форму `greet` на `<Login/>`. Видалити пов'язані стилі логотипів і input/button styles, що належали тільки демці.                            |
+| `app/src-tauri/Cargo.toml`                       | Нові залежності (нижче)                                                                                                                                   |
+| `app/src-tauri/gen/android/app/build.gradle.kts` | Нові Android dependencies (нижче)                                                                                                                         |
+| `app/package.json`                               | Додати `vitest`, `@vue/test-utils`, `jsdom` у devDependencies; новий скрипт `test`                                                                        |
+| `.cspell.json`                                   | Додати нові англомовні технічні терміни (нижче)                                                                                                           |
+| `docs/ci4/02-containers.md`                      | Стрілки HTTPS до Google Identity Services — від Backend, не Frontend                                                                                      |
+| `docs/ci4/03-components.md`                      | Auth Component / Auth Store — `implemented`, додати Auth Module (Rust) з підкомпонентами                                                                  |
+| `docs/ci4/04-code.md`                            | Нова секція code для `app/src-tauri/src/auth/*`; оновлений Backend Entry lib без `greet`                                                                  |
+| `docs/ci4/decisions.md`                          | Закрити три відкритих ADR-питання (token storage, HTTPS-виклики, частина secrets), додати посилання на ADR-0006                                           |
+| `docs/adr/ADR-0006-google-oauth.md`              | Новий ADR — три тісно пов'язаних рішення (flow, storage, token surface)                                                                                   |
 
 ## Потоки даних
 
@@ -235,7 +235,10 @@ export function useAuthStore() {
     isAuthenticated: readonly(_isAuthenticated),
     isLoading: readonly(_isLoading),
     errorKind: readonly(_errorKind),
-    initialize, login, getAccessToken, logout,
+    initialize,
+    login,
+    getAccessToken,
+    logout
   }
 }
 ```
@@ -246,20 +249,22 @@ export function useAuthStore() {
 
 ```js
 const messages = {
-  Cancelled:      'Логін скасовано.',
-  Network:        'Не вдалося з\'єднатися з Google. Перевірте мережу.',
-  OAuth:          'Помилка авторизації Google.',
-  Storage:        'Не вдалося зберегти токен у захищене сховище пристрою.',
+  Cancelled: 'Логін скасовано.',
+  Network: "Не вдалося з'єднатися з Google. Перевірте мережу.",
+  OAuth: 'Помилка авторизації Google.',
+  Storage: 'Не вдалося зберегти токен у захищене сховище пристрою.',
   ReauthRequired: 'Сеанс прострочений — увійдіть знову.',
-  Platform:       'Помилка платформи.',
-  Unknown:        'Невідома помилка.',
+  Platform: 'Помилка платформи.',
+  Unknown: 'Невідома помилка.'
 }
 
 /**
  *
  * @param kind
  */
-export function errorMessage(kind) { return messages[kind] ?? messages.Unknown }
+export function errorMessage(kind) {
+  return messages[kind] ?? messages.Unknown
+}
 ```
 
 Без vue-i18n у цій ітерації — простий switch достатній для семи рядків.
@@ -782,11 +787,11 @@ Storage analogous — JNI виклики до `MlmailAuth.saveSession/loadSessio
 
 Створити **три** OAuth clients:
 
-| Client | Тип | Призначення | Налаштування |
-|--------|-----|-------------|--------------|
-| **Web** | Web application | `serverClientId` для Credential Manager на Android | Authorized redirect URIs — порожньо. Authorized JavaScript origins — порожньо. Назва: `MLMaiL Web (Android sign-in)` |
-| **Android** | Android | AuthorizationClient на Android (server auth code → tokens) | Package: `com.vitaliytv.mlmail`. SHA-1: debug keystore (зараз) + release keystore (пізніше) |
-| **Desktop** | Desktop application | macOS loopback flow | Без додаткових налаштувань. Назва: `MLMaiL Desktop (macOS)` |
+| Client      | Тип                 | Призначення                                                | Налаштування                                                                                                         |
+| ----------- | ------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Web**     | Web application     | `serverClientId` для Credential Manager на Android         | Authorized redirect URIs — порожньо. Authorized JavaScript origins — порожньо. Назва: `MLMaiL Web (Android sign-in)` |
+| **Android** | Android             | AuthorizationClient на Android (server auth code → tokens) | Package: `com.vitaliytv.mlmail`. SHA-1: debug keystore (зараз) + release keystore (пізніше)                          |
+| **Desktop** | Desktop application | macOS loopback flow                                        | Без додаткових налаштувань. Назва: `MLMaiL Desktop (macOS)`                                                          |
 
 **OAuth consent screen:**
 
@@ -872,21 +877,21 @@ MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.co
 
 ### Rust (`cargo test --manifest-path app/src-tauri/Cargo.toml`)
 
-| Модуль | Покриття |
-|--------|----------|
-| `auth/pkce.rs` | `generate()` → verifier 43-128 chars URL-safe; `challenge == base64url(sha256(verifier))`; повторні виклики дають різні пари |
-| `auth/id_token.rs` | валідний JWT з `email` → `Some(...)`; невалідний → `None`; JWT без email → `None`; не-JWT → `None` |
+| Модуль                   | Покриття                                                                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth/pkce.rs`           | `generate()` → verifier 43-128 chars URL-safe; `challenge == base64url(sha256(verifier))`; повторні виклики дають різні пари                          |
+| `auth/id_token.rs`       | валідний JWT з `email` → `Some(...)`; невалідний → `None`; JWT без email → `None`; не-JWT → `None`                                                    |
 | `auth/token_exchange.rs` | mockito-сервер: `exchange_code` 200 → парс OK; `exchange_refresh` 400 + `invalid_grant` → `ReauthRequired`; 5xx → `Network`; malformed JSON → `OAuth` |
-| `auth/state.rs` | `is_access_token_fresh` true коли expiry > now+30s; false коли менше; false коли токен None |
-| `auth/storage` | тест-only `InMemoryStorage`: save→load round-trip; clear→load = None |
+| `auth/state.rs`          | `is_access_token_fresh` true коли expiry > now+30s; false коли менше; false коли токен None                                                           |
+| `auth/storage`           | тест-only `InMemoryStorage`: save→load round-trip; clear→load = None                                                                                  |
 
 ### JS (`bun run test`)
 
-| Файл | Покриття |
-|------|----------|
-| `services/auth-store.test.js` | mock invoke: `initialize()` оновлює `isAuthenticated`; `login()` тимчасово `isLoading=true`; `login()` помилка → `errorKind`; `logout()` зкидає стан |
-| `views/Login.test.js` | рендер "Увійти через Google" коли не залогінений; "Ви увійшли як X" + "Вийти" коли так; "Зачекайте…" під час логіну; українські повідомлення про помилку |
-| `i18n/auth-errors.test.js` | кожен відомий `kind` повертає унікальну українську строку; невідомий → fallback "Невідома помилка" |
+| Файл                          | Покриття                                                                                                                                                 |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `services/auth-store.test.js` | mock invoke: `initialize()` оновлює `isAuthenticated`; `login()` тимчасово `isLoading=true`; `login()` помилка → `errorKind`; `logout()` зкидає стан     |
+| `views/Login.test.js`         | рендер "Увійти через Google" коли не залогінений; "Ви увійшли як X" + "Вийти" коли так; "Зачекайте…" під час логіну; українські повідомлення про помилку |
+| `i18n/auth-errors.test.js`    | кожен відомий `kind` повертає унікальну українську строку; невідомий → fallback "Невідома помилка"                                                       |
 
 ### Manual e2e (не автоматизовано — нотатки у цьому specі)
 

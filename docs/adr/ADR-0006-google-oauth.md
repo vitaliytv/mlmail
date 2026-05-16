@@ -30,23 +30,23 @@ exchange. Тому всі три рішення зафіксовано **одн�
 
 ### 1. OAuth flow — platform-native
 
-| Платформа | Механізм |
-| --------- | -------- |
-| macOS | Authorization Code + PKCE через системний браузер + Rust loopback HTTP-server на `127.0.0.1:RANDOM_PORT` |
-| Android | Credential Manager (sign-in → ID token) + Google Identity AuthorizationClient (scope `gmail.modify` → server auth code) через Tauri 2 mobile plugin (Kotlin) |
+| Платформа | Механізм                                                                                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| macOS     | Authorization Code + PKCE через системний браузер + Rust loopback HTTP-server на `127.0.0.1:RANDOM_PORT`                                                     |
+| Android   | Credential Manager (sign-in → ID token) + Google Identity AuthorizationClient (scope `gmail.modify` → server auth code) через Tauri 2 mobile plugin (Kotlin) |
 
 Реалізація — [app/src-tauri/src/auth/flow/macos.rs](../../app/src-tauri/src/auth/flow/macos.rs)
 та [app/src-tauri/src/auth/flow/android.rs](../../app/src-tauri/src/auth/flow/android.rs)
 
 - Kotlin модуль
-[app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/](../../app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/).
+  [app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/](../../app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/).
 
 ### 2. Token storage — platform-specific
 
-| Платформа | Сховище |
-| --------- | ------- |
-| macOS | Apple Keychain через Rust crate `keyring` (`apple-native` feature, Security framework) |
-| Android | EncryptedSharedPreferences з master key у Android Keystore (через Kotlin `MlmailAuthPlugin.saveSession/loadSession/clearSession`) |
+| Платформа | Сховище                                                                                                                           |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| macOS     | Apple Keychain через Rust crate `keyring` (`apple-native` feature, Security framework)                                            |
+| Android   | EncryptedSharedPreferences з master key у Android Keystore (через Kotlin `MlmailAuthPlugin.saveSession/loadSession/clearSession`) |
 
 Реалізація — [app/src-tauri/src/auth/storage/macos.rs](../../app/src-tauri/src/auth/storage/macos.rs)
 та [app/src-tauri/src/auth/storage/android.rs](../../app/src-tauri/src/auth/storage/android.rs)

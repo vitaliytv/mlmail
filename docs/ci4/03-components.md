@@ -264,20 +264,20 @@ Auth Module MLMaiL — Rust-підсистема у
 [app/src-tauri/src/auth/](../../app/src-tauri/src/auth/), що реалізує всю
 Google OAuth-механіку MLMaiL. Підкомпоненти:
 
-| Файл | Роль |
-| ---- | ---- |
-| `mod.rs` | П'ять Tauri-команд: `auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`; pub helper `acquire_access_token` (його викликають як `auth_get_access_token`, так і Gmail Module MLMaiL); `on_startup` для відновлення сесії при холодному старті |
-| `state.rs` | `AuthState` (in-memory access token + email + expiry); `is_access_token_fresh()` з 30-секундним буфером |
-| `pkce.rs` | Генератор PKCE pair (verifier 43 chars URL-safe, challenge = base64url(SHA-256(verifier))) |
-| `token_exchange.rs` | HTTPS-обмін до `oauth2.googleapis.com/token`: `exchange_code` (auth code → tokens) і `exchange_refresh` (refresh → access); 400 + `invalid_grant` мапиться в `AuthError::ReauthRequired` |
-| `id_token.rs` | Витяг `email` з JWT payload (без верифікації — токен прийшов прямо з Google по HTTPS, потрібен лише для UI) |
-| `error.rs` | `AuthError` enum з serde-серіалізацією `{kind, message}`; `StorageError` |
-| `config.rs` | OAuth client IDs з `option_env!` (compile-time) |
-| `storage/mod.rs` | Trait `RefreshTokenStorage` (save/load/clear) + platform_storage factory |
-| `storage/macos.rs` | Реалізація через crate `keyring` → Apple Keychain (service `com.vitaliytv.mlmail`, окремі entries для email і refresh_token) |
-| `storage/android.rs` | Реалізація через JNI-міст до Kotlin `MlmailAuthPlugin.saveSession/loadSession/clearSession` |
-| `flow/macos.rs` | Loopback HTTP server на `127.0.0.1:RANDOM_PORT` + `tauri-plugin-opener` для системного браузера + 5-хв таймаут + CSRF state перевірка |
-| `flow/android.rs` | Tauri 2 mobile plugin виклик до Kotlin `signInAndAuthorize` (Credential Manager + AuthorizationClient) + token exchange |
+| Файл                 | Роль                                                                                                                                                                                                                                                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mod.rs`             | П'ять Tauri-команд: `auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`; pub helper `acquire_access_token` (його викликають як `auth_get_access_token`, так і Gmail Module MLMaiL); `on_startup` для відновлення сесії при холодному старті |
+| `state.rs`           | `AuthState` (in-memory access token + email + expiry); `is_access_token_fresh()` з 30-секундним буфером                                                                                                                                                                                           |
+| `pkce.rs`            | Генератор PKCE pair (verifier 43 chars URL-safe, challenge = base64url(SHA-256(verifier)))                                                                                                                                                                                                        |
+| `token_exchange.rs`  | HTTPS-обмін до `oauth2.googleapis.com/token`: `exchange_code` (auth code → tokens) і `exchange_refresh` (refresh → access); 400 + `invalid_grant` мапиться в `AuthError::ReauthRequired`                                                                                                          |
+| `id_token.rs`        | Витяг `email` з JWT payload (без верифікації — токен прийшов прямо з Google по HTTPS, потрібен лише для UI)                                                                                                                                                                                       |
+| `error.rs`           | `AuthError` enum з serde-серіалізацією `{kind, message}`; `StorageError`                                                                                                                                                                                                                          |
+| `config.rs`          | OAuth client IDs з `option_env!` (compile-time)                                                                                                                                                                                                                                                   |
+| `storage/mod.rs`     | Trait `RefreshTokenStorage` (save/load/clear) + platform_storage factory                                                                                                                                                                                                                          |
+| `storage/macos.rs`   | Реалізація через crate `keyring` → Apple Keychain (service `com.vitaliytv.mlmail`, окремі entries для email і refresh_token)                                                                                                                                                                      |
+| `storage/android.rs` | Реалізація через JNI-міст до Kotlin `MlmailAuthPlugin.saveSession/loadSession/clearSession`                                                                                                                                                                                                       |
+| `flow/macos.rs`      | Loopback HTTP server на `127.0.0.1:RANDOM_PORT` + `tauri-plugin-opener` для системного браузера + 5-хв таймаут + CSRF state перевірка                                                                                                                                                             |
+| `flow/android.rs`    | Tauri 2 mobile plugin виклик до Kotlin `signInAndAuthorize` (Credential Manager + AuthorizationClient) + token exchange                                                                                                                                                                           |
 
 Покриття тестами: 32 unit-тести (PKCE, ID token, state, token_exchange з
 mockito, InMemoryStorage, parser callback-запиту, URL-кодування).
@@ -301,11 +301,11 @@ HTTPS-виклики до Gmail REST API від імені MLMaiL Backend. У ц
 
 Підкомпоненти:
 
-| Файл | Роль |
-| ---- | ---- |
-| `mod.rs` | Tauri-команди `gmail_inbox_count` / `gmail_random_message`; HTTP helpers `fetch_inbox_count_at` / `list_inbox_ids_at` / `get_message_at` (URL — параметр для unit-тестів через `mockito`); `parse_messages_total` |
+| Файл         | Роль                                                                                                                                                                                                                                                                  |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mod.rs`     | Tauri-команди `gmail_inbox_count` / `gmail_random_message`; HTTP helpers `fetch_inbox_count_at` / `list_inbox_ids_at` / `get_message_at` (URL — параметр для unit-тестів через `mockito`); `parse_messages_total`                                                     |
 | `message.rs` | `GmailMessage` DTO (`id, from, subject, date, body`), `extract_header` (case-insensitive header lookup), `extract_plain_text` (рекурсивний обхід `payload.parts` з пріоритетом `text/plain` і fallback на `text/html` зі стрипом тегів через `regex` + `html-escape`) |
-| `error.rs` | `GmailError { Network, Http{status,body}, Parse, ReauthRequired, Platform, Empty }` + конверсії з `reqwest::Error` і `AuthError` |
+| `error.rs`   | `GmailError { Network, Http{status,body}, Parse, ReauthRequired, Platform, Empty }` + конверсії з `reqwest::Error` і `AuthError`                                                                                                                                      |
 
 Покриття тестами: 30 unit-тестів (parse_messages_total, fetch_inbox_count_at,
 list_inbox_ids_at, get_message_at з mockito; extract_header,

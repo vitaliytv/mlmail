@@ -1,5 +1,4 @@
 <script setup>
-import { onMounted } from 'vue'
 import { useAuthStore } from '../services/auth-store.js'
 import { errorMessage } from '../i18n/auth-errors.js'
 
@@ -12,9 +11,7 @@ onMounted(() => auth.initialize())
     <h1>MLMaiL</h1>
     <div v-if="auth.isAuthenticated.value" class="signed-in">
       <p>Ви увійшли як {{ auth.email.value }}</p>
-      <p v-if="auth.inboxCount.value !== null" class="inbox-count">
-        Листів у скриньці: {{ auth.inboxCount.value }}
-      </p>
+      <p v-if="auth.inboxCount.value !== null" class="inbox-count">Листів у скриньці: {{ auth.inboxCount.value }}</p>
       <p v-else-if="auth.inboxErrorKind.value" class="error">
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </p>
@@ -31,21 +28,12 @@ onMounted(() => auth.initialize())
       <p v-else-if="auth.messageErrorKind.value" class="error">
         {{ errorMessage(auth.messageErrorKind.value) }}
       </p>
-      <button
-        @click="auth.loadRandomMessage()"
-        type="button"
-        :disabled="auth.isMessageLoading.value"
-      >
+      <button @click="auth.loadRandomMessage()" type="button" :disabled="auth.isMessageLoading.value">
         Показати інший
       </button>
       <button @click="auth.logout()" type="button">Вийти</button>
     </div>
-    <button
-      v-else
-      @click="auth.login()"
-      type="button"
-      :disabled="auth.isLoading.value"
-    >
+    <button v-else @click="auth.login()" type="button" :disabled="auth.isLoading.value">
       {{ auth.isLoading.value ? 'Зачекайте…' : 'Увійти через Google' }}
     </button>
     <p v-if="auth.errorKind.value" class="error">

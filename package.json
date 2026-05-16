@@ -7,10 +7,12 @@
   ],
   "type": "module",
   "scripts": {
-    "lint": "bun run lint-js && bun run lint-text && bun run lint-style",
-    "lint-js": "bunx oxlint --fix && bunx eslint --fix . && bunx jscpd .",
+    "lint": "bun run lint-js && bun run lint-text && bun run lint-style && bun run lint-ga && bun run lint-image && oxfmt .",
+    "lint-ga": "n-cursor lint-ga",
+    "lint-image": "npx @nitra/minify-image --src=. --write",
+    "lint-js": "bunx oxlint --fix && bunx eslint --fix . && bunx jscpd . && bunx knip --no-config-hints",
     "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
-    "lint-text": "npx cspell . && bun ./node_modules/@nitra/cursor/scripts/run-shellcheck-text.mjs && bunx markdownlint-cli2 --fix \"**/*.md\" \"**/*.mdc\" && bun ./node_modules/@nitra/cursor/scripts/run-v8r.mjs"
+    "lint-text": "n-cursor lint-text"
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
