@@ -11,12 +11,7 @@
   ],
   "project": ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"],
   "ignore": ["**/__fixtures__/**", "app/src-tauri/target/**"],
-  "ignoreDependencies": [
-    "@nitra/cspell-dict",
-    "/@cspell\\/dict-.+/",
-    "graphql",
-    "@nitra/stylelint-config"
-  ],
+  "ignoreDependencies": ["@nitra/cspell-dict", "/@cspell\\/dict-.+/", "graphql", "@nitra/stylelint-config"],
   "ignoreBinaries": [
     "actionlint",
     "cspell",

@@ -1,7 +1,6 @@
-.vscode/extensions.json
-.vscode/settings.json
-.git/**
-app/src-tauri/target/**
-app/src-tauri/gen/**
+.vscode/
+.git/
+app/src-tauri/target/
+app/src-tauri/gen/
 app/src-tauri/tauri.conf.json
-app/src-tauri/capabilities/**
+app/src-tauri/capabilities/
