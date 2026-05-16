@@ -83,18 +83,44 @@ Auth Component MLMaiL, Inbox List Component MLMaiL, Mail Reader Component MLMaiL
 Auth Component MLMaiL — Vue-компонент Login-екрану MLMaiL
 ([app/src/views/Login.vue](../../app/src/views/Login.vue)). Має дві гілки UI:
 
-- не авторизовано → кнопка "Увійти через Google" (заблокована поки триває
-  логін, текст змінюється на "Зачекайте…");
-- авторизовано → "Ви увійшли як {email}", рядок "Листів у скриньці: N",
-  картка випадкового листа (Від/Тема/Дата + тіло у `<pre>`) і кнопка
-  "Показати інший", яка обирає інший випадковий лист; внизу кнопка "Вийти";
-- помилка останньої спроби логіну — український рядок з Auth Errors i18n MLMaiL.
+- не авторизовано → `q-btn` "Увійти через Google" (вбудований loading-стан,
+  текст у `#loading` слоті — "Зачекайте…");
+- авторизовано → "Ви увійшли як {email}", `q-chip` "Листів у скриньці: N"
+  (або `q-skeleton`-плейсхолдер поки число вантажиться; `q-banner` при
+  помилці Gmail), `q-card` із випадковим листом (Від/Тема/Дата у
+  `q-card-section`, `<pre>` тіло) або `q-card` зі `q-skeleton`-рядками під
+  час завантаження; `q-btn` "Показати інший" із loading-станом і `q-btn`
+  "Вийти";
+- помилка останньої спроби логіну — `q-banner` з українським рядком з Auth
+  Errors i18n MLMaiL.
 
 Auth Component MLMaiL **не торкається токенів** і не знає про OAuth — він
 лише викликає методи Auth Store MLMaiL (`login`, `logout`, `initialize`).
 OAuth-механіка живе у контейнері MLMaiL Backend (Auth Module MLMaiL нижче).
 
-Залежить від: Auth Store MLMaiL, Auth Errors i18n MLMaiL.
+Залежить від: Auth Store MLMaiL, Auth Errors i18n MLMaiL, Frontend UI Kit
+MLMaiL (Quasar).
+
+### Компонент Frontend UI Kit MLMaiL (implemented)
+
+Frontend UI Kit MLMaiL — Quasar 2 як UI-фреймворк MLMaiL. Підключений через
+[`@quasar/vite-plugin`](../../app/vite.config.js) з кастомним
+[quasar-variables.sass](../../app/src/quasar-variables.sass) (macOS Accent
+Blue для `$primary`, system-ui font stack із SF Pro, мʼякший radius:
+кнопки 6px, generic 8px). Глобально зареєстрований у
+[main.js](../../app/src/main.js) із `iconSet: 'material-symbols-outlined'`
+і `config.dark: 'auto'` (наслідує OS prefers-color-scheme).
+
+Усі Vue-компоненти MLMaiL використовують Quasar-компоненти замість
+сирого HTML: `q-page`, `q-btn`, `q-card`, `q-chip`, `q-banner`,
+`q-skeleton`, `q-separator`, `q-layout`, `q-page-container`. Іконки —
+Material Symbols Outlined через `@quasar/extras`.
+
+Тести Vue-компонентів MLMaiL використовують
+[mountWithQuasar](../../app/src/test-utils/quasar.js) фабрику — обгортку
+над `mount()` з Vue Test Utils, що рендерить компонент усередині
+`q-layout > q-page-container` і реєструє Quasar plugin із `dark: false`
+(детерміністично).
 
 ### Компонент Auth Store MLMaiL (implemented)
 
