@@ -178,6 +178,19 @@ sandboxed iframe — окрема ітерація.
 ADR ще не оформлений; кандидат — `docs/adr/ADR-0008-random-message.md`.
 Чернетка інбоксу — у `docs/adr/_inbox/`.
 
+---
+
+**UI-фреймворк: Quasar 2 з macOS material look** — MLMaiL (macOS + Android)
+використовує Quasar 2 з sass-vars overrides (`$primary: #0a84ff`,
+`$button-border-radius: 6px`, system-ui font stack) для macOS-friendly look.
+Material Design = рідний UX на Android; bundle-size (~120 КБ gz) прийнятний
+для Tauri-бінарника. Альтернативи (plain HTML, Reka UI + Tailwind) відхилені
+через відсутність готових dialog/skeleton/notify з a11y та необхідність
+писати весь CSS вручну.
+
+ADR ще не оформлений; кандидат — `docs/adr/ADR-0009-quasar-ui-framework.md`.
+Чернетка — у `docs/adr/_inbox/`.
+
 ## Рішення, що очікують ADR для MLMaiL
 
 Нижче перелічено архітектурні питання MLMaiL, які **впливатимуть** на C4-модель
