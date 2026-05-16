@@ -6,8 +6,8 @@ import App from './App.vue'
 createApp(App)
   .use(Quasar, {
     config: {
-      dark: 'auto',
+      dark: 'auto'
     },
-    iconSet: 'material-symbols-outlined',
+    iconSet: 'material-symbols-outlined'
   })
   .mount('#app')
