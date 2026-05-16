@@ -1,0 +1,52 @@
+docs/adr/20260516-154647-e44bf0ca.md
+  s_ae8cefc21b0eb6::t_b42dfce1f49863 1-19
+package.json
+  s_ae8cefc21b0eb6::t_feaf36913d07e9 19
+docs/adr/20260516-154355-e44bf0ca.md
+  s_009b2a638b8557::t_8204829da20ef0 16-20,67,71,75,77-80,82-87,89-91,99-102,104,106,116,120,124,126-129,131-136,138-146,148-156,158-168,204,220-227,248-258,265,269,279,283,292-318,324,331-334,338,345,351-354
+  s_ae8cefc21b0eb6::t_b42dfce1f49863 1-15,21-66,68-70,72-74,76,81,88,92-98,103,105,107-115,117-119,121-123,125,130,137,147,157,169-203,205-219,228-247,259-264,266-268,270-278,280-282,284-291,319-323,325-330,335-337,339-344,346-350,355-382
+CLAUDE.md
+  s_ae8cefc21b0eb6::t_feaf36913d07e9 14
+.cursor/rules/n-adr.mdc
+  s_ae8cefc21b0eb6::t_feaf36913d07e9 7,9
+docs/adr/20260516-141724-25122938.md
+  s_ae8cefc21b0eb6::t_b42dfce1f49863 1-27
+AGENTS.md
+  s_ae8cefc21b0eb6::t_feaf36913d07e9 52
+.claude/hooks/capture-decisions.sh
+  s_ae8cefc21b0eb6::t_feaf36913d07e9 148-174
+app/src/main.js
+  s_009b2a638b8557::t_8204829da20ef0 9,11
+.markdownlint-cli2.jsonc
+  s_009b2a638b8557::t_91a64a98927126 3
+.cursor/skills/n-fix/SKILL.md
+  s_ae8cefc21b0eb6::t_feaf36913d07e9 9
+.cspell.json
+  s_009b2a638b8557::t_9465a74a85e517 130
+  s_009b2a638b8557::t_7031ad2a54c606 105-124
+  s_009b2a638b8557::t_bdbd2f1d5ac110 125-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "e7c8c24325e4b7228972664bd9063fbb2ba4dcf9",
+  "prompts": {},
+  "sessions": {
+    "s_009b2a638b8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1098a922-6a72-4a73-9224-19cec4744fd4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
