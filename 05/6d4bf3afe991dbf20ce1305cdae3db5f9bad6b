@@ -1,0 +1,19 @@
+app/src/views/Login.vue
+  s_009b2a638b8557::t_e470868a14591e 2,4,11-12,14-15,17-33,35-73,75-88,90-100,102-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "056d4bf3afe991dbf20ce1305cdae3db5f9bad6b",
+  "prompts": {},
+  "sessions": {
+    "s_009b2a638b8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1098a922-6a72-4a73-9224-19cec4744fd4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
