@@ -1,0 +1,35 @@
+knip.json
+  s_a7f7549cdcd542::t_f701fc9bc7ea38 18
+  s_a7f7549cdcd542::t_9c2d949fb9ef24 13-17,19,30
+docs/adr/20260516-135705-76bfcf1f.md
+  s_a7f7549cdcd542::t_9a47226b1892e6 19
+  s_a7f7549cdcd542::t_bf8f00ebd08670 12,22-36
+docs/adr/20260516-140144-76bfcf1f.md
+  s_a7f7549cdcd542::t_6d7e878f7cf3b7 1-45
+docs/adr/20260516-140330-76bfcf1f.md
+  s_a7f7549cdcd542::t_75a043ac1ae921 1-39
+.cspell.json
+  s_a7f7549cdcd542::t_3e7c451ea7a269 104-110
+  s_a7f7549cdcd542::t_81692d402d8e2f 111-115
+.v8rignore
+  s_a7f7549cdcd542::t_b759bf020f1e2e 7
+  s_a7f7549cdcd542::t_02124cc8543e1a 4-6
+docs/adr/20260516-074527-82fbac1a.md
+  s_a7f7549cdcd542::t_bf8f00ebd08670 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "882c9017e73c822d69fc25c6c13d06771074839a",
+  "prompts": {},
+  "sessions": {
+    "s_a7f7549cdcd542": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "25122938-0404-4a34-bcbd-70666569f03a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
