@@ -1,0 +1,21 @@
+app/package.json
+  s_009b2a638b8557::t_f37fad418ed668 16,18,22,27
+bun.lock
+  ai_agent 18,20,24,29,439-466,475-478,859-860,1181-1182,1411-1412,1527-1528,1533-1534,1581
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "70f1827e6f5b4731ea8ba5bcb53cace59a6c0e5b",
+  "prompts": {},
+  "sessions": {
+    "s_009b2a638b8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1098a922-6a72-4a73-9224-19cec4744fd4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
