@@ -1,0 +1,29 @@
+.cspell.json
+  s_a7f7549cdcd542::t_ac66e772ff3f53 114,116-117
+docs/adr/20260516-140330-76bfcf1f.md
+  s_a7f7549cdcd542::t_6a9f4b76dbf69c 20,37
+.github/workflows/git-ai.yml
+  s_a7f7549cdcd542::t_07e50d1cb09660 22
+.v8rignore
+  s_a7f7549cdcd542::t_0dc2b5b2e213ee 1-4,6
+docs/adr/_inbox/20260511-230235-96687315.md
+  s_a7f7549cdcd542::t_3a388fd7629d79 163,220
+knip.json
+  s_a7f7549cdcd542::t_3a388fd7629d79 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "d4c20130d0a9d35c4acc28d25cbaa2e12c59e075",
+  "prompts": {},
+  "sessions": {
+    "s_a7f7549cdcd542": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "25122938-0404-4a34-bcbd-70666569f03a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
