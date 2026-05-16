@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-05-16-quasar-refactor-design.md
+  s_ae8cefc21b0eb6::t_992f44118f8023 1-222
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "753264fe17fd84d77454c5806466b52ac59017b1",
+  "prompts": {},
+  "sessions": {
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
