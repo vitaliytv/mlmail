@@ -7,7 +7,7 @@ import Layouts from 'vite-plugin-vue-layouts-next'
 import VueMacros from 'vue-macros/vite'
 
 const host = process.env.TAURI_DEV_HOST
-const quasarVariables = fileURLToPath(new URL('./src/quasar-variables.sass', import.meta.url))
+const quasarVariables = fileURLToPath(new URL('src/quasar-variables.sass', import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig(() => ({

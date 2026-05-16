@@ -74,14 +74,14 @@ onMounted(() => auth.initialize())
 
       <div class="row q-gutter-sm">
         <q-btn
+          @click="auth.loadRandomMessage()"
           color="primary"
           icon="refresh"
           :loading="auth.isMessageLoading.value"
-          @click="auth.loadRandomMessage()"
         >
           Показати інший
         </q-btn>
-        <q-btn flat color="grey-8" icon="logout" @click="auth.logout()">
+        <q-btn @click="auth.logout()" flat color="grey-8" icon="logout">
           Вийти
         </q-btn>
       </div>
@@ -89,11 +89,11 @@ onMounted(() => auth.initialize())
 
     <q-btn
       v-else
+      @click="auth.login()"
       color="primary"
       icon-right="login"
       size="md"
       :loading="auth.isLoading.value"
-      @click="auth.login()"
     >
       <template v-if="!auth.isLoading.value">Увійти через Google</template>
       <template v-else>Зачекайте…</template>
