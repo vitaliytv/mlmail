@@ -1,0 +1,80 @@
+docs/superpowers/specs/2026-05-11-google-oauth-design.md
+  s_225042d7b4cee7::t_c989e09e2549c9 44-65,69-81,238-241,252-255,257-258,265-267,790-794,880-883,885-886,890-894
+.github/workflows/clean-ga-workflows.yml
+  s_225042d7b4cee7::t_8721f05802e383 1-26
+.github/workflows/lint-ga.yml
+  s_225042d7b4cee7::t_10290023e2bde7 1-35
+.cursor/rules/vue.mdc
+  h_74546f1f1ded3e 1-9
+docs/superpowers/plans/2026-05-14-inbox-count.md
+  s_225042d7b4cee7::t_c989e09e2549c9 527,540,551,564,576,590,606,854,867,870-873,885,922,929,1037-1040,1088,1107,1117,1135,1194,1261-1280
+.github/workflows/lint-js.yml
+  s_225042d7b4cee7::t_3e55a1b81f956d 44
+.n-cursor.json
+  s_225042d7b4cee7::t_c989e09e2549c9 16
+.github/workflows/git-ai.yml
+  s_225042d7b4cee7::t_de383beebaf062 1-30
+docs/adr/_inbox/20260511-230235-96687315.md
+  s_225042d7b4cee7::t_c989e09e2549c9 14-21,54,183,189-193,222,224-225,233-253,259
+  s_225042d7b4cee7::t_fa3272992e4b03 163,220-221
+docs/adr/20260515-222134-76bfcf1f.md
+  s_225042d7b4cee7::t_c989e09e2549c9 12,24
+app/package.json
+  s_225042d7b4cee7::t_c989e09e2549c9 29
+docs/superpowers/plans/2026-05-15-random-message.md
+  s_225042d7b4cee7::t_c989e09e2549c9 865,880,893,911,915,925,941,959,1162-1164,1224,1240,1244,1253,1263-1264,1267,1286,1294-1295,1298,1676-1694
+docs/adr/_inbox/20260511-222248-96687315.md
+  s_225042d7b4cee7::t_c989e09e2549c9 14,20,27,29,31
+docs/superpowers/specs/2026-05-15-random-message-design.md
+  s_225042d7b4cee7::t_c989e09e2549c9 97,116-123
+app/src/views/Login.vue
+  s_225042d7b4cee7::t_c989e09e2549c9 14,31,36
+docs/adr/_inbox/20260513-065057-96687315.md
+  s_225042d7b4cee7::t_c989e09e2549c9 9
+app/src/services/auth-store.test.js
+  s_225042d7b4cee7::t_c989e09e2549c9 15,26,105,118,129,142,154,157-158,169,185,200,215,228,246,250,260,276,294
+.github/zizmor.yml
+  s_225042d7b4cee7::t_96263b8494f566 1-8
+docs/adr/_inbox/20260513-063356-96687315.md
+  s_225042d7b4cee7::t_c989e09e2549c9 13,21,27,33
+docs/superpowers/specs/2026-05-14-inbox-count-design.md
+  s_225042d7b4cee7::t_c989e09e2549c9 96-102
+docs/ci4/03-components.md
+  s_225042d7b4cee7::t_c989e09e2549c9 267-280,304-306,308
+.github/workflows/clean-merged-branch.yml
+  s_225042d7b4cee7::t_b89286f7c8ab5d 1-34
+docs/ci4/04-code.md
+  s_225042d7b4cee7::t_c989e09e2549c9 122-124,129-131,136-138,144-146,151-153
+docs/adr/ADR-0006-google-oauth.md
+  s_225042d7b4cee7::t_c989e09e2549c9 33-36,42,46-49
+app/src/views/Login.test.js
+  s_225042d7b4cee7::t_c989e09e2549c9 25,37,50,63,72,82,96-99,114,136,152,156,165,175-176,179
+docs/adr/_inbox/20260511-231012-96687315.md
+  s_225042d7b4cee7::t_c989e09e2549c9 135-136,157,165,210,219,221,223,225,227,248-252
+.markdownlint-cli2.jsonc
+  s_225042d7b4cee7::t_155e1b00c0db0c 7-9
+package.json
+  s_225042d7b4cee7::t_d83a8fdf9934ff 10-11
+  s_225042d7b4cee7::t_7b21b823333e0b 12-13,15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "3e18bb33a097b7adf3abc1c727eb6fd80b6f600b",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_225042d7b4cee7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "82fbac1a-9b94-4697-9834-d3313a4b2463",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
