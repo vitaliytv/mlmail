@@ -1,0 +1,33 @@
+app/src/views/Login.vue
+  s_009b2a638b8557::t_b8f1bbb62cf905 33
+app/src/views/Login.test.js
+  s_009b2a638b8557::t_54515b4df26d8c 73
+  s_ae8cefc21b0eb6::t_98f0fd2b5a3865 2-3
+  s_ae8cefc21b0eb6::t_253945f1542832 20,31,43,56,70,89,106,121,144,160,173
+  s_009b2a638b8557::t_8caad8424904ea 94,108
+  s_009b2a638b8557::t_046757c4d234e1 180
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "cb2057dfe0705ee3ffbfd32b87222b131fc304ac",
+  "prompts": {},
+  "sessions": {
+    "s_009b2a638b8557": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1098a922-6a72-4a73-9224-19cec4744fd4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_ae8cefc21b0eb6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "76bfcf1f-39b2-4d5e-88b6-c387f498efb9",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
