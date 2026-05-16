@@ -1,104 +1,83 @@
 <script setup>
-import { useAuthStore } from '../services/auth-store.js'
+import { onMounted } from 'vue'
 import { errorMessage } from '../i18n/auth-errors.js'
+import { useAuthStore } from '../services/auth-store.js'
 
 const auth = useAuthStore()
 onMounted(() => auth.initialize())
 </script>
 
 <template>
-  <main class="login">
-    <h1>MLMaiL</h1>
-    <div v-if="auth.isAuthenticated.value" class="signed-in">
-      <p>Ви увійшли як {{ auth.email.value }}</p>
-      <p v-if="auth.inboxCount.value !== null" class="inbox-count">Листів у скриньці: {{ auth.inboxCount.value }}</p>
-      <p v-else-if="auth.inboxErrorKind.value" class="error">
+  <q-page class="flex flex-center column q-gutter-md q-pa-md">
+    <div class="text-h4">MLMaiL</div>
+
+    <template v-if="auth.isAuthenticated.value">
+      <div class="text-body1">Ви увійшли як {{ auth.email.value }}</div>
+
+      <q-chip v-if="auth.inboxCount.value !== null" icon="mail" color="primary" text-color="white">
+        Листів у скриньці: {{ auth.inboxCount.value }}
+      </q-chip>
+      <q-banner v-else-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.inboxErrorKind.value) }}
-      </p>
-      <p v-else class="inbox-count muted">Листів у скриньці: …</p>
-      <section v-if="auth.currentMessage.value" class="message">
-        <header class="message-head">
-          <p><strong>Від:</strong> {{ auth.currentMessage.value.from }}</p>
-          <p><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</p>
-          <p><strong>Дата:</strong> {{ auth.currentMessage.value.date }}</p>
-        </header>
-        <pre class="message-body">{{ auth.currentMessage.value.body }}</pre>
-      </section>
-      <p v-else-if="auth.isMessageLoading.value" class="muted">Завантаження…</p>
-      <p v-else-if="auth.messageErrorKind.value" class="error">
+      </q-banner>
+      <q-skeleton v-else type="QChip" width="180px" />
+
+      <template v-if="auth.currentMessage.value">
+        <q-card flat bordered style="max-width: 60ch; width: 100%">
+          <q-card-section>
+            <div><strong>Від:</strong> {{ auth.currentMessage.value.from }}</div>
+            <div><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</div>
+            <div><strong>Дата:</strong> {{ auth.currentMessage.value.date }}</div>
+          </q-card-section>
+          <q-separator inset />
+          <q-card-section class="message-body">
+            {{ auth.currentMessage.value.body }}
+          </q-card-section>
+        </q-card>
+      </template>
+      <template v-else-if="auth.isMessageLoading.value">
+        <q-card flat bordered style="max-width: 60ch; width: 100%">
+          <q-card-section>
+            <q-skeleton type="text" width="70%" />
+            <q-skeleton type="text" width="60%" />
+            <q-skeleton type="text" width="50%" />
+          </q-card-section>
+          <q-separator inset />
+          <q-card-section>
+            <q-skeleton type="text" />
+            <q-skeleton type="text" />
+            <q-skeleton type="text" width="80%" />
+          </q-card-section>
+        </q-card>
+      </template>
+      <q-banner v-else-if="auth.messageErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.messageErrorKind.value) }}
-      </p>
-      <button @click="auth.loadRandomMessage()" type="button" :disabled="auth.isMessageLoading.value">
-        Показати інший
-      </button>
-      <button @click="auth.logout()" type="button">Вийти</button>
-    </div>
-    <button v-else @click="auth.login()" type="button" :disabled="auth.isLoading.value">
-      {{ auth.isLoading.value ? 'Зачекайте…' : 'Увійти через Google' }}
-    </button>
-    <p v-if="auth.errorKind.value" class="error">
+      </q-banner>
+      <q-banner v-else class="bg-grey-2" rounded dense> Скринька порожня. </q-banner>
+
+      <div class="row q-gutter-sm">
+        <q-btn @click="auth.loadRandomMessage()" color="primary" icon="refresh" :loading="auth.isMessageLoading.value">
+          Показати інший
+        </q-btn>
+        <q-btn @click="auth.logout()" flat color="grey-8" icon="logout"> Вийти </q-btn>
+      </div>
+    </template>
+
+    <q-btn v-else @click="auth.login()" color="primary" icon-right="login" size="md" :loading="auth.isLoading.value">
+      <template v-if="!auth.isLoading.value">Увійти через Google</template>
+      <template v-else>Зачекайте…</template>
+    </q-btn>
+
+    <q-banner v-if="auth.errorKind.value" class="bg-red-1 text-red-9" rounded dense>
       {{ errorMessage(auth.errorKind.value) }}
-    </p>
-  </main>
+    </q-banner>
+  </q-page>
 </template>
 
 <style scoped>
-.login {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding-top: 10vh;
-  text-align: center;
-}
-
-.login button {
-  padding: 0.6em 1.2em;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: #fff;
-  cursor: pointer;
-  font: inherit;
-}
-
-.login button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.inbox-count {
-  margin: 0;
-}
-
-.inbox-count.muted {
-  opacity: 0.6;
-}
-
-.error {
-  color: #b00020;
-}
-
-.message {
-  max-width: 60ch;
-  text-align: left;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 0.8em 1em;
-  background: rgb(0 0 0 / 2%);
-}
-
-.message-head p {
-  margin: 0.1em 0;
-}
-
 .message-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  margin: 0.6em 0 0;
   font-family: inherit;
-}
-
-.muted {
-  opacity: 0.6;
 }
 </style>

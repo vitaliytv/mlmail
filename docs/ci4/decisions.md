@@ -178,6 +178,40 @@ sandboxed iframe — окрема ітерація.
 ADR ще не оформлений; кандидат — `docs/adr/ADR-0008-random-message.md`.
 Чернетка інбоксу — у `docs/adr/_inbox/`.
 
+### Рішення: UI-фреймворк MLMaiL — Quasar 2 з macOS material-look
+
+Закодовано у [app/package.json](../../app/package.json),
+[app/vite.config.js](../../app/vite.config.js),
+[app/src/main.js](../../app/src/main.js),
+[app/src/quasar-variables.sass](../../app/src/quasar-variables.sass),
+[app/src/App.vue](../../app/src/App.vue),
+[app/src/views/Login.vue](../../app/src/views/Login.vue),
+[app/src/test-utils/quasar.js](../../app/src/test-utils/quasar.js).
+
+Quasar 2 підключається через `@quasar/vite-plugin` у наявний Vite-конфіг
+(не Quasar CLI), що зберігає Tauri-pipeline і всі попередні плагіни.
+Кастомний `quasar-variables.sass` дає macOS material-look: macOS Accent
+Blue (`#0a84ff`) для `$primary`, system-ui font stack із SF Pro, мʼякший
+radius (6px кнопки, 8px generic). Іконки — Material Symbols Outlined
+(`@quasar/extras`). Dark mode — `auto` за OS prefers-color-scheme.
+
+Узгоджується з `.cursor/rules/vue.mdc` («Використовуй Quasar для
+компонентів»). Tauri-таргети macOS та Android, без вебу, без Windows;
+Quasar mobile-first + платформ-aware дає кращий out-of-the-box UX, ніж
+plain HTML або Reka UI.
+
+Вплив на C4-модель MLMaiL:
+
+- [03-components.md](03-components.md) — додано Frontend UI Kit MLMaiL
+  (Quasar) як новий компонент, Auth Component MLMaiL переключений на
+  Quasar-компоненти, mountWithQuasar test-helper зафіксовано.
+- [04-code.md](04-code.md) — нові секції для `quasar-variables.sass`,
+  `test-utils/quasar.js`, оновлено `main.js`, `vite.config.js`, `App.vue`,
+  `Login.vue`.
+
+ADR ще не оформлений; кандидат — `docs/adr/ADR-0009-quasar-ui.md`.
+Чернетка інбоксу — у `docs/adr/_inbox/`.
+
 ## Рішення, що очікують ADR для MLMaiL
 
 Нижче перелічено архітектурні питання MLMaiL, які **впливатимуть** на C4-модель

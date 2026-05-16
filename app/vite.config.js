@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
 import Vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import { defineConfig } from 'vite'
@@ -5,6 +7,7 @@ import Layouts from 'vite-plugin-vue-layouts-next'
 import VueMacros from 'vue-macros/vite'
 
 const host = process.env.TAURI_DEV_HOST
+const quasarVariables = fileURLToPath(new URL('src/quasar-variables.sass', import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
@@ -14,10 +17,13 @@ export default defineConfig(() => ({
     }),
     VueMacros({
       plugins: {
-        vue: Vue()
+        vue: Vue({ template: { transformAssetUrls } })
       }
     }),
-    Layouts()
+    Layouts(),
+    quasar({
+      sassVariables: quasarVariables
+    })
   ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

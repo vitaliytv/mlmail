@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { flushPromises } from '@vue/test-utils'
+import { mountWithQuasar } from '../test-utils/quasar.js'
 
 const invokeMock = vi.fn()
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
@@ -16,7 +17,7 @@ beforeEach(() => {
 describe('Login.vue', () => {
   it('renders "Увійти через Google" when not authenticated', async () => {
     invokeMock.mockResolvedValue(false)
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('Увійти через Google')
   })
@@ -27,7 +28,7 @@ describe('Login.vue', () => {
       if (cmd === 'auth_current_email') return Promise.resolve('me@example.com')
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('Ви увійшли як me@example.com')
     expect(w.text()).toContain('Вийти')
@@ -39,7 +40,7 @@ describe('Login.vue', () => {
       if (cmd === 'auth_start_login') return Promise.reject(Object.assign(new Error('Network'), { kind: 'Network' }))
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     await w.find('button').trigger('click')
     await flushPromises()
@@ -52,7 +53,7 @@ describe('Login.vue', () => {
       if (cmd === 'auth_start_login') return Promise.resolve({ email: 'x@y' })
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     await w.find('button').trigger('click')
     await flushPromises()
@@ -66,10 +67,10 @@ describe('Login.vue', () => {
       if (cmd === 'auth_logout') return Promise.resolve()
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     const buttons = w.findAll('button')
-    const logoutBtn = buttons.find(b => b.text() === 'Вийти')
+    const logoutBtn = buttons.find(b => b.text().includes('Вийти'))
     await logoutBtn.trigger('click')
     await flushPromises()
     expect(invokeMock).toHaveBeenCalledWith('auth_logout')
@@ -85,12 +86,12 @@ describe('Login.vue inbox count', () => {
       if (cmd === 'gmail_inbox_count') return Promise.resolve(348)
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('Листів у скриньці: 348')
   })
 
-  it('shows placeholder before count loads', async () => {
+  it('shows skeleton before count loads', async () => {
     let resolveCount
     // oxlint-disable-next-line promise/avoid-new
     const pending = new Promise(resolve => {
@@ -102,9 +103,9 @@ describe('Login.vue inbox count', () => {
       if (cmd === 'gmail_inbox_count') return pending
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
-    expect(w.text()).toContain('Листів у скриньці: …')
+    expect(w.find('.q-skeleton').exists()).toBe(true)
     resolveCount(7)
     await flushPromises()
     expect(w.text()).toContain('Листів у скриньці: 7')
@@ -117,7 +118,7 @@ describe('Login.vue inbox count', () => {
       if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('Gmail повернув помилку. Спробуйте пізніше.')
   })
@@ -140,7 +141,7 @@ describe('Login.vue random message', () => {
       if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('alice@example.com')
     expect(w.text()).toContain('Greetings')
@@ -156,7 +157,7 @@ describe('Login.vue random message', () => {
       if (cmd === 'gmail_random_message') return Promise.reject(Object.assign(new Error('Empty'), { kind: 'Empty' }))
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('Скринька порожня.')
   })
@@ -169,14 +170,14 @@ describe('Login.vue random message', () => {
       if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
       return Promise.resolve(null)
     })
-    const w = mount(Login)
+    const w = mountWithQuasar(Login)
     await flushPromises()
     invokeMock.mockClear()
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'gmail_random_message') return Promise.resolve({ ...sampleMessage, id: 'm2', subject: 'Next one' })
       return Promise.resolve(null)
     })
-    const btn = w.findAll('button').find(b => b.text() === 'Показати інший')
+    const btn = w.findAll('button').find(b => b.text().includes('Показати інший'))
     await btn.trigger('click')
     await flushPromises()
     expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')

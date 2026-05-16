@@ -11,10 +11,12 @@
 @.cursor/rules/n-style-lint.mdc
 @.cursor/rules/n-text.mdc
 @.cursor/rules/n-vue.mdc
+@.cursor/rules/vue.mdc
 
 ## Лінт і ESLint (без паралельних запусків)
 
 Щоб не запускати **кілька** одночасних **`eslint`** (і не перевантажувати диск/CPU), **заборонено** стартувати `bun run lint` / `lint-js` / `eslint` **паралельно** в різних Bash-задачах, **фонових** shells чи **субагентах** (Task тощо). Має бути **один** послідовний прогон на сесію; команда **`/n-lint`** — **не** ділити на паралельні підзадачі. Деталі: `.cursor/skills/n-lint/SKILL.md`.
+
 
 ## Skills
 
