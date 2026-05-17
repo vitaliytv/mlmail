@@ -1,0 +1,21 @@
+app/src-tauri/src/auth/storage/file.rs
+  s_03b972607c7997::t_e135badf5c88f5 41-42,44-59,63-64,75
+docs/adr/20260517-105342-rust-analyzer-не-знаходить-workspace-у-кореневій-директорії.md
+  s_03b972607c7997::t_de7217c1d216e4 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "5287428294407f5522e728cd36e845d8f719a00d",
+  "prompts": {},
+  "sessions": {
+    "s_03b972607c7997": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5453824c-bfc9-44a1-b81a-32590d698b1b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
