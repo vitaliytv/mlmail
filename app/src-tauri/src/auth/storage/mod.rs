@@ -15,8 +15,7 @@ pub trait RefreshTokenStorage: Send + Sync {
 
 pub type SharedStorage = Arc<dyn RefreshTokenStorage>;
 
-#[cfg(target_os = "macos")]
-pub mod macos;
+pub mod file;
 
 #[cfg(target_os = "android")]
 pub mod android;
@@ -24,8 +23,8 @@ pub mod android;
 pub mod in_memory;
 
 #[cfg(target_os = "macos")]
-pub fn platform_storage() -> SharedStorage {
-    Arc::new(macos::Keychain::new())
+pub fn platform_storage(path: std::path::PathBuf) -> SharedStorage {
+    Arc::new(file::FileStorage::new(path))
 }
 
 #[cfg(target_os = "android")]

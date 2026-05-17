@@ -33,9 +33,6 @@ dotenvy = "0.15.7"
 regex = "1"
 html-escape = "0.2"
 
-[target.'cfg(target_os = "macos")'.dependencies]
-keyring = { version = "3", default-features = false, features = ["apple-native"] }
-
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21"
 
@@ -43,3 +40,4 @@ jni = "0.21"
 mockito = "1"
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
 tauri = { version = "2", features = ["test"] }
+tempfile = "3"

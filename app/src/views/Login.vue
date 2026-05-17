@@ -8,7 +8,7 @@ onMounted(() => auth.initialize())
 </script>
 
 <template>
-  <q-page class="flex flex-center column q-gutter-md q-pa-md">
+  <q-page class="column items-center q-gutter-md q-pa-md">
     <div class="text-h4">MLMaiL</div>
 
     <template v-if="auth.isAuthenticated.value">

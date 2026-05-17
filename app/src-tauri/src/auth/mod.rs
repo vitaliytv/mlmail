@@ -23,8 +23,12 @@ pub struct AuthSession {
 }
 
 #[cfg(target_os = "macos")]
-pub fn make_storage(_app: &AppHandle) -> SharedStorage {
-    storage::platform_storage()
+pub fn make_storage(app: &AppHandle) -> SharedStorage {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .expect("app_data_dir must be available on macOS");
+    storage::platform_storage(dir.join("session.json"))
 }
 
 #[cfg(target_os = "android")]
