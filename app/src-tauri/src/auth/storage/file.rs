@@ -38,15 +38,30 @@ fn ensure_parent_dir(path: &Path) -> Result<(), StorageError> {
     Ok(())
 }
 
+// Write data to a tmp file with 0600 mode from the start, then rename atomically.
+// This avoids the race window that exists when writing with default umask then chmod.
 #[cfg(unix)]
-fn restrict_permissions(path: &Path) -> Result<(), StorageError> {
-    use std::os::unix::fs::PermissionsExt;
-    fs::set_permissions(path, fs::Permissions::from_mode(0o600)).map_err(io_to_backend)
+fn write_atomic_secret(path: &Path, data: &[u8]) -> Result<(), StorageError> {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+
+    let tmp = path.with_extension("tmp");
+    {
+        let mut f = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .mode(0o600)
+            .open(&tmp)
+            .map_err(io_to_backend)?;
+        f.write_all(data).map_err(io_to_backend)?;
+    }
+    fs::rename(&tmp, path).map_err(io_to_backend)
 }
 
 #[cfg(not(unix))]
-fn restrict_permissions(_path: &Path) -> Result<(), StorageError> {
-    Ok(())
+fn write_atomic_secret(path: &Path, data: &[u8]) -> Result<(), StorageError> {
+    fs::write(path, data).map_err(io_to_backend)
 }
 
 impl RefreshTokenStorage for FileStorage {
@@ -57,8 +72,7 @@ impl RefreshTokenStorage for FileStorage {
             refresh_token: refresh_token.to_string(),
         };
         let data = serde_json::to_vec_pretty(&session).map_err(json_to_backend)?;
-        fs::write(&self.path, data).map_err(io_to_backend)?;
-        restrict_permissions(&self.path)
+        write_atomic_secret(&self.path, &data)
     }
 
     fn load(&self) -> Result<Option<StoredSession>, StorageError> {
