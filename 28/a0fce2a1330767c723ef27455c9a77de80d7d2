@@ -1,0 +1,87 @@
+docs/adr/20260517-073030-таурі-тестування-на-macos-mock-runtime-замість-webdriver.md
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 16,26,40,50
+docs/adr/20260517-102006-файловий-бекенд-сесії-замість-keychain.md
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 8,12,23,33
+bun.lock
+  ai_agent 9,24,302,1620
+.v8rignore
+  s_0c2e3d38f1f4bc::t_a4007262786d3b 1-2,4
+.cursor/rules/n-js-lint.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 3-5
+docs/adr/20260517-075423-q-page-з-flex-center-приховує-контент-нижче-viewport.md
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 13,25
+.cursor/rules/n-adr.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 2,7,9,11-15,17,19,28-30,47,94-95,147,149,151-167,169
+.cursor/rules/n-text.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 2,4,7,118
+package.json
+  s_0c2e3d38f1f4bc::t_244e181db7fbc6 10,14
+.cursor/rules/n-ci4.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 2,4,7-9,13,17,21,25,29,33,37-162,164,166-300,304,308,312,316,320-328,330,332
+app/src/views/Login.vue
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 58-62,69-75
+.n-cursor.json
+  s_014bfc59beb6a1::t_8551bf684a560c 12
+.cursor/rules/n-ga.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 20-22,53-55,85-88,98-101,141-143,256-259,264,268-270,278,280-284,286,288-296
+.cursor/rules/n-image-avif.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 10
+.claude/hooks/capture-decisions.sh
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 12-15,26-27,29,86,88,92-98,102-119,122-123,127,130
+.gitleaks.toml
+  s_0c2e3d38f1f4bc::t_17db0fe1dd3ae1 1-12
+.claude/hooks/.normalize-state
+  ai_agent 1
+app/package.json
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 25,36
+.cursor/rules/n-security.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 1-88
+AGENTS.md
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 27-30
+.cursor/rules/n-vue.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 3,107-120
+.cursor/rules/n-js-run.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 1-213
+docs/adr/20260517-163133-міграція-з-vitest-на-bun-test-runner.md
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 8
+.claude/hooks/normalize-decisions.sh
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 15-18,30-32,163,172,176-180,191
+.cursor/rules/n-image-compress.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 8,10,25,27-29,33
+.cursor/rules/n-bun.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 3-5
+docs/adr/vi-hoisted-vitest-mock.md
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 18
+docs/adr/20260517-162620-міграція-з-vitest-на-bun-test-runner.md
+  s_0c2e3d38f1f4bc::t_08c9ce26367590 17,23,30
+.cursor/rules/n-changelog.mdc
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 8
+CLAUDE.md
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 11-12
+.cursor/hooks.json
+  s_0c2e3d38f1f4bc::t_e1274c765287ee 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "28a0fce2a1330767c723ef27455c9a77de80d7d2",
+  "prompts": {},
+  "sessions": {
+    "s_014bfc59beb6a1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "28b0e088-1292-491d-941c-6c588f30dcb8",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_0c2e3d38f1f4bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b69d2c87-5272-41a6-8c90-8197ce66c4b0",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
