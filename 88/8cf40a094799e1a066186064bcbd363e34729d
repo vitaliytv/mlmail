@@ -1,0 +1,41 @@
+app/src-tauri/src/auth/storage/file.rs
+  s_ddcb1669062a3d::t_a743a5bfc6410e 3-6,8-12,14-16,18-20,24-25,28,32-52,54-61,65,67-68,70-74,78-160
+app/src-tauri/Cargo.lock
+  ai_agent 536,549,2113,3601
+app/src-tauri/src/auth/storage/mod.rs
+  s_ddcb1669062a3d::t_e43e600211db17 18,26-27
+app/src-tauri/src/auth/mod.rs
+  s_ddcb1669062a3d::t_ef99a0f30a87aa 26-31
+app/src/views/Login.vue
+  s_ddcb1669062a3d::t_48a81e908dd865 11
+docs/adr/20260517-075423-q-page-з-flex-center-приховує-контент-нижче-viewport.md
+  s_ddcb1669062a3d::t_095c369b87a196 1-50
+app/src-tauri/Cargo.toml
+  s_ddcb1669062a3d::t_e9d1ffe1d148bf 43
+app/package.json
+  s_b22d2c48d54f91::t_b11fa673dd535c 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "888cf40a094799e1a066186064bcbd363e34729d",
+  "prompts": {},
+  "sessions": {
+    "s_b22d2c48d54f91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ea1bfcf-c521-4bb7-97f7-d69b25ac9347",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_ddcb1669062a3d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5443ccc5-127f-4780-b2aa-b8040a9b1708",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
