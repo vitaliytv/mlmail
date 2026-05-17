@@ -1,5 +1,4 @@
 <script setup>
-import { onMounted } from 'vue'
 import { errorMessage } from '../i18n/auth-errors.js'
 import { useAuthStore } from '../services/auth-store.js'
 
@@ -56,14 +55,24 @@ onMounted(() => auth.initialize())
       <q-banner v-else class="bg-grey-2" rounded dense> Скринька порожня. </q-banner>
 
       <div class="row q-gutter-sm">
-        <q-btn @click="auth.loadRandomMessage()" color="primary" icon="sym_o_refresh" :loading="auth.isMessageLoading.value">
+        <q-btn
+          @click="auth.loadRandomMessage()"
+          color="primary"
+          icon="sym_o_refresh"
+          :loading="auth.isMessageLoading.value">
           Показати інший
         </q-btn>
         <q-btn @click="auth.logout()" flat color="grey-8" icon="sym_o_logout"> Вийти </q-btn>
       </div>
     </template>
 
-    <q-btn v-else @click="auth.login()" color="primary" icon-right="sym_o_login" size="md" :loading="auth.isLoading.value">
+    <q-btn
+      v-else
+      @click="auth.login()"
+      color="primary"
+      icon-right="sym_o_login"
+      size="md"
+      :loading="auth.isLoading.value">
       <template v-if="!auth.isLoading.value">Увійти через Google</template>
       <template v-else>Зачекайте…</template>
     </q-btn>

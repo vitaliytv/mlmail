@@ -10,6 +10,7 @@ Let me check the memory file and current state of Login.vue to provide better co
 The user is asking why the email body is not showing in the app. I need to systematically debug this. Let me check the Login.vue more carefully, especially the auth-store and the Rust implementation.
 
 Let me trace the data flow:
+
 1. Rust returns `gmail_random_message`
 2. auth-store.js stores it in `_currentMessage`
 3. Login.vue displays `auth.currentMessage.value.body`
@@ -21,6 +22,7 @@ I need to see the full content of the files to make a proper diagnosis. Let me l
 Let me review what's in the transcript so far. The assistant has done good investigation. Now I need to analyze what they've found and continue the debugging. But wait - this is a transcript analysis task, not me actually debugging the code. I need to produce a knowledge artifact about what was done in this session.
 
 The session transcript shows:
+
 1. User reports email body not showing
 2. Assistant uses systematic-debugging skill
 3. Investigates Login.vue, auth-store.js, Rust gmail/mod.rs and message.rs

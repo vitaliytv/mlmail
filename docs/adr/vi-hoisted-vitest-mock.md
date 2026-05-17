@@ -15,7 +15,7 @@ Vitest hoistує `vi.mock()` на початок файлу на етапі тр
 const mockAuth = vi.hoisted(() => ({
   status: 'idle',
   initialize: vi.fn(),
-  startLogin: vi.fn(),
+  startLogin: vi.fn()
 }))
 vi.mock('../services/auth-store.js', () => ({ useAuthStore: () => mockAuth }))
 ```

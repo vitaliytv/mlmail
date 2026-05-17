@@ -1,0 +1,88 @@
+---
+description: Локальний та CI-секюріті-лінт через gitleaks — скрипт `lint-security`, `.gitleaks.toml`, інтеграція в агрегований `lint`
+globs: "**/.gitleaks.toml,**/package.json,**/.github/workflows/**/*.yml"
+alwaysApply: false
+version: '1.1'
+---
+
+[gitleaks](https://github.com/gitleaks/gitleaks) — глобальний CLI (як `shellcheck`, `conftest`); **не** додавай до `dependencies`/`devDependencies`.
+
+## Канон `package.json#scripts`
+
+- `lint-security` скрипт: `package.json`:
+
+```json
+{ "scripts": { "lint-security": "gitleaks detect --no-banner" } }
+```
+- `lint` агрегатор повинен містити: `package.json`:
+
+```json
+{ "scripts": { "lint": ["bun run lint-security"] } }
+```
+- Заборонено `gitleaks` у `dependencies`/`devDependencies`: `package.json`:
+
+```json
+{
+  "dependencies": { "gitleaks": "глобальний CLI — не додавай у dependencies" },
+  "devDependencies": { "gitleaks": "глобальний CLI — не додавай у devDependencies" }
+}
+```
+
+**Зауваження:**
+
+- `gitleaks detect` — сканує робоче дерево (uncommitted + tracked); швидше і безпечніше для частого `bun run lint`, ніж `gitleaks git`.
+- `--no-banner` — прибирає ASCII-арт (CI-friendly).
+- Позиція в `lint`: за конвенцією після інших `lint-*` і перед `oxfmt`.
+
+## `.gitleaks.toml` (рекомендована основа)
+
+Канон (допускає розширення в `[allowlist].paths`): `.gitleaks.toml`:
+
+```toml
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''(^|/)node_modules(/|$)''',
+  '''(^|/)\.git(/|$)''',
+  '''(^|/)dist(/|$)''',
+  '''(^|/)build(/|$)''',
+  '''.*\.lock$''',
+  '''.*fixtures?/.*'''
+]
+```
+
+**Важливо:** `useDefault = true` — НЕ перетирай дефолтний `rules`-масив; реальні винятки лише через `[allowlist]`.
+
+## GitHub Actions (опційно)
+
+Окремий workflow не обовʼязковий — `lint-security` уже виконується через агрегований `lint`. Для fast-feedback окремо:
+
+```yaml title=".github/workflows/lint-security.yml"
+name: Lint Security
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+```
+
+Для повного скану git-історії потрібен `fetch-depth: 0`.

@@ -1,5 +1,4 @@
 import { mount } from '@vue/test-utils'
-import { h } from 'vue'
 import { QLayout, QPageContainer, Quasar } from 'quasar'
 
 /**

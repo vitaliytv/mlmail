@@ -13,6 +13,7 @@ I'll produce a durable knowledge artifact from this session transcript.
 **Контекст:** Розробляється Tauri v2 десктопний додаток на macOS. Потрібно вирішити стратегію e2e/integration тестування, враховуючи що macOS офіційно не підтримується `tauri-driver` (Apple не надає WebKit WebDriver для WKWebView у вбудованих застосунках).
 
 **Рішення/Процедура/Факт:**
+
 - Вибрано офіційний шлях Tauri v2 — **Mock Runtime** (`tauri::test::mock_builder` + `mock_context` + `noop_assets`) замість WebDriver чи Appium.
 - Додано `tauri = { version = "2", features = ["test"] }` у `[dev-dependencies]` у `src-tauri/Cargo.toml`.
 - Рефакторинг для DI тестованості: `Box<dyn RefreshTokenStorage>` → `Arc<dyn ...>` як `SharedStorage` (managed Tauri state); новий файл `src-tauri/src/endpoints.rs` містить `Endpoints { google_token, gmail_label_inbox, gmail_messages_list }` — URL як managed state, щоб тести могли підставляти `mockito`-адреси.
@@ -22,6 +23,7 @@ I'll produce a durable knowledge artifact from this session transcript.
 **Обґрунтування:** Tauri team явно заявляє «On desktop, only Windows and Linux are supported» для WebDriver; macOS без обхідних шляхів (Docker/Linux VM) не має жодного офіційного UI e2e механізму. Mock Runtime покриває рівень `State<>` + `AppHandle`, дозволяє використовувати `mockito` для HTTP-ендпоінтів Google/Gmail і не потребує реального keyring/браузера. Appium + XCUITest розглядався, але є community-solution без офіційної підтримки Tauri.
 
 **Розглянуті альтернативи:**
+
 - `tauri-driver` + WebDriverIO на Linux через Docker/OrbStack (офіційне, але не продова платформа macOS, складне налаштування OAuth-моків)
 - Appium + XCUITest driver (нативний macOS UI, але не WebDriver DOM-протокол, нема офіційної підтримки Tauri)
 - Playwright проти `bun run dev` без Tauri runtime (лише frontend DX, не e2e)
@@ -35,6 +37,7 @@ I'll produce a durable knowledge artifact from this session transcript.
 **Контекст:** Проект має фронтенд на Vue 3 + Quasar з `unplugin-auto-import`. `bun test` запускає Bun's власний runner без Vite pipeline, що ламало тести через відсутність auto-import transform і несумісний API (`vi.fn()` vs `mock()`).
 
 **Рішення/Процедура/Факт:**
+
 - `*.test.js` → `bun:test` API (`mock`, `mock.module`, імпорт з `bun:test`). Файли: `auth-store.test.js`, `auth-errors.test.js`.
 - `*.vitest.js` → Vitest (Vue SFC + Quasar plugin pipeline). Файл `Login.test.js` перейменовано в `Login.vitest.js`.
 - `vite.config.js` `include` звужено до `'src/**/*.vitest.{js,vue}'` — Vitest не підхоплює `*.test.js`.
@@ -44,6 +47,7 @@ I'll produce a durable knowledge artifact from this session transcript.
 **Обґрунтування:** Vue SFC потребує компіляції через `@vitejs/plugin-vue` + Quasar plugin — за межами bun's вбудованого loader-а. Pure-JS логіка (store, i18n) не залежить від Vite і виграє від швидкості bun:test. Розподіл за розширенням (`.test.js` / `.vitest.js`) дає чітку конвенцію без конфігурації per-file.
 
 **Розглянуті альтернативи:**
+
 - `bunx vitest` для всього (нуль змін коду, але `bun test` все одно не працює)
 - Повна міграція на `bun:test` включно з Vue SFC через community `bun-plugin-vue` (нестабільний, ~3-4 год без гарантій)
 

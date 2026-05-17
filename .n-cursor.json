@@ -9,6 +9,8 @@
     "image-avif",
     "image-compress",
     "js-lint",
+    "js-run",
+    "security",
     "style-lint",
     "text",
     "vue"

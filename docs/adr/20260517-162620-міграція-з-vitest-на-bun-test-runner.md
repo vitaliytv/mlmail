@@ -14,17 +14,20 @@ transcript: /Users/vitaliytv/.claude/projects/-Users-vitaliytv-www-vitaliytv-mlm
 **Так, з Bun Test Runner + happy-dom DOM-тести працюють**, але потрібна мінімальна конфігурація:
 
 1. Додати в `app/package.json` devDependencies:
+
 ```json
 "happy-dom": "^16.0.0"
 ```
 
 2. Створити `app/bunfig.toml` (або додати до існуючого):
+
 ```toml
 [test]
 preload = ["./setup-happy-dom.ts"]
 ```
 
 3. Файл `app/setup-happy-dom.ts`:
+
 ```ts
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 GlobalRegistrator.register()

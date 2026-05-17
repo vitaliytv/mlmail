@@ -5,6 +5,7 @@ transcript: /Users/vitaliytv/.claude/projects/-Users-vitaliytv-www-vitaliytv-mlm
 ---
 
 ## ADR Міграція з Vitest на Bun Test Runner
+
 **Контекст:** У проєкті є два тест-файли (`auth-errors.test.js`, `auth-store.test.js`), які вже імпортують з `bun:test` і використовують `mock.module` — Bun-специфічний API, несумісний із Vitest. Скрипт `test` у `app/package.json` також уже викликає `bun test`. Vitest залишався у `devDependencies` без жодного реального тесту під його API.
 **Рішення/Процедура/Факт:** Прийнято рішення офіційно закріпити **Bun Test Runner** як єдиний test runner у проєкті. Оновлено правило `.cursor/rules/n-vue.mdc` (версія 1.8 → 1.9): секція «Тестування» тепер рекомендує `bun:test` замість Vitest. Для DOM-тестів Vue-компонентів — `happy-dom` через `bunfig.toml` preload (`@happy-dom/global-registrator`). Vitest і `jsdom` підлягають видаленню з `devDependencies`.
 **Обґрунтування:** Фактичний стан коду вже спирався на `bun:test`/`mock.module`, тобто шлях назад до Vitest фактично відрізаний. Bun Test Runner не потребує окремого конфіга, happy-dom швидший за jsdom і достатній для Vue-компонентного тестування. Уніфікація runnerа прибирає дублювання залежностей.
