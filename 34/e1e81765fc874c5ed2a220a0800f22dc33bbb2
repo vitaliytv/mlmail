@@ -1,0 +1,37 @@
+app/src-tauri/.env
+  s_0c2e3d38f1f4bc::t_d81fce30ae9f66 3
+.markdownlint-cli2.jsonc
+  s_0c2e3d38f1f4bc::t_1ebf3299390abe 3
+app/src-tauri/.env.example
+  s_0c2e3d38f1f4bc::t_d81fce30ae9f66 3-4
+.gitignore
+  s_0c2e3d38f1f4bc::t_3087b7f8736b2e 21-23
+docs/adr/tauri-mock-runtime-тестування.md
+  s_0c2e3d38f1f4bc::t_8e51046ae03089 8
+.v8rignore
+  s_0c2e3d38f1f4bc::t_7b1ce183f17da3 5
+  s_0c2e3d38f1f4bc::t_6de9393dfd752c 4
+docs/adr/20260517-182918-інтеграція-gitleaks-як-обовязкового-security-лінтера.md
+  s_0c2e3d38f1f4bc::t_8e2d2ec78d773e 10-57
+knip.json
+  s_0c2e3d38f1f4bc::t_5f1063927190f3 20
+.cspell.json
+  s_0c2e3d38f1f4bc::t_3e545467472d37 167-182
+  s_0c2e3d38f1f4bc::t_d1bb5f3cc312b3 143-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "34e1e81765fc874c5ed2a220a0800f22dc33bbb2",
+  "prompts": {},
+  "sessions": {
+    "s_0c2e3d38f1f4bc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b69d2c87-5272-41a6-8c90-8197ce66c4b0",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
