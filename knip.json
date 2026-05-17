@@ -17,6 +17,7 @@
     "cspell",
     "eslint",
     "git-ai",
+    "gitleaks",
     "jscpd",
     "markdownlint-cli2",
     "oxfmt",

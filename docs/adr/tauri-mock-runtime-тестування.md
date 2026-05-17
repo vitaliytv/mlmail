@@ -5,7 +5,7 @@
 
 ## Контекст
 
-Pроєкт MLMaiL — Tauri v2 + Vue 3 на macOS. Необхідно покрити integration-тестами Rust-команди (`auth_*`, `gmail_*`), але `tauri-driver` WebDriver не підтримує macOS.
+Проєкт MLMaiL — Tauri v2 + Vue 3 на macOS. Необхідно покрити integration-тестами Rust-команди (`auth_*`, `gmail_*`), але `tauri-driver` WebDriver не підтримує macOS.
 
 ## Рішення/Процедура/Факт
 
