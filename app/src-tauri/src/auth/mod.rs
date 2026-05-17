@@ -9,36 +9,40 @@ pub mod token_exchange;
 
 use crate::auth::error::AuthError;
 use crate::auth::state::AuthState;
-use crate::auth::storage::{RefreshTokenStorage, StoredSession};
+use crate::auth::storage::{RefreshTokenStorage, SharedStorage, StoredSession};
 use crate::auth::token_exchange::TokenResponse;
+use crate::endpoints::Endpoints;
 use serde::Serialize;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Manager, State};
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct AuthSession {
     pub email: String,
 }
 
 #[cfg(target_os = "macos")]
-fn make_storage(_app: &AppHandle) -> Box<dyn RefreshTokenStorage> {
+pub fn make_storage(_app: &AppHandle) -> SharedStorage {
     storage::platform_storage()
 }
 
 #[cfg(target_os = "android")]
-fn make_storage(app: &AppHandle) -> Box<dyn RefreshTokenStorage> {
+pub fn make_storage(app: &AppHandle) -> SharedStorage {
     storage::platform_storage(app)
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "android")))]
-fn make_storage(_app: &AppHandle) -> Box<dyn RefreshTokenStorage> {
+pub fn make_storage(_app: &AppHandle) -> SharedStorage {
+    use std::sync::Arc;
     // Other platforms unsupported; in-memory keeps the binary buildable for tooling.
-    Box::new(storage::in_memory::InMemoryStorage::new())
+    Arc::new(storage::in_memory::InMemoryStorage::new())
 }
 
-pub fn on_startup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let storage = make_storage(app);
+pub fn on_startup(
+    app: &AppHandle,
+    storage: &dyn RefreshTokenStorage,
+) -> Result<(), Box<dyn std::error::Error>> {
     let loaded = storage.load().map_err(|e| AuthError::from(e).to_string())?;
     if let Some(session) = loaded {
         let state: State<'_, Mutex<AuthState>> = app.state();
@@ -91,13 +95,11 @@ fn client_secret_for_refresh() -> Option<&'static str> {
     Some(config::desktop_client_secret())
 }
 
-#[tauri::command]
-pub async fn auth_start_login(
-    app: AppHandle,
-    state: State<'_, Mutex<AuthState>>,
+pub fn finalize_login(
+    resp: TokenResponse,
+    storage: &dyn RefreshTokenStorage,
+    state: &Mutex<AuthState>,
 ) -> Result<AuthSession, AuthError> {
-    let resp = run_login(&app).await?;
-
     let email = resp
         .id_token
         .as_deref()
@@ -109,7 +111,6 @@ pub async fn auth_start_login(
         .clone()
         .ok_or_else(|| AuthError::OAuth("no refresh_token in response".into()))?;
 
-    let storage = make_storage(&app);
     storage.save(&email, &refresh)?;
 
     {
@@ -120,9 +121,20 @@ pub async fn auth_start_login(
     Ok(AuthSession { email })
 }
 
+#[tauri::command]
+pub async fn auth_start_login(
+    app: AppHandle,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<AuthSession, AuthError> {
+    let resp = run_login(&app).await?;
+    finalize_login(resp, storage.inner().as_ref(), state.inner())
+}
+
 pub async fn acquire_access_token(
-    app: &AppHandle,
-    state: &State<'_, Mutex<AuthState>>,
+    token_endpoint: &str,
+    storage: &dyn RefreshTokenStorage,
+    state: &Mutex<AuthState>,
 ) -> Result<String, AuthError> {
     {
         let s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
@@ -131,12 +143,12 @@ pub async fn acquire_access_token(
         }
     }
 
-    let storage = make_storage(app);
     let stored = storage
         .load()?
         .ok_or(AuthError::ReauthRequired)?;
 
-    let resp = token_exchange::exchange_refresh(
+    let resp = token_exchange::exchange_refresh_at(
+        token_endpoint,
         client_id_for_refresh(),
         client_secret_for_refresh(),
         &stored.refresh_token,
@@ -166,10 +178,11 @@ pub async fn acquire_access_token(
 
 #[tauri::command]
 pub async fn auth_get_access_token(
-    app: AppHandle,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
 ) -> Result<String, AuthError> {
-    acquire_access_token(&app, &state).await
+    acquire_access_token(&endpoints.google_token, storage.inner().as_ref(), state.inner()).await
 }
 
 #[tauri::command]
@@ -187,17 +200,15 @@ pub fn auth_current_email(state: State<'_, Mutex<AuthState>>) -> Option<String> 
 
 #[tauri::command]
 pub async fn auth_logout(
-    app: AppHandle,
+    storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
 ) -> Result<(), AuthError> {
-    let storage = make_storage(&app);
     storage.clear()?;
     let mut s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
     s.reset();
     Ok(())
 }
 
-pub fn collect_session(app: &AppHandle) -> Result<Option<StoredSession>, AuthError> {
-    let storage = make_storage(app);
+pub fn collect_session(storage: &dyn RefreshTokenStorage) -> Result<Option<StoredSession>, AuthError> {
     Ok(storage.load()?)
 }

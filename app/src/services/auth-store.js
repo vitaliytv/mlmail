@@ -1,3 +1,4 @@
+import { ref, readonly } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
 const _email = ref(null)

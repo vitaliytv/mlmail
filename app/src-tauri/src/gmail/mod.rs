@@ -1,11 +1,12 @@
 pub mod error;
 pub mod message;
 
-use crate::auth::{self, state::AuthState};
+use crate::auth::{self, state::AuthState, storage::SharedStorage};
+use crate::endpoints::Endpoints;
 use crate::gmail::error::GmailError;
 use serde::Deserialize;
 use std::sync::Mutex;
-use tauri::{AppHandle, State};
+use tauri::State;
 
 pub const GMAIL_LABEL_INBOX_URL: &str =
     "https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX";
@@ -49,11 +50,17 @@ pub(crate) async fn fetch_inbox_count_at(
 
 #[tauri::command]
 pub async fn gmail_inbox_count(
-    app: AppHandle,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
 ) -> Result<u64, GmailError> {
-    let token = auth::acquire_access_token(&app, &state).await?;
-    fetch_inbox_count_at(GMAIL_LABEL_INBOX_URL, &token).await
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    fetch_inbox_count_at(&endpoints.gmail_label_inbox, &token).await
 }
 
 pub const GMAIL_MESSAGES_LIST_URL: &str =
@@ -156,16 +163,22 @@ pub(crate) async fn get_message_at(
 
 #[tauri::command]
 pub async fn gmail_random_message(
-    app: AppHandle,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
 ) -> Result<GmailMessage, GmailError> {
-    let token = auth::acquire_access_token(&app, &state).await?;
-    let ids = list_inbox_ids_at(GMAIL_MESSAGES_LIST_URL, &token).await?;
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let ids = list_inbox_ids_at(&endpoints.gmail_messages_list, &token).await?;
     if ids.is_empty() {
         return Err(GmailError::Empty);
     }
     let i = rand::random::<u64>() as usize % ids.len();
-    get_message_at(GMAIL_MESSAGES_LIST_URL, &token, &ids[i]).await
+    get_message_at(&endpoints.gmail_messages_list, &token, &ids[i]).await
 }
 
 #[cfg(test)]

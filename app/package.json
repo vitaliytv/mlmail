@@ -9,8 +9,11 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "android": "tauri android dev",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "bun test src/services src/i18n",
+    "test:ui": "vitest run",
+    "test:watch": "vitest",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "test:all": "bun test src/services src/i18n && bun run test:ui && bun run test:rust"
   },
   "dependencies": {
     "@quasar/extras": "^1.18.0",
@@ -29,7 +32,8 @@
     "vite": "^8.0.11",
     "vite-plugin-vue-layouts-next": "^1.0.6",
     "vitest": "^2.1.9",
-    "vue-macros": "^3.1.2"
+    "vue-macros": "^3.1.2",
+    "@nitra/cursor": "^1.11.17"
   },
   "engines": {
     "bun": ">=1.3",

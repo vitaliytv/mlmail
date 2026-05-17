@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, mock, beforeEach } from 'bun:test'
 
-const invokeMock = vi.fn()
-vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
+const invokeMock = mock()
+mock.module('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
 
 const { useAuthStore, _resetForTest } = await import('./auth-store.js')
 

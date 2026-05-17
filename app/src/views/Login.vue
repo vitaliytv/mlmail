@@ -14,7 +14,7 @@ onMounted(() => auth.initialize())
     <template v-if="auth.isAuthenticated.value">
       <div class="text-body1">Ви увійшли як {{ auth.email.value }}</div>
 
-      <q-chip v-if="auth.inboxCount.value !== null" icon="mail" color="primary" text-color="white">
+      <q-chip v-if="auth.inboxCount.value !== null" icon="sym_o_mail" color="primary" text-color="white">
         Листів у скриньці: {{ auth.inboxCount.value }}
       </q-chip>
       <q-banner v-else-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
@@ -56,14 +56,14 @@ onMounted(() => auth.initialize())
       <q-banner v-else class="bg-grey-2" rounded dense> Скринька порожня. </q-banner>
 
       <div class="row q-gutter-sm">
-        <q-btn @click="auth.loadRandomMessage()" color="primary" icon="refresh" :loading="auth.isMessageLoading.value">
+        <q-btn @click="auth.loadRandomMessage()" color="primary" icon="sym_o_refresh" :loading="auth.isMessageLoading.value">
           Показати інший
         </q-btn>
-        <q-btn @click="auth.logout()" flat color="grey-8" icon="logout"> Вийти </q-btn>
+        <q-btn @click="auth.logout()" flat color="grey-8" icon="sym_o_logout"> Вийти </q-btn>
       </div>
     </template>
 
-    <q-btn v-else @click="auth.login()" color="primary" icon-right="login" size="md" :loading="auth.isLoading.value">
+    <q-btn v-else @click="auth.login()" color="primary" icon-right="sym_o_login" size="md" :loading="auth.isLoading.value">
       <template v-if="!auth.isLoading.value">Увійти через Google</template>
       <template v-else>Зачекайте…</template>
     </q-btn>

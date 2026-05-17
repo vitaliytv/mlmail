@@ -1,15 +1,21 @@
 pub mod auth;
+pub mod endpoints;
 pub mod gmail;
 
 use std::sync::Mutex;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(Mutex::new(auth::state::AuthState::default()))
+        .manage(endpoints::Endpoints::default())
         .setup(|app| {
-            auth::on_startup(&app.handle())?;
+            let handle = app.handle();
+            let storage = auth::make_storage(handle);
+            auth::on_startup(handle, storage.as_ref())?;
+            app.manage(storage);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

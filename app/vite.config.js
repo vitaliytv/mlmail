@@ -51,6 +51,6 @@ export default defineConfig(() => ({
   test: {
     environment: 'jsdom',
     globals: false,
-    include: ['src/**/*.test.{js,vue}']
+    include: ['src/**/*.vitest.{js,vue}']
   }
 }))

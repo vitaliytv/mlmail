@@ -42,3 +42,4 @@ jni = "0.21"
 [dev-dependencies]
 mockito = "1"
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
+tauri = { version = "2", features = ["test"] }
