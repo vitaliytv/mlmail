@@ -1,0 +1,69 @@
+app/src/i18n/auth-errors.test.js
+  s_f45e8141619ac5::t_c3f741d357ba6f 1
+app/package.json
+  s_b1af410a95e26b::t_665d5262701210 14-15
+  s_f45e8141619ac5::t_c2d00ff07cce11 12-13,16
+app/src-tauri/tests/auth_logout.rs
+  s_b1af410a95e26b::t_d2d3a802f4e99d 8
+  s_b1af410a95e26b::t_8462fa47b974f4 1-7,9-50
+app/src-tauri/src/auth/storage/mod.rs
+  s_b1af410a95e26b::t_0db948ac987421 2,16-17,27-28,32-33
+app/src-tauri/tests/gmail_commands.rs
+  s_b1af410a95e26b::t_bddb3bb6c9b2a4 1-155
+app/src-tauri/tests/auth_finalize_login.rs
+  s_b1af410a95e26b::t_62e3d4c3df8a86 1-7,9-94
+  s_b1af410a95e26b::t_6544eaf5efdc45 8
+app/src-tauri/Cargo.toml
+  s_b1af410a95e26b::t_f92f2a8bde39d3 45
+app/src-tauri/src/lib.rs
+  s_b1af410a95e26b::t_d1b4451cfe9357 2
+  s_b1af410a95e26b::t_ce54a63202c612 6
+  s_b1af410a95e26b::t_6e7fd09ae27e98 15-18
+  s_b1af410a95e26b::t_c2865d8851e304 13
+app/src-tauri/src/auth/mod.rs
+  s_b1af410a95e26b::t_8b91096890f801 12,26,31,36-37,39,42-45,136,182,203,212
+  s_b1af410a95e26b::t_23bc3ed8072a73 14,98-101,124-133,135,137,150-151,181,185
+  s_b1af410a95e26b::t_4c6f1fcbd91106 20
+app/src/services/auth-store.js
+  s_f45e8141619ac5::t_28be3015da7d9a 1
+app/vite.config.js
+  s_f45e8141619ac5::t_0e01c2ba780d33 54
+app/src/services/auth-store.test.js
+  s_f45e8141619ac5::t_da8adbe0756052 1,3-4
+app/src-tauri/src/gmail/mod.rs
+  s_b1af410a95e26b::t_a531302325cd64 5
+  s_b1af410a95e26b::t_b06c53aedacc24 4,9
+  s_b1af410a95e26b::t_e9593cd3e28fa2 53,57-63
+  s_b1af410a95e26b::t_8d9127691eb495 166,170-176,181
+  s_b1af410a95e26b::t_1ad75b1728ba86 54
+  s_b1af410a95e26b::t_99feb155ab4c08 167
+app/src-tauri/tests/acquire_access_token.rs
+  s_b1af410a95e26b::t_b8c97543cf3dbb 1-7,9-116
+  s_b1af410a95e26b::t_819409ea96438a 8
+app/src-tauri/tests/auth_commands.rs
+  s_b1af410a95e26b::t_62f3adab6866f1 1-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "b973868dfcdce6955358e4ae56a1008cc349553d",
+  "prompts": {},
+  "sessions": {
+    "s_b1af410a95e26b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e44bf0ca-9c07-4840-b7a0-defdeeff62a4",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_f45e8141619ac5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2608a28c-fcb2-44e0-844c-77f05eab5828",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
