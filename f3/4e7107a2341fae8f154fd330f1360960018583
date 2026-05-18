@@ -1,0 +1,14 @@
+.gitignore
+  h_74546f1f1ded3e 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "f34e7107a2341fae8f154fd330f1360960018583",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
