@@ -202,3 +202,19 @@ Manual end-to-end (потребує налаштованих Google Cloud OAuth 
   у Login → перезапуск → стан логіну відновлено → "Вийти" → знову Login.
 
 Деталі — [docs/superpowers/specs/2026-05-11-google-oauth-design.md](../superpowers/specs/2026-05-11-google-oauth-design.md).
+
+## Update 2026-05-13
+
+### `setServerClientId` потребує Web OAuth Client ID, не Android
+
+`GetGoogleIdOption.Builder().setServerClientId(...)` вимагає **Web application** client ID з Google Cloud Console — не Android client ID. APK ідентифікується через Android OAuth client (package name + SHA-1 fingerprint), але `serverClientId` завжди вказує на Web-клієнта. У проєкті потрібні два окремі client ID для Android-flow: `ANDROID_CLIENT_ID` та `ANDROID_WEB_CLIENT_ID` у `app/src-tauri/src/auth/config.rs` та Kotlin `CredentialManagerFlow.kt`.
+
+### OAuth Client IDs неможливо створити через `gcloud` CLI
+
+OAuth 2.0 Client IDs у Google Cloud Console не підтримуються через `gcloud` CLI — обмеження Google API. Через термінал доступно: `gcloud services enable gmail.googleapis.com`, `keytool` для debug SHA-1. Самі Client IDs — тільки через UI: `https://console.cloud.google.com/apis/credentials?project=<project_id>`.
+
+## Update 2026-05-13
+
+### IAP OAuth Admin API deprecated з 19 березня 2026
+
+`gcloud iap oauth-brands create` та суміжні IAP OAuth Admin API **відключені з 19 березня 2026**. Після цієї дати OAuth consent screen brand редагується лише через Google Auth Platform UI (`https://console.cloud.google.com/auth/`). OAuth clients (Desktop/Android/Web) ніколи не підтримувались через gcloud — тільки UI. Brands і клієнти залишаються робочими — відключено лише CLI/API для управління. Джерело: WARNING у виводі `gcloud iap oauth-brands create`.

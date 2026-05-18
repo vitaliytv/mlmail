@@ -31,3 +31,4 @@ app/auto-imports.d.ts
 *.njsproj
 *.sln
 *.sw?
+.claude/hooks/.normalize-state
