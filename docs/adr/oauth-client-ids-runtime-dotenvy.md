@@ -36,3 +36,13 @@ Chosen option: "`std::env::var()` + `dotenvy` runtime", because зміни у `.
 Відкинуто "Передача через `tauri.conf.json`": відсутнє шифрування, дублювання конфіг-файлу без переваг.
 
 Додаткової інформації в transcript не зафіксовано.
+
+## Update 2026-05-13
+
+### Розділення `.env` і `.env.secret`; `client_secret` у token exchange
+
+Конфігурація розбита на два файли: `.env` (публічні Client IDs, трекується у git) та `.env.secret` (Desktop `client_secret`, у `.gitignore`). `dotenvy` завантажує обидва при старті, другий не перезаписує перший.
+
+`auth/token_exchange.rs`: `exchange_code_at` і `exchange_refresh_at` приймають `Option<&str>` для `client_secret`; Desktop flow — `Some(secret)`, Android flow — `None` (автентифікація SHA-1 fingerprint).
+
+**Файли:** `app/src-tauri/src/auth/config.rs`, `app/src-tauri/src/auth/token_exchange.rs`, `app/src-tauri/src/auth/flow/macos.rs`, `app/src-tauri/src/auth/flow/android.rs`, `app/src-tauri/.env`, `app/src-tauri/.env.secret` (gitignored), `app/src-tauri/.env.example`, `app/src-tauri/.env.secret.example`, `.gitignore`.

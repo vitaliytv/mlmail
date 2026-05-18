@@ -25,3 +25,16 @@ MLMaiL показує один випадковий лист з INBOX після
 ## Зачіпає
 
 `app/src-tauri/src/gmail/message.rs` (новий), `app/src-tauri/src/gmail/mod.rs`, `app/src-tauri/src/gmail/error.rs`, `app/src-tauri/src/lib.rs`, `app/src/services/auth-store.js`, `app/src/views/Login.vue`, `app/src/i18n/auth-errors.js`, `app/src-tauri/Cargo.toml` (deps: `regex`, `html-escape`).
+
+## Update 2026-05-15
+
+Деталі реалізації body extraction та обробки помилок:
+
+- Sample space: `messages.list?labelIds=INBOX&maxResults=100&fields=messages/id`
+- Вибір індексу: `rand::random::<u64>() as usize % ids.len()`
+- Отримання листа: `messages.get?id=<id>&format=full`
+- Body extraction: пріоритет `text/plain`; fallback — `text/html` зі стрипом тегів через `regex` + `html-escape`
+- Обмеження body: 10 000 символів
+- Порожній INBOX: `GmailError::Empty` → рядок «Скринька порожня.» у UI
+- Plain-text підхід усуває XSS-ризики без DOMPurify/iframe; HTML-рендер тіла винесено в окрему ітерацію
+- Зачіпає: `app/src-tauri/src/gmail/error.rs` (новий kind `Empty`), `app/src/i18n/auth-errors.js`
