@@ -1,0 +1,259 @@
+scripts/__tests__/docs-regen/fixtures/collision/docs/adr/clean.md
+  s_7c2e1123b85138::t_5c73c80fcb30ef 1
+scripts/docs-regen/default-templates/01-context.prompt.md
+  s_7c2e1123b85138::t_814848943dfaf3 1-50
+scripts/__tests__/docs-regen/manifest.test.js
+  s_7c2e1123b85138::t_d21a798d66e867 72-77
+  s_7c2e1123b85138::t_9ae16405061a32 1-71,78-96
+scripts/__tests__/docs-regen/fixtures/discover/docs/adr/with-mark.md
+  s_7c2e1123b85138::t_67e0ba416fe5ce 1-9
+docs/adr/gitleaks-security-лінтер.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 31-36
+AGENTS.md
+  s_7c2e1123b85138::t_c20aa8c32d896e 44-45
+scripts/docs-regen/default-templates/decisions.prompt.md
+  s_7c2e1123b85138::t_3e16de89404777 1-29
+scripts/__tests__/docs-regen/llm.test.js
+  s_7c2e1123b85138::t_2bdc6bcac49677 1-46
+docs/adr/oauth-client-id-у-приватному-репо.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 55-62
+docs/adr/c4-документація-mlmail-ініціалізація.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 34-39
+docs/adr/gmail-random-message-команда.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 41-49
+docs/adr/vi-hoisted-vitest-mock.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 34-40
+docs/adr/tauri-storage-endpoints-managed-state.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 35-43
+docs/adr/rust-analyzer-workspace-підтека.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 29-33
+scripts/docs-regen/templates.js
+  s_7c2e1123b85138::t_3bcda61c750d29 1-23,26-51
+  s_7c2e1123b85138::t_10578f885896a5 24-25
+scripts/__tests__/docs-regen/marks.test.js
+  s_7c2e1123b85138::t_a692a1b8099b1f 1-115
+scripts/__tests__/docs-regen/cli.test.js
+  s_7c2e1123b85138::t_eed6f66796d7c1 1-38
+scripts/docs-regen.js
+  s_7c2e1123b85138::t_d93c3f7e103dc3 154-157,160
+  s_7c2e1123b85138::t_8bb886dd29977f 132
+  s_7c2e1123b85138::t_c10465a8db7791 209-225,227
+  s_7c2e1123b85138::t_8129812ddd2f1e 1-131,133-153,158-159,161-208,226,228,231-252
+  s_7c2e1123b85138::t_10578f885896a5 229-230
+docs/ci4/_templates/_global.prompt.md
+  s_7c2e1123b85138::t_5d5719e29534b9 1-53
+docs/superpowers/specs/2026-05-18-docs-regen-design.md
+  s_7c2e1123b85138::t_cde7e0294adb7e 314,319
+  s_7c2e1123b85138::t_8ebb67d4fc3dcc 453
+  s_7c2e1123b85138::t_a2d270a5263438 445
+  s_7c2e1123b85138::t_6685bf4b93019b 616,618
+  s_7c2e1123b85138::t_41ad0b68aed62d 11
+  s_7c2e1123b85138::t_719e38806429ec 60-61,68
+  s_7c2e1123b85138::t_cdc3945cc646cb 459
+  s_7c2e1123b85138::t_8e91c0fc467dfb 368,374,376,378-381,383,385-387
+  s_7c2e1123b85138::t_91575148fc4cf8 511,513-517
+  s_7c2e1123b85138::t_36d995c0c29929 648,650
+  s_7c2e1123b85138::t_9efcdb4fec0141 421
+  s_7c2e1123b85138::t_cfe46b0178b1b2 427
+  s_7c2e1123b85138::t_7def9e0cf13bb5 1-10,12-59,62-67,69-313,315-318,320-342,346-350,352-367,369-373,375,377,382,384,388-420,422-426,428-444,446-452,454-458,460-510,512,518-612,614-615,617,619-632,634-647,649,651-670
+  s_7c2e1123b85138::t_d9e999e3c07edb 633
+  s_7c2e1123b85138::t_c0fd440d7c4e0d 343-345,351
+  s_7c2e1123b85138::t_dc45eee0c40f2f 613
+docs/superpowers/plans/2026-05-18-docs-regen.md
+  s_7c2e1123b85138::t_c3ac9172aafb6f 1-1970,1972-2430
+  s_7c2e1123b85138::t_765a120eb30b01 1971
+scripts/docs-regen/projection.js
+  s_7c2e1123b85138::t_a4ce8d57d0c502 22,34,38,41
+  s_7c2e1123b85138::t_309c7dc5b66239 1-2,11,14-18,20-21,23-33,35-37,39-40,42-46
+  s_7c2e1123b85138::t_f5eed9ed927ab7 101-111
+  s_7c2e1123b85138::t_e9229d61fc5ed7 3-10,12-13,47-100,112-120
+  s_7c2e1123b85138::t_10578f885896a5 19
+docs/adr/файловий-стор-токенів-замість-keychain.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 37-45
+.cursor/rules/n-style-lint.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 3,15-102
+scripts/__tests__/docs-regen/fixtures/discover/docs/adr/_inbox/old-draft.md
+  s_7c2e1123b85138::t_85ddefeef9f576 1-5
+.cursor/rules/n-js-run.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 5,20-59,89-103,109-134,139-146
+docs/adr/quasar-2-ui-фреймворк-mlmail.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 56-64
+scripts/__tests__/docs-regen/fixtures/discover/docs/adr/clean.md
+  s_7c2e1123b85138::t_69cd58ba8372ef 1-9
+docs/adr/nitra-cursor-видалення-з-підпакету.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 30-34
+scripts/docs-regen/hash.js
+  s_7c2e1123b85138::t_b153a2e16efa50 1-5
+scripts/__tests__/docs-regen/triggers.test.js
+  s_7c2e1123b85138::t_d65284a7a10b06 1-3,15-104
+  s_7c2e1123b85138::t_d5c157ad67d3e3 4-14
+docs/ci4/03-components.md
+  s_7c2e1123b85138::t_4176cd58c8b73d 9-12,15-21,25-33,56,83,85,91,96,303,326,329-332
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 69,89,104,117,121,132,170,187,316,354,369
+  s_7c2e1123b85138::t_c90466f4bac1bf 323,379,465
+  s_7c2e1123b85138::t_f7a7fd31541e8c 59,72,79,94,111,126,141,164,179,196,213,228,237,252,291,306,337,342,359,372,384,389,408,423
+  s_8ff7a9f0eb9746::t_cdf4703ed4dc0a 3-7,13-14,22-24,34-35,41,43,45-46,48-50,52,58,60-68,70-71,73-78,80-82,84,86-88,90,92-93,95,98-103,105-110,112-116,119,123-125,127-131,133-134,138-140,142-146,148,150-157,161-163,165-168,171-172,176,178,180-185,188-189,193-195,197-202,204-206,210-212,214-217,219-223,227,229-234,236,238-245,249-251,253-260,264,269,271,273,275-284,288-290,292-299,305,307-315,317-322,324-325,327-328,333-336,338-341,343-348,350-353,355-358,360-368,371,373-378,380-383,385-388,390-395,399,405-407,409-416,420-422,424-431,435,447,449,451-452,454-460,462-464,466-481
+docs/adr/міграція-з-vitest-на-bun-test-runner.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 55-61
+scripts/docs-regen/triggers.js
+  s_7c2e1123b85138::t_1b4b49f82ffe78 1-29
+CLAUDE.md
+  s_7c2e1123b85138::t_c20aa8c32d896e 25-26
+docs/adr/gmail-rust-команди-та-auth-store.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 41-49
+docs/adr/bun-vitest-dual-runner.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 37-45
+docs/adr/ADR-0006-google-oauth.md
+  s_7c2e1123b85138::t_e4ada8e6006cba 235-243
+scripts/docs-regen/discover.js
+  s_7c2e1123b85138::t_4b01dc1b1b88ac 1-39
+scripts/docs-regen/lock.js
+  s_7c2e1123b85138::t_298ce38e2f7b1f 1-8,12-17,20-23
+  s_7c2e1123b85138::t_10578f885896a5 9-11,18-19
+docs/ci4/02-containers.md
+  s_7c2e1123b85138::t_f7a7fd31541e8c 231
+  s_7c2e1123b85138::t_c90466f4bac1bf 122,171
+  s_7c2e1123b85138::t_4176cd58c8b73d 12,14-16,20,22-24,27-28,30-31,33-34,36-37,39-40,42-43,45-46,48-49,52-53,55,60-65,67,70,73,75-77,80-86,90-94,97,99,103-105,109,111,113,115,125,127,129,131,133,135,150,154,156,158-161,168,176,186-187,189,191,193,199-200,205-206,208,213,223,229-230
+  s_7c2e1123b85138::t_3f577d9ca5efa1 47,59,68,72,74,78,95,101,119,121,123,137-140,151,153,155,157,162,166,170,172-173,175,177,179,195,202,207,215-216,218,221-222,224-225
+docs/adr/bun-run-lint-виправлення.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 30-35
+docs/adr/adr-нормалізація-розмір-батчу-batch5.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 59-63
+docs/ci4/_templates/02-containers.prompt.md
+  s_7c2e1123b85138::t_5d5719e29534b9 1-32
+docs/adr/nitra-cursor-rules-compliance.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 48-53
+docs/adr/q-page-flex-center-overflow.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 29-35
+scripts/__tests__/docs-regen/fixtures/collision/docs/adr/sub/clean.md
+  s_7c2e1123b85138::t_1b676e9ba3f9f4 1
+docs/ci4/manifest.json
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 1-403
+scripts/docs-regen/default-templates/04-code.prompt.md
+  s_7c2e1123b85138::t_d68048cbda755a 1-44
+package.json
+  s_7c2e1123b85138::t_c20aa8c32d896e 22
+  s_7c2e1123b85138::t_2682f1590ebd33 16-18,24-26
+scripts/__tests__/docs-regen/fixtures/discover/docs/adr/clean-status.md
+  s_7c2e1123b85138::t_291a314e8db0bd 1-8
+scripts/docs-regen/default-templates/02-containers.prompt.md
+  s_7c2e1123b85138::t_2b40814e2f6c36 1-32
+docs/adr/tauri-web-таргет-відсутність.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 36-41
+.cursor/rules/n-ga.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 137-142
+.cursor/rules/n-ci4.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 98,281-282,284-287
+.cursor/rules/n-vue.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 121
+scripts/docs-regen/default-templates/03-components.prompt.md
+  s_7c2e1123b85138::t_519d859eb12389 1-37
+docs/adr/tauri-e2e-macos-webdriver.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 26-32
+docs/ci4/_templates/03-components.prompt.md
+  s_7c2e1123b85138::t_5d5719e29534b9 1-37
+docs/adr/tauri-mock-runtime-тестування.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 33-41
+scripts/__tests__/docs-regen/discover.test.js
+  s_7c2e1123b85138::t_6a8723ec06e3c7 1-43
+docs/adr/normalize-decisions-batch-sonnet.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 54-58
+docs/ci4/01-context.md
+  s_7c2e1123b85138::t_4176cd58c8b73d 17,41-42,54,60-62,83,89,128,131,133-134,148
+  s_7c2e1123b85138::t_3f577d9ca5efa1 3,21,28-31,33,36,46-50,52,59,64,66,71-74,79,81,85,87,91,93,98-100,103-115,117-120,124,126-127,130,132,136-142,146
+docs/ci4/decisions.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 3-121,125,128-129
+scripts/docs-regen/default-templates/_global.prompt.md
+  s_7c2e1123b85138::t_89482295f24d14 9-24
+  s_7c2e1123b85138::t_b063b9c76070f8 1-8,25-69
+scripts/__tests__/docs-regen/lock.test.js
+  s_7c2e1123b85138::t_58ed267f058abd 1-23,26,28-47
+  s_7c2e1123b85138::t_25198fb089851b 24-25,27
+docs/adr/gmail-inbox-count-стартовий-екран.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 45-53
+docs/adr/oauth-client-ids-runtime-dotenvy.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 49-57
+docs/ci4/_templates/decisions.prompt.md
+  s_7c2e1123b85138::t_5d5719e29534b9 1-29
+docs/adr/tauri-vs-capacitor-огляд.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 31-35
+scripts/docs-regen/manifest.js
+  s_7c2e1123b85138::t_10578f885896a5 23-25
+  s_7c2e1123b85138::t_d45cfe5e46cc25 1-22,26-50
+scripts/docs-regen/cli.js
+  s_7c2e1123b85138::t_b945e6ba5f4ff7 1-23
+.gitignore
+  s_7c2e1123b85138::t_a9b09aaa6d0685 35-37,39
+  s_7c2e1123b85138::t_35aba61f8c9840 38
+scripts/__tests__/docs-regen/fixtures/discover/docs/adr/20260517-draft.md
+  s_7c2e1123b85138::t_082a308c6530c6 1-7
+.cursor/skills/docs-regen/SKILL.md
+  s_7c2e1123b85138::t_330ecf028a1146 1-36
+scripts/docs-regen/log.js
+  s_7c2e1123b85138::t_18a5a7df104946 1-34
+docs/ci4/04-code.md
+  s_25ddb7aca79f1c::t_e45743f21b3dc5 256-258,260
+  s_7c2e1123b85138::t_4176cd58c8b73d 56-63,65,67-71,97-101,162,166-185,195-198,201,203-204,213-214,216,218,220,233,235,239,244,251,253-255,259,261,289,337-342,347-351,384-386,388-392,400-401,417,426,432
+  s_7c2e1123b85138::t_c90466f4bac1bf 427
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 3,9,13,17,21,25,31-33,35-36,43-44,47-50,52,54,64,66,72-73,77,81-83,87,91,104,120,129,131,133-135,139,151,155-161,163,165,187,191,215,217,219,221-225,238,240,242,246,248,250,252,263,269,274,288,290-302,356,364-365,367-369,371,380,382,393-394,396,402-412,415,422,428-430
+.claude/commands/docs-regen.md
+  s_7c2e1123b85138::t_c20aa8c32d896e 1-8
+scripts/__tests__/docs-regen/hash.test.js
+  s_7c2e1123b85138::t_7f87b2cf992c73 1-23
+.cursor/rules/n-changelog.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 2-4,7-32,36,38,40,42,44-47,49,51,53-56,58
+.cursor/rules/n-bun.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 5,85-87
+.cursor/rules/n-image-avif.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 3,8,10-12,15,35-43
+.cursor/rules/n-js-lint.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 5,24-42,70-80,155-157
+scripts/docs-regen/marks.js
+  s_7c2e1123b85138::t_3e0205356d7892 7-8,14-18,22,25-30,39-45
+  s_7c2e1123b85138::t_af92753211e4fd 1-6,9-13,19-21,23-24,31-38,46-66
+scripts/docs-regen/llm.js
+  s_7c2e1123b85138::t_7865450af9f828 1-14,17-19,21-22,24-26,28-67,70-72,74-77
+  s_7c2e1123b85138::t_10578f885896a5 15-16,20,23,27,68-69,73
+docs/ci4/_templates/01-context.prompt.md
+  s_7c2e1123b85138::t_5d5719e29534b9 1-50
+docs/adr/adr-нормалізація-ручний-запуск.md
+  s_7c2e1123b85138::t_0a4c95a6ec6b50 48-52
+.cursor/rules/n-security.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 15-19
+docs/ci4/_templates/04-code.prompt.md
+  s_7c2e1123b85138::t_5d5719e29534b9 1-44
+.cursor/rules/n-text.mdc
+  s_7c2e1123b85138::t_c20aa8c32d896e 4,23-30,90-103,130-142,145-163,212-227,236-238,290-297,302,320-349
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.9",
+  "base_commit_sha": "3462bae86a8887052562256f3aa25c86a438118b",
+  "prompts": {},
+  "sessions": {
+    "s_25ddb7aca79f1c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7dbb34ed-8414-4f2e-a384-3dd0d12e49cf",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_7c2e1123b85138": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74cd5ade-0c55-4247-9bcf-493d2f6787ec",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_8ff7a9f0eb9746": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "15023ad9-8798-431f-a4f0-027aff1e8461",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
