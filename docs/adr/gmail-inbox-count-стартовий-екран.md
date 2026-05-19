@@ -42,3 +42,12 @@ Chosen option: "`users.labels.get?id=INBOX`", because це канонічний 
 - Tauri-команда: `gmail_inbox_count` повертає поле `messagesTotal` (тип `u64`)
 - Vue Auth Store: ref `inboxCount` — скидається до null при `ReauthRequired` від Gmail
 - i18n покриває коди помилок `Http` та `Parse`
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

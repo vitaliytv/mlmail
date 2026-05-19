@@ -52,3 +52,10 @@ GlobalRegistrator.register()
 ```
 
 Після реєстрації `document`, `window`, `HTMLElement` доступні у тестах; `@vue/test-utils` підхоплює автоматично.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

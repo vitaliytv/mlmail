@@ -23,3 +23,10 @@
 ## Зачіпає
 
 CI-конфігурація (`.github/workflows/`), тестова інфраструктура (`wdio.conf.js`, `tauri-driver`), майбутні e2e-сьюти для Tauri-частини MLMaiL.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [decisions](../ci4/decisions.md)

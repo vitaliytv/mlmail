@@ -51,3 +51,8 @@ Guardrail від рекурсії: паралельні Stop-хук-виклик
 Команда запуску: `ADR_NORMALIZE_THRESHOLD=0 ADR_NORMALIZE_MIN_INTERVAL_HOURS=0 ADR_NORMALIZE_BATCH=5 bash .claude/hooks/normalize-decisions.sh`
 
 Лог операцій: `.claude/hooks/normalize-decisions.log`
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [decisions](../ci4/decisions.md)

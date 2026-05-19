@@ -28,3 +28,9 @@ Chosen option: "Додати `.gitleaks.toml` + `lint-security`", because `npx @
 - `package.json` `scripts.lint`: доданий `&& bun run lint-security` до кінця ланцюга.
 - Правило: `.cursor/rules/n-security.mdc` (version `1.1`).
 - Та сама сесія: видалено явні `import { ... } from 'vue'` з `app/src/services/auth-store.js`, `app/src/test-utils/quasar.js`, `app/src/views/Login.vue` відповідно до `n-vue.mdc`; `npx @nitra/cursor check` підтвердив `12/12`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

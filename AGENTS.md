@@ -41,6 +41,8 @@ The primary development rules are stored in the Cursor rules directory:
 ## Skills
 
 
+- `.cursor/skills/docs-regen/SKILL.md`
+
 - `.cursor/skills/n-adr-normalize/SKILL.md` — Ручний запуск ADR-нормалізації — обхід порогу й min-interval, прогон одного батчу чернеток через LLM, перегляд результату через git diff
 
 - `.cursor/skills/n-fix/SKILL.md` — Виправити проєкт відповідно до всіх правил в .cursor/rules/

@@ -38,3 +38,12 @@ Chosen option: "Gmail API у Rust Tauri-команди + Gmail-дані в auth-
 - `app/src/views/Login.vue`
 - Деталі endpoint inbox count: ADR `gmail-inbox-count-стартовий-екран.md`
 - Деталі вибірки random message: ADR `gmail-random-message-команда.md`
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

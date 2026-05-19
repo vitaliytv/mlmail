@@ -46,3 +46,12 @@ Chosen option: "`std::env::var()` + `dotenvy` runtime", because зміни у `.
 `auth/token_exchange.rs`: `exchange_code_at` і `exchange_refresh_at` приймають `Option<&str>` для `client_secret`; Desktop flow — `Some(secret)`, Android flow — `None` (автентифікація SHA-1 fingerprint).
 
 **Файли:** `app/src-tauri/src/auth/config.rs`, `app/src-tauri/src/auth/token_exchange.rs`, `app/src-tauri/src/auth/flow/macos.rs`, `app/src-tauri/src/auth/flow/android.rs`, `app/src-tauri/.env`, `app/src-tauri/.env.secret` (gitignored), `app/src-tauri/.env.example`, `app/src-tauri/.env.secret.example`, `.gitignore`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

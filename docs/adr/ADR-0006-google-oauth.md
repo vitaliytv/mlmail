@@ -232,3 +232,12 @@ OAuth 2.0 Client IDs у Google Cloud Console не підтримуються ч�
 **Vue-шар:** `services/auth-store.js` (singleton composable, токени не виходять у JS), `views/Login.vue`, `i18n/auth-errors.js` (Rust `kind` → Ukrainian).
 
 **Файли:** `app/src-tauri/src/auth/` (13 файлів), `gen/android/.../auth/` (4 Kotlin), `app/src/services/auth-store.js`, `app/src/views/Login.vue`, `app/src/i18n/auth-errors.js`, `Cargo.toml`, `app/build.gradle.kts`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

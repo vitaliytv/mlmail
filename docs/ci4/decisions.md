@@ -1,283 +1,131 @@
 # Зведення ADR-впливів на C4-модель MLMaiL
 
-Цей файл зводить **архітектурні рішення MLMaiL**, які формують поточну
-C4-модель проєкту MLMaiL, і фіксує, на які рівні моделі вони впливають
-([01-context.md](01-context.md), [02-containers.md](02-containers.md),
-[03-components.md](03-components.md), [04-code.md](04-code.md)).
-
-Формальні ADR живуть у `docs/adr/`. Поточний стан: тека `docs/adr/_inbox/`
-існує, проте формальних ADR-документів **ще немає** — список нижче описує
-рішення, **які вже закодовані** у репозиторії MLMaiL, і **рішення, які
-очікують ADR**.
-
-## Прийняті рішення MLMaiL (закодовані у репозиторії)
-
-### Рішення: Tauri 2 як рамка крос-платформеного застосунку MLMaiL
-
-Закодовано у [app/src-tauri/Cargo.toml](../../app/src-tauri/Cargo.toml)
-(`tauri = "2"`, `tauri-build = "2"`) і
-[app/src-tauri/tauri.conf.json](../../app/src-tauri/tauri.conf.json)
-(`$schema: https://schema.tauri.app/config/2`).
-
-Вплив на C4-модель MLMaiL:
-
-- [02-containers.md](02-containers.md) — описує контейнер MLMaiL Backend саме
-  як Tauri 2 + Rust і контейнер WebView (WKWebView / Android System WebView)
-  як рендер контейнера MLMaiL Frontend.
-- [03-components.md](03-components.md) і [04-code.md](04-code.md) —
-  передбачають IPC через `@tauri-apps/api/core invoke()` як єдиний міст між
-  Vue-кодом MLMaiL і Rust-кодом MLMaiL.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0001-tauri-2.md`.
-
-### Рішення: Vue 3 + Vite + auto-import + layouts як фронтенд MLMaiL
-
-Закодовано у [app/package.json](../../app/package.json) (`vue: ^3`,
-`vite: ^8`, `unplugin-auto-import`, `vite-plugin-vue-layouts-next`,
-`vue-macros`) і [app/vite.config.js](../../app/vite.config.js).
-
-Вплив на C4-модель MLMaiL:
-
-- [02-containers.md](02-containers.md) — контейнер MLMaiL Frontend описаний
-  саме як Vue 3 + Vite SPA;
-- [03-components.md](03-components.md) — Auth Component MLMaiL, Inbox List
-  Component MLMaiL і Mail Reader Component MLMaiL передбачені як
-  layout/route-driven Vue-компоненти.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0002-vue3-vite-stack.md`.
-
-### Рішення: Bun monorepo з єдиним workspace `app`
-
-Закодовано у кореневому [package.json](../../package.json)
-(`workspaces: ["app"]`), [bunfig.toml](../../bunfig.toml)
-(`linker = "hoisted"`), `bun.lock` і обмеженням «у `devDependencies` кореня —
-тільки `@nitra/*`». Узгоджено з `.cursor/rules/n-bun.mdc`.
-
-Вплив на C4-модель MLMaiL:
-
-- [02-containers.md](02-containers.md) — підтверджує, що контейнер MLMaiL
-  Frontend і контейнер MLMaiL Backend живуть у єдиному монорепо MLMaiL і
-  збираються через `bun run` усередині `app/`;
-- [04-code.md](04-code.md) — фіксує лінт-pipeline MLMaiL у кореневому
-  `package.json`.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0003-bun-monorepo.md`.
-
-### Рішення: цільові платформи MLMaiL — macOS і Android
-
-Закодовано у [app/package.json](../../app/package.json) (скрипт
-`android: tauri android dev`), наявності
-[app/src-tauri](../../app/src-tauri/) із підтримкою mobile-entry
-(`#[cfg_attr(mobile, tauri::mobile_entry_point)]` у
-[app/src-tauri/src/lib.rs](../../app/src-tauri/src/lib.rs)) та історії
-коміту `android` (e49e5ab `cursor`, 05cf22d `android`).
-
-Вплив на C4-модель MLMaiL:
-
-- [01-context.md](01-context.md) — користувач застосунку MLMaiL описаний як
-  такий, що працює з MLMaiL на macOS або Android;
-- [02-containers.md](02-containers.md) — контейнерна діаграма MLMaiL із
-  двома підграфами (`MLMaiL на macOS` і `MLMaiL на Android`) з тими ж
-  іменами логічних контейнерів MLMaiL.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0004-target-platforms.md`.
-
-### Рішення: `tauri-plugin-opener` як офіційний механізм відкриття зовнішніх URL
-
-Закодовано у [app/src-tauri/Cargo.toml](../../app/src-tauri/Cargo.toml)
-(`tauri-plugin-opener = "2"`), [app/src-tauri/src/lib.rs](../../app/src-tauri/src/lib.rs)
-(`.plugin(tauri_plugin_opener::init())`) і
-[app/src-tauri/capabilities/default.json](../../app/src-tauri/capabilities/default.json)
-(дозвіл `opener:default`).
-
-Вплив на C4-модель MLMaiL:
-
-- [03-components.md](03-components.md) — Auth Component MLMaiL описаний як
-  такий, що відкриває системний браузер MLMaiL через Plugin Opener MLMaiL у
-  Authorization Code flow з PKCE.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0005-opener-plugin.md`.
-
-### Рішення: Google OAuth-архітектура MLMaiL
-
-Закодовано у [app/src-tauri/src/auth/](../../app/src-tauri/src/auth/) (Rust),
-[app/src/views/Login.vue](../../app/src/views/Login.vue),
-[app/src/services/auth-store.js](../../app/src/services/auth-store.js),
-[app/src/i18n/auth-errors.js](../../app/src/i18n/auth-errors.js) та Kotlin
-plugin `app/src-tauri/gen/android/app/src/main/java/com/vitaliytv/mlmail/auth/`.
-
-Три зв'язаних рішення зафіксовано у єдиному ADR:
-
-1. **OAuth flow** — Authorization Code + PKCE через системний браузер і
-   loopback `127.0.0.1` на macOS; Credential Manager + AuthorizationClient
-   через Tauri mobile plugin на Android.
-2. **Token storage** — platform-specific: Apple Keychain (macOS) і
-   EncryptedSharedPreferences (Android). Не Stronghold, не plaintext store.
-3. **Token surface** — Rust тримає всі токени; Vue Frontend кличе
-   `auth_get_access_token` Tauri command при потребі. Refresh token не
-   покидає Rust.
-
-Вплив на C4-модель MLMaiL:
-
-- [01-context.md](01-context.md) — System Context лишається той самий;
-- [02-containers.md](02-containers.md) — стрілки HTTPS до Google Identity
-  Services переміщено з Frontend на Backend;
-- [03-components.md](03-components.md) — Auth Component і Auth Store позначено
-  `implemented`, додано Auth Module MLMaiL (Rust) з повним описом
-  підкомпонентів і Auth Errors i18n MLMaiL;
-- [04-code.md](04-code.md) — додано секції коду для нових файлів,
-  оновлено приклад `lib.rs::run()`, видалено згадку про команду `greet`.
-
-ADR оформлений як `docs/adr/ADR-0006-google-oauth.md`.
-
-### Рішення: Кількість листів у скриньці — точне число через `users.labels.get`
-
-Закодовано у [app/src-tauri/src/gmail/](../../app/src-tauri/src/gmail/) і
-[app/src/services/auth-store.js](../../app/src/services/auth-store.js).
-
-Endpoint `GET users/me/labels/INBOX` повертає точне `messagesTotal` одним
-викликом. Альтернативи (`users.getProfile` — рахує всю скриньку, не INBOX;
-`messages.list?labelIds=INBOX` — повертає приблизне `resultSizeEstimate`)
-відкинуто свідомо. HTTPS-виклик живе у Rust, не у WebView fetch — узгоджено з
-ADR-0006 (token surface).
-
-Вплив на C4-модель MLMaiL:
-
-- [03-components.md](03-components.md) — додано Gmail Module MLMaiL (Rust);
-  Auth Store MLMaiL отримав `inboxCount`, `inboxErrorKind`, `refreshInboxCount`;
-  Auth Errors i18n MLMaiL — девʼять ключів (додано `Http`, `Parse`).
-- [04-code.md](04-code.md) — додано секції `app/src-tauri/src/gmail/`,
-  оновлено приклад `invoke_handler!` у `lib.rs`, опис `auth-store.js`.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0007-inbox-count.md`.
-Чернетка інбоксу — у `docs/adr/_inbox/`.
-
-### Рішення: Випадковий лист на стартовому екрані — sample з перших 100
-
-Закодовано у [app/src-tauri/src/gmail/](../../app/src-tauri/src/gmail/) і
-[app/src/services/auth-store.js](../../app/src/services/auth-store.js).
-
-Команда `gmail_random_message` обирає випадковий id серед перших 100 листів
-INBOX (`messages.list?maxResults=100&fields=messages/id`). «Чесний» рандом
-по всьому INBOX потребує курсор-пагінації (Gmail API не підтримує offset),
-що для скриньки в 5K листів = 50+ послідовних викликів — overkill для UX
-«покажи якийсь лист».
-
-Plain-text body extraction: пріоритет `text/plain` part, fallback на
-`text/html` зі стрипом тегів через `regex` + `html-escape`. HTML-рендер у
-sandboxed iframe — окрема ітерація.
-
-Вплив на C4-модель MLMaiL:
-
-- [03-components.md](03-components.md) — Gmail Module MLMaiL отримав другу
-  команду; Auth Store — `currentMessage`/`messageErrorKind`/`isMessageLoading`
-  і метод `loadRandomMessage`; Auth Errors i18n — ключ `Empty`.
-- [04-code.md](04-code.md) — нова секція для `gmail/message.rs`, оновлено
-  список handler-ів у `lib.rs`.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0008-random-message.md`.
-Чернетка інбоксу — у `docs/adr/_inbox/`.
-
-### Рішення: UI-фреймворк MLMaiL — Quasar 2 з macOS material-look
-
-Закодовано у [app/package.json](../../app/package.json),
-[app/vite.config.js](../../app/vite.config.js),
-[app/src/main.js](../../app/src/main.js),
-[app/src/quasar-variables.sass](../../app/src/quasar-variables.sass),
-[app/src/App.vue](../../app/src/App.vue),
-[app/src/views/Login.vue](../../app/src/views/Login.vue),
-[app/src/test-utils/quasar.js](../../app/src/test-utils/quasar.js).
-
-Quasar 2 підключається через `@quasar/vite-plugin` у наявний Vite-конфіг
-(не Quasar CLI), що зберігає Tauri-pipeline і всі попередні плагіни.
-Кастомний `quasar-variables.sass` дає macOS material-look: macOS Accent
-Blue (`#0a84ff`) для `$primary`, system-ui font stack із SF Pro, мʼякший
-radius (6px кнопки, 8px generic). Іконки — Material Symbols Outlined
-(`@quasar/extras`). Dark mode — `auto` за OS prefers-color-scheme.
-
-Узгоджується з `.cursor/rules/vue.mdc` («Використовуй Quasar для
-компонентів»). Tauri-таргети macOS та Android, без вебу, без Windows;
-Quasar mobile-first + платформ-aware дає кращий out-of-the-box UX, ніж
-plain HTML або Reka UI.
-
-Вплив на C4-модель MLMaiL:
-
-- [03-components.md](03-components.md) — додано Frontend UI Kit MLMaiL
-  (Quasar) як новий компонент, Auth Component MLMaiL переключений на
-  Quasar-компоненти, mountWithQuasar test-helper зафіксовано.
-- [04-code.md](04-code.md) — нові секції для `quasar-variables.sass`,
-  `test-utils/quasar.js`, оновлено `main.js`, `vite.config.js`, `App.vue`,
-  `Login.vue`.
-
-ADR ще не оформлений; кандидат — `docs/adr/ADR-0009-quasar-ui.md`.
-Чернетка інбоксу — у `docs/adr/_inbox/`.
-
-## Рішення, що очікують ADR для MLMaiL
-
-Нижче перелічено архітектурні питання MLMaiL, які **впливатимуть** на C4-модель
-MLMaiL і мають бути зафіксовані ADR до або під час відповідної реалізації. Без
-ADR — реалізація **заборонена** (правило Spec-as-Source з
-`.cursor/rules/n-ci4.mdc`).
-
-### Очікує ADR: вибір LLM-провайдера для MLMaiL
-
-Кандидати MLMaiL: Anthropic Claude API, OpenAI Chat Completions, локальна
-модель через зовнішній runtime. Вибір впливає на:
-
-- [01-context.md](01-context.md) — конкретизація зовнішньої системи
-  `LLM-провайдер MLMaiL`;
-- [03-components.md](03-components.md) — реалізація Summary Service MLMaiL і
-  Reply Drafter Component MLMaiL;
-- безпеку токенів і місце зберігання API-ключа MLMaiL (див. наступний пункт).
-
-### Очікує ADR: де живе API-ключ LLM/TTS у MLMaiL і хто робить HTTPS-виклики
-
-Для Google Identity Services рішення зафіксовано ADR-0006 (Rust робить
-token exchange; токени не покидають Backend). Питання залишається відкритим
-для **LLM/TTS-провайдерів**:
-
-- Два варіанти: HTTPS прямо з MLMaiL Frontend (WebView) — або проксі через
-  Backend.
-- Вибір впливає на [02-containers.md](02-containers.md) (напрямок стрілок) і
-  [03-components.md](03-components.md) (структура Summary Service MLMaiL,
-  Speech Service MLMaiL).
-
-### Очікує ADR: вибір TTS-провайдера для MLMaiL
-
-Кандидати MLMaiL: браузерний `SpeechSynthesis` API, хмарні TTS (Google Cloud
-TTS, ElevenLabs), локальна модель. Вибір впливає на:
-
-- [01-context.md](01-context.md) — конкретизація зовнішньої системи
-  `TTS-провайдер MLMaiL`;
-- [03-components.md](03-components.md) — реалізацію Speech Service MLMaiL.
-
-### Очікує ADR: схема Markdown-замітки MLMaiL у `notes/work/` і `notes/home/`
-
-MLMaiL пише `.md`-замітку на лист (frontmatter + тіло). Вибір схеми впливає на:
-
-- [02-containers.md](02-containers.md) — формат контейнера Локальне сховище
-  MLMaiL;
-- [04-code.md](04-code.md) — сигнатуру `GmailMessage`/`NotePath` у Notes
-  Commands MLMaiL.
-
-### Очікує ADR: Content Security Policy для MLMaiL у `tauri.conf.json`
-
-Зараз `app.security.csp: null` у
-[app/src-tauri/tauri.conf.json](../../app/src-tauri/tauri.conf.json). Для
-бойової версії MLMaiL CSP має бути заданий явно — це обмежить, до яких
-зовнішніх доменів MLMaiL фронтенд може робити прямі HTTPS-запити.
-
-<!-- "збереження токенів" закрите ADR-0006: Keychain (macOS) +
-EncryptedSharedPreferences (Android), не Stronghold. -->
+`docs/ci4/decisions.md` — хронологічний індекс усіх архітектурних рішень MLMaiL і їхній вплив на рівні C4-моделі проєкту. Формальні ADR живуть у `docs/adr/`.
+
+## Хронологічний індекс ADR MLMaiL
+
+| Slug | Дата | Статус | Summary |
+| ---- | ---- | ------ | ------- |
+| [ADR-0006-google-oauth](../adr/ADR-0006-google-oauth.md) | 2026-05-11 | Accepted | Google OAuth авторизація MLMaiL: Authorization Code + PKCE (macOS), Credential Manager (Android); токени зберігає Rust |
+| [c4-документація-mlmail-ініціалізація](../adr/c4-документація-mlmail-ініціалізація.md) | 2026-05-11 | Accepted | Ініціалізація C4-документації MLMaiL у `docs/ci4/` на основі реального коду |
+| [oauth-client-id-у-приватному-репо](../adr/oauth-client-id-у-приватному-репо.md) | 2026-05-13 | Accepted | Google OAuth Client IDs MLMaiL у приватному репозиторії; Internal consent screen для `nitralabs.com` |
+| [oauth-client-ids-runtime-dotenvy](../adr/oauth-client-ids-runtime-dotenvy.md) | 2026-05-13 | Accepted | Читання OAuth Client IDs MLMaiL у runtime через `dotenvy` замість compile-time `option_env!()` |
+| [gmail-inbox-count-стартовий-екран](../adr/gmail-inbox-count-стартовий-екран.md) | 2026-05-14 | Accepted | Точна кількість листів INBOX MLMaiL через `users.labels.get`; HTTP-виклик у Rust |
+| [tauri-vs-capacitor-огляд](../adr/tauri-vs-capacitor-огляд.md) | 2026-05-14 | Accepted | Tauri обрано над Capacitor MLMaiL: менший бінарник, Rust FFI, локальні ML-моделі |
+| [tauri-web-таргет-відсутність](../adr/tauri-web-таргет-відсутність.md) | 2026-05-14 | Accepted | Tauri MLMaiL не має web-таргета; web-деплой — окремий Vite + шар `platform.ts` |
+| [gmail-random-message-команда](../adr/gmail-random-message-команда.md) | 2026-05-15 | Accepted | Команда `gmail_random_message` MLMaiL: вибірка з 100 листів INBOX, `text/plain` витяг |
+| [gmail-rust-команди-та-auth-store](../adr/gmail-rust-команди-та-auth-store.md) | 2026-05-15 | Accepted | Gmail API-виклики MLMaiL у Rust Tauri-командах; Gmail-дані в `auth-store.js` |
+| [bun-run-lint-виправлення](../adr/bun-run-lint-виправлення.md) | 2026-05-16 | Accepted | Виправлення lint-ланцюжка `bun run lint` MLMaiL після `/n-fix` |
+| [nitra-cursor-rules-compliance](../adr/nitra-cursor-rules-compliance.md) | 2026-05-16 | Accepted | Приведення проєкту MLMaiL до правил `@nitra/cursor` через `/n-fix`; `12/12 правил` |
+| [quasar-2-ui-фреймворк-mlmail](../adr/quasar-2-ui-фреймворк-mlmail.md) | 2026-05-16 | Accepted | Quasar 2 як UI-фреймворк MLMaiL з macOS material-look |
+| [tauri-e2e-macos-webdriver](../adr/tauri-e2e-macos-webdriver.md) | 2026-05-16 | Accepted | Tauri e2e MLMaiL на macOS не підтримується через WebDriver; `mock_builder` + Vitest як альтернатива |
+| [tauri-mock-runtime-тестування](../adr/tauri-mock-runtime-тестування.md) | 2026-05-16 | Accepted | Tauri Mock Runtime (`mock_builder`) як стратегія інтеграційного тестування MLMaiL на macOS |
+| [vi-hoisted-vitest-mock](../adr/vi-hoisted-vitest-mock.md) | 2026-05-16 | Accepted | `vi.hoisted()` обов'язковий для mock-об'єктів з `vi.fn()` у Vitest-тестах MLMaiL |
+| [adr-нормалізація-ручний-запуск](../adr/adr-нормалізація-ручний-запуск.md) | 2026-05-17 | Accepted | Ручний запуск ADR-нормалізації MLMaiL через env-var override (`THRESHOLD=0`, `MIN_INTERVAL=0`) |
+| [bun-vitest-dual-runner](../adr/bun-vitest-dual-runner.md) | 2026-05-17 | Accepted | Dual-runner MLMaiL: `bun:test` для pure-JS, Vitest для Vue SFC |
+| [gitleaks-security-лінтер](../adr/gitleaks-security-лінтер.md) | 2026-05-17 | Accepted | `gitleaks` як обов'язковий security-лінтер MLMaiL; `.gitleaks.toml` + `lint-security` |
+| [міграція-з-vitest-на-bun-test-runner](../adr/міграція-з-vitest-на-bun-test-runner.md) | 2026-05-17 | Accepted | Повна міграція MLMaiL з Vitest на Bun Test Runner як єдиний test runner |
+| [nitra-cursor-видалення-з-підпакету](../adr/nitra-cursor-видалення-з-підпакету.md) | 2026-05-17 | Accepted | Видалення `@nitra/cursor` з `app/package.json` MLMaiL; залишається лише у кореневому workspace |
+| [normalize-decisions-batch-sonnet](../adr/normalize-decisions-batch-sonnet.md) | 2026-05-17 | Accepted | `ADR_NORMALIZE_BATCH=10` для `normalize-decisions.sh` MLMaiL; витіснений рішенням BATCH=5 |
+| [q-page-flex-center-overflow](../adr/q-page-flex-center-overflow.md) | 2026-05-17 | Accepted | `q-page flex-center` MLMaiL приховує контент нижче viewport; замінено на `column items-center` |
+| [rust-analyzer-workspace-підтека](../adr/rust-analyzer-workspace-підтека.md) | 2026-05-17 | Accepted | `linkedProjects` у `.vscode/settings.json` MLMaiL для `rust-analyzer` у монорепо |
+| [tauri-storage-endpoints-managed-state](../adr/tauri-storage-endpoints-managed-state.md) | 2026-05-17 | Accepted | Tauri Managed State (`Arc`) MLMaiL для `Storage` та `Endpoints` як DI для тестованості |
+| [файловий-стор-токенів-замість-keychain](../adr/файловий-стор-токенів-замість-keychain.md) | 2026-05-17 | Accepted | `FileStorage` (`session.json`, `0600`) MLMaiL замість macOS Keychain для зберігання токенів |
+| [adr-нормалізація-розмір-батчу-batch5](../adr/adr-нормалізація-розмір-батчу-batch5.md) | 2026-05-18 | Accepted | `ADR_NORMALIZE_BATCH=5` як стабільний розмір батчу `normalize-decisions.sh` MLMaiL |
+
+## Вплив ADR на рівні C4 MLMaiL
+
+Для кожного ADR MLMaiL — проекції C4-моделі, на які він вплинув.
+
+| ADR slug | 01-context | 02-containers | 03-components | 04-code |
+| -------- | :--------: | :-----------: | :-----------: | :-----: |
+| ADR-0006-google-oauth | ✓ | ✓ | ✓ | ✓ |
+| c4-документація-mlmail-ініціалізація | ✓ | ✓ | ✓ | ✓ |
+| oauth-client-id-у-приватному-репо | — | — | — | — |
+| oauth-client-ids-runtime-dotenvy | — | — | — | ✓ |
+| gmail-inbox-count-стартовий-екран | — | — | ✓ | ✓ |
+| tauri-vs-capacitor-огляд | — | ✓ | — | — |
+| tauri-web-таргет-відсутність | ✓ | ✓ | — | — |
+| gmail-random-message-команда | — | — | ✓ | ✓ |
+| gmail-rust-команди-та-auth-store | — | ✓ | ✓ | ✓ |
+| bun-run-lint-виправлення | — | — | — | — |
+| nitra-cursor-rules-compliance | — | — | — | — |
+| quasar-2-ui-фреймворк-mlmail | — | — | ✓ | ✓ |
+| tauri-e2e-macos-webdriver | — | — | — | — |
+| tauri-mock-runtime-тестування | — | — | ✓ | ✓ |
+| vi-hoisted-vitest-mock | — | — | — | — |
+| adr-нормалізація-ручний-запуск | — | — | — | — |
+| bun-vitest-dual-runner | — | — | — | — |
+| gitleaks-security-лінтер | — | — | — | — |
+| міграція-з-vitest-на-bun-test-runner | — | — | — | — |
+| nitra-cursor-видалення-з-підпакету | — | — | — | — |
+| normalize-decisions-batch-sonnet | — | — | — | — |
+| q-page-flex-center-overflow | — | — | ✓ | ✓ |
+| rust-analyzer-workspace-підтека | — | — | — | — |
+| tauri-storage-endpoints-managed-state | — | — | ✓ | ✓ |
+| файловий-стор-токенів-замість-keychain | — | ✓ | ✓ | ✓ |
+| adr-нормалізація-розмір-батчу-batch5 | — | — | — | — |
+
+## Зворотний індекс
+
+Для кожного рівня C4-моделі MLMaiL — slug-и ADR, що його сформували.
+
+### 01-context.md
+
+- [ADR-0006-google-oauth](../adr/ADR-0006-google-oauth.md) — зовнішні системи Google Identity Services і Gmail API у System Context MLMaiL
+- [c4-документація-mlmail-ініціалізація](../adr/c4-документація-mlmail-ініціалізація.md) — ініціалізація файлу рівня `01-context.md` MLMaiL
+- [tauri-web-таргет-відсутність](../adr/tauri-web-таргет-відсутність.md) — MLMaiL розгортається як desktop/mobile без web-контейнера
+
+### 02-containers.md
+
+- [ADR-0006-google-oauth](../adr/ADR-0006-google-oauth.md) — HTTPS-стрілки до Google Identity Services перенесено з контейнера MLMaiL Frontend на контейнер MLMaiL Backend
+- [c4-документація-mlmail-ініціалізація](../adr/c4-документація-mlmail-ініціалізація.md) — ініціалізація файлу рівня `02-containers.md` MLMaiL
+- [gmail-rust-команди-та-auth-store](../adr/gmail-rust-команди-та-auth-store.md) — контейнер MLMaiL Backend виконує всі HTTP-виклики до Gmail API без передачі токенів у Frontend
+- [tauri-vs-capacitor-огляд](../adr/tauri-vs-capacitor-огляд.md) — контейнер MLMaiL Backend реалізовано як Tauri + Rust, а не Capacitor
+- [tauri-web-таргет-відсутність](../adr/tauri-web-таргет-відсутність.md) — відсутній web-контейнер у C4-діаграмі MLMaiL; Tauri розгортається лише на macOS і Android
+- [файловий-стор-токенів-замість-keychain](../adr/файловий-стор-токенів-замість-keychain.md) — контейнер Локальне сховище MLMaiL зберігає `session.json` (FileStorage, `0600`)
+
+### 03-components.md
+
+- [ADR-0006-google-oauth](../adr/ADR-0006-google-oauth.md) — компоненти Auth Component MLMaiL, Auth Store MLMaiL, Auth Module MLMaiL (Rust), Auth Errors i18n MLMaiL
+- [c4-документація-mlmail-ініціалізація](../adr/c4-документація-mlmail-ініціалізація.md) — ініціалізація файлу рівня `03-components.md` MLMaiL
+- [gmail-inbox-count-стартовий-екран](../adr/gmail-inbox-count-стартовий-екран.md) — компонент Gmail Module MLMaiL (Rust) з командою `gmail_inbox_count`; Auth Store MLMaiL отримав `inboxCount`, `refreshInboxCount`
+- [gmail-random-message-команда](../adr/gmail-random-message-команда.md) — компонент Gmail Module MLMaiL отримав команду `gmail_random_message`; Auth Store MLMaiL — `currentMessage`, `loadRandomMessage`
+- [gmail-rust-команди-та-auth-store](../adr/gmail-rust-команди-та-auth-store.md) — структура компонента Auth Store MLMaiL з Gmail-даними замість окремого `mailbox-store.js`
+- [q-page-flex-center-overflow](../adr/q-page-flex-center-overflow.md) — виправлення поведінки компонента Auth Component MLMaiL (Login.vue): `column items-center` замість `flex-center`
+- [quasar-2-ui-фреймворк-mlmail](../adr/quasar-2-ui-фреймворк-mlmail.md) — компонент Frontend UI Kit MLMaiL (Quasar 2) з macOS material-look
+- [tauri-mock-runtime-тестування](../adr/tauri-mock-runtime-тестування.md) — DI-структура Tauri-команд MLMaiL через `SharedStorage` і `Endpoints` (Managed State)
+- [tauri-storage-endpoints-managed-state](../adr/tauri-storage-endpoints-managed-state.md) — компоненти SharedStorage MLMaiL і Endpoints MLMaiL як `Arc`-об'єкти у Tauri Managed State
+- [файловий-стор-токенів-замість-keychain](../adr/файловий-стор-токенів-замість-keychain.md) — компонент Auth Module MLMaiL: `FileStorage` замість macOS Keychain
+
+### 04-code.md
+
+- [ADR-0006-google-oauth](../adr/ADR-0006-google-oauth.md) — нові файли `app/src-tauri/src/auth/`, Kotlin-файли `gen/android/.../auth/`, `auth-store.js`, `Login.vue`, `auth-errors.js`
+- [c4-документація-mlmail-ініціалізація](../adr/c4-документація-mlmail-ініціалізація.md) — ініціалізація файлу рівня `04-code.md` MLMaiL
+- [gmail-inbox-count-стартовий-екран](../adr/gmail-inbox-count-стартовий-екран.md) — `app/src-tauri/src/gmail/mod.rs` (новий), оновлення `lib.rs`, `auth-store.js`
+- [gmail-random-message-команда](../adr/gmail-random-message-команда.md) — `app/src-tauri/src/gmail/message.rs` (новий), оновлення `lib.rs`, `auth-store.js`, `Login.vue`
+- [gmail-rust-команди-та-auth-store](../adr/gmail-rust-команди-та-auth-store.md) — структура `gmail/mod.rs`, `gmail/error.rs`, оновлення `auth-store.js`
+- [oauth-client-ids-runtime-dotenvy](../adr/oauth-client-ids-runtime-dotenvy.md) — `app/src-tauri/src/auth/config.rs`: runtime-функції замість compile-time констант; `dotenvy::dotenv()` у `lib.rs`
+- [q-page-flex-center-overflow](../adr/q-page-flex-center-overflow.md) — виправлення класу `q-page` у `app/src/views/Login.vue`
+- [quasar-2-ui-фреймворк-mlmail](../adr/quasar-2-ui-фреймворк-mlmail.md) — `quasar-variables.sass`, `main.js`, `vite.config.js`, `App.vue`, `Login.vue`, `test-utils/quasar.js`
+- [tauri-mock-runtime-тестування](../adr/tauri-mock-runtime-тестування.md) — `app/src-tauri/src/endpoints.rs` (новий), `tests/*.rs` (5 нових файлів)
+- [tauri-storage-endpoints-managed-state](../adr/tauri-storage-endpoints-managed-state.md) — `endpoints.rs`, `auth/storage/mod.rs`, `gmail/mod.rs`, `lib.rs`
+- [файловий-стор-токенів-замість-keychain](../adr/файловий-стор-токенів-замість-keychain.md) — `app/src-tauri/src/auth/storage/file.rs` (новий), `storage/mod.rs`
+
+## Superseded chains
+
+Ланцюжок замін розміру батчу `normalize-decisions.sh` MLMaiL:
+
+`normalize-decisions-batch-sonnet` (BATCH=10) → `adr-нормалізація-розмір-батчу-batch5` (BATCH=5)
+
+ADR `normalize-decisions-batch-sonnet` зафіксував `BATCH=10` як відповідь на збій `BATCH=30` (перевищення output-токенів). Реальний прогін з `BATCH=10` завершився `Request timed out` (~1 год). ADR `adr-нормалізація-розмір-батчу-batch5` закріплює остаточне рішення: `BATCH=5` стабільно завершує прогін у межах output-токенів і часу виконання `claude` CLI.
 
 ## Правило синхронізації MLMaiL
 
-Будь-яка зміна, що **впливає** на список вище — нова прийнята архітектурна
-опція, новий ADR у `docs/adr/`, новий зовнішній сервіс MLMaiL — оновлює:
+Будь-яка зміна, що впливає на індекс вище — новий ADR у `docs/adr/`, новий зовнішній сервіс MLMaiL, нова ключова залежність — оновлює:
 
 1. цей файл (`docs/ci4/decisions.md`);
-2. відповідний рівень C4-моделі MLMaiL;
-3. (для прийнятих ADR) тіло самого ADR з явним переліком C4-схем, які потрібно
-   оновити (правило `.cursor/rules/n-adr.mdc`, секція «Зв'язок із ADR»).
+2. відповідний рівень C4-моделі MLMaiL (`01-context.md`, `02-containers.md`, `03-components.md`, `04-code.md`);
+3. тіло самого ADR з явним переліком C4-проекцій для оновлення (правило `.cursor/rules/n-adr.mdc`).
 
 Усе у тому ж PR — розсинхрон між кодом, ADR і C4-моделлю MLMaiL заборонено.

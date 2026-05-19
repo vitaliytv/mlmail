@@ -27,3 +27,9 @@
 ## Зачіпає
 
 `app/package.json`, `bun.lock`, `knip.json`, `.cspell.json`, `.v8rignore`, `.github/workflows/git-ai.yml`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)
