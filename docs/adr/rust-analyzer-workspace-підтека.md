@@ -26,3 +26,8 @@ Chosen option: "Налаштувати linkedProjects у .vscode/settings.json",
 ## More Information
 
 Зачіпає: `app/src-tauri/Cargo.toml` (цільовий файл для linkedProjects), `.vscode/settings.json` (необхідно додати `"rust-analyzer.linkedProjects": ["app/src-tauri/Cargo.toml"]`). Сесія містить лише пасивне спостереження логу IDE — жодних дій у коді не виконувалося.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [decisions](../ci4/decisions.md)

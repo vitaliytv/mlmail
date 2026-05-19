@@ -45,3 +45,9 @@
 
 ### Додавання файлів без Schema Store до `.v8rignore`
 `.cursor/hooks.json` та `.gitleaks.toml` не мають схем у Schema Store — `v8r` завершував помилкою `Could not find a schema to validate`. Рішення: додати обидва файли до `.v8rignore` відповідно до `n-text.mdc`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

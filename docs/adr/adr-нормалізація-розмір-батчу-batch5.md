@@ -56,3 +56,8 @@ Dry-run: додати `ADR_NORMALIZE_DRY=1`. Лог: `.claude/hooks/normalize-de
 ADR_NORMALIZE_THRESHOLD=0 ADR_NORMALIZE_MIN_INTERVAL_HOURS=0 ADR_NORMALIZE_BATCH=5 bash .claude/hooks/normalize-decisions.sh
 ```
 Dry-run: додати `ADR_NORMALIZE_DRY=1`. Лог: `.claude/hooks/normalize-decisions.log`. Скіл: `.cursor/skills/n-adr-normalize/SKILL.md`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [decisions](../ci4/decisions.md)

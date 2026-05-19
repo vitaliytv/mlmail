@@ -32,3 +32,8 @@ app/auto-imports.d.ts
 *.sln
 *.sw?
 .claude/hooks/.normalize-state
+
+# docs:regen
+docs/ci4/.regen.log
+docs/ci4/.regen-debug/
+.claude/hooks/.docs-regen.lock

@@ -32,3 +32,12 @@ Chosen option: "Tauri managed state", because це стандартний мех
 - `acquire_access_token` і `finalize_login` тепер приймають URL-рядок і `&dyn RefreshTokenStorage` явно, не беруть їх зсередини.
 
 Зачіпає: `src-tauri/src/auth/storage/mod.rs` (SharedStorage), `src-tauri/src/endpoints.rs` (новий), `src-tauri/src/auth/mod.rs`, `src-tauri/src/gmail/mod.rs`, `src-tauri/src/lib.rs`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

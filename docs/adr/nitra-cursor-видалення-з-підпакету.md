@@ -27,3 +27,8 @@ Chosen option: "Видалити з app/package.json", because пакет вик
 ## More Information
 
 Зачіпає: `app/package.json` (видалено рядок `@nitra/cursor` з `devDependencies`), `bun.lock` (оновлено після `bun install`). У кореневому `package.json` залежність збережена.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [decisions](../ci4/decisions.md)

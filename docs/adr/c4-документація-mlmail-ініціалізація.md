@@ -31,3 +31,9 @@
 ## Зачіпає
 
 `docs/ci4/README.md`, `docs/ci4/01-context.md`, `docs/ci4/02-containers.md`, `docs/ci4/03-components.md`, `docs/ci4/04-code.md`, `docs/ci4/decisions.md`, `.cspell.json`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [03-components](../ci4/03-components.md)
+- [decisions](../ci4/decisions.md)

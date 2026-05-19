@@ -22,6 +22,8 @@
 
 ## Skills
 
+- `.cursor/skills/docs-regen/SKILL.md`
+  Команда: `/docs-regen`
 - `.cursor/skills/n-adr-normalize/SKILL.md` — Ручний запуск ADR-нормалізації — обхід порогу й min-interval, прогон одного батчу чернеток через LLM, перегляд результату через git diff
   Команда: `/n-adr-normalize`
 - `.cursor/skills/n-fix/SKILL.md` — Виправити проєкт відповідно до всіх правил в .cursor/rules/

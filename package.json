@@ -13,13 +13,17 @@
     "lint-js": "bunx oxlint --fix && bunx eslint --fix . && bunx jscpd . && bunx knip --no-config-hints",
     "lint-security": "gitleaks detect --no-banner",
     "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
-    "lint-text": "n-cursor lint-text"
+    "lint-text": "n-cursor lint-text",
+    "docs:regen": "bun run scripts/docs-regen.js",
+    "test:scripts": "bun test scripts/__tests__"
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
-    "@nitra/cursor": "^1.13.26",
+    "@nitra/cursor": "^1.13.52",
     "@nitra/eslint-config": "^3.9.2",
-    "@nitra/stylelint-config": "^1.4.0"
+    "@nitra/stylelint-config": "^1.4.0",
+    "globby": "^14.0.2",
+    "gray-matter": "^4.0.3"
   },
   "stylelint": {
     "extends": "@nitra/stylelint-config"

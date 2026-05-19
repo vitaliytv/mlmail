@@ -34,3 +34,12 @@ Chosen option: "Dual-runner: bun:test для pure-JS, Vitest для Vue SFC", be
 - `package.json` скрипти: `test` (bun:test для `src/services src/i18n`), `test:ui` (vitest run), `test:rust` (cargo test), `test:all` (усі три послідовно).
 
 Зачіпає: `app/src/services/auth-store.js`, `app/src/services/auth-store.test.js`, `app/src/i18n/auth-errors.test.js`, `app/src/views/Login.vitest.js` (перейменовано з `Login.test.js`), `app/vite.config.js`, `app/package.json`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [03-components](../ci4/03-components.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)

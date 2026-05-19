@@ -1,0 +1,403 @@
+{
+  "adrs": {
+    "ADR-0006-google-oauth": {
+      "path": "docs/adr/ADR-0006-google-oauth.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "adr-нормалізація-розмір-батчу-batch5": {
+      "path": "docs/adr/adr-нормалізація-розмір-батчу-batch5.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "decisions"
+      ]
+    },
+    "adr-нормалізація-ручний-запуск": {
+      "path": "docs/adr/adr-нормалізація-ручний-запуск.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "decisions"
+      ]
+    },
+    "bun-run-lint-виправлення": {
+      "path": "docs/adr/bun-run-lint-виправлення.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "04-code",
+        "decisions"
+      ]
+    },
+    "bun-vitest-dual-runner": {
+      "path": "docs/adr/bun-vitest-dual-runner.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "c4-документація-mlmail-ініціалізація": {
+      "path": "docs/adr/c4-документація-mlmail-ініціалізація.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "03-components",
+        "decisions"
+      ]
+    },
+    "gitleaks-security-лінтер": {
+      "path": "docs/adr/gitleaks-security-лінтер.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "04-code",
+        "decisions"
+      ]
+    },
+    "gmail-inbox-count-стартовий-екран": {
+      "path": "docs/adr/gmail-inbox-count-стартовий-екран.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "gmail-random-message-команда": {
+      "path": "docs/adr/gmail-random-message-команда.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "gmail-rust-команди-та-auth-store": {
+      "path": "docs/adr/gmail-rust-команди-та-auth-store.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "nitra-cursor-rules-compliance": {
+      "path": "docs/adr/nitra-cursor-rules-compliance.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "04-code",
+        "decisions"
+      ]
+    },
+    "nitra-cursor-видалення-з-підпакету": {
+      "path": "docs/adr/nitra-cursor-видалення-з-підпакету.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "decisions"
+      ]
+    },
+    "normalize-decisions-batch-sonnet": {
+      "path": "docs/adr/normalize-decisions-batch-sonnet.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "decisions"
+      ]
+    },
+    "oauth-client-id-у-приватному-репо": {
+      "path": "docs/adr/oauth-client-id-у-приватному-репо.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "oauth-client-ids-runtime-dotenvy": {
+      "path": "docs/adr/oauth-client-ids-runtime-dotenvy.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "q-page-flex-center-overflow": {
+      "path": "docs/adr/q-page-flex-center-overflow.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "quasar-2-ui-фреймворк-mlmail": {
+      "path": "docs/adr/quasar-2-ui-фреймворк-mlmail.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "rust-analyzer-workspace-підтека": {
+      "path": "docs/adr/rust-analyzer-workspace-підтека.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "decisions"
+      ]
+    },
+    "tauri-e2e-macos-webdriver": {
+      "path": "docs/adr/tauri-e2e-macos-webdriver.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "decisions"
+      ]
+    },
+    "tauri-mock-runtime-тестування": {
+      "path": "docs/adr/tauri-mock-runtime-тестування.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "tauri-storage-endpoints-managed-state": {
+      "path": "docs/adr/tauri-storage-endpoints-managed-state.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "tauri-vs-capacitor-огляд": {
+      "path": "docs/adr/tauri-vs-capacitor-огляд.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "decisions"
+      ]
+    },
+    "tauri-web-таргет-відсутність": {
+      "path": "docs/adr/tauri-web-таргет-відсутність.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "decisions"
+      ]
+    },
+    "vi-hoisted-vitest-mock": {
+      "path": "docs/adr/vi-hoisted-vitest-mock.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "міграція-з-vitest-на-bun-test-runner": {
+      "path": "docs/adr/міграція-з-vitest-на-bun-test-runner.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    },
+    "файловий-стор-токенів-замість-keychain": {
+      "path": "docs/adr/файловий-стор-токенів-замість-keychain.md",
+      "processed_at": "2026-05-19",
+      "projections": [
+        "01-context",
+        "02-containers",
+        "03-components",
+        "04-code",
+        "decisions"
+      ]
+    }
+  },
+  "generated_at": "2026-05-19T15:04:24.611Z",
+  "projections": {
+    "01-context": {
+      "generated_at": "2026-05-19T13:15:50.555Z",
+      "output_hash": "sha256:3f36047ab8befa5f39fa5b86dd64fcb2226a238e255e539c58f61b02ce2e7217",
+      "output_length": 12402,
+      "path": "docs/ci4/01-context.md",
+      "prompt_length": 87718,
+      "used_adrs": [
+        "ADR-0006-google-oauth",
+        "oauth-client-id-у-приватному-репо",
+        "oauth-client-ids-runtime-dotenvy",
+        "файловий-стор-токенів-замість-keychain",
+        "gmail-inbox-count-стартовий-екран",
+        "gmail-random-message-команда",
+        "gmail-rust-команди-та-auth-store",
+        "tauri-storage-endpoints-managed-state",
+        "quasar-2-ui-фреймворк-mlmail",
+        "tauri-mock-runtime-тестування",
+        "bun-vitest-dual-runner",
+        "tauri-e2e-macos-webdriver",
+        "tauri-web-таргет-відсутність"
+      ]
+    },
+    "02-containers": {
+      "generated_at": "2026-05-19T13:22:58.994Z",
+      "output_hash": "sha256:d90d39d99d75ada7d815b29de34e822a051c96f4561f59aec4e0387d068fe640",
+      "output_length": 16614,
+      "path": "docs/ci4/02-containers.md",
+      "prompt_length": 91217,
+      "used_adrs": [
+        "ADR-0006-google-oauth",
+        "oauth-client-ids-runtime-dotenvy",
+        "oauth-client-id-у-приватному-репо",
+        "файловий-стор-токенів-замість-keychain",
+        "gmail-inbox-count-стартовий-екран",
+        "gmail-random-message-команда",
+        "gmail-rust-команди-та-auth-store",
+        "tauri-storage-endpoints-managed-state",
+        "tauri-mock-runtime-тестування",
+        "quasar-2-ui-фреймворк-mlmail",
+        "bun-vitest-dual-runner",
+        "tauri-e2e-macos-webdriver"
+      ]
+    },
+    "03-components": {
+      "generated_at": "2026-05-19T14:08:25.905Z",
+      "output_hash": "sha256:a4ea3db4263265e9dc5657b5498b06088002ed3e834350f1a373f2a0bb20ba7b",
+      "output_length": 26732,
+      "path": "docs/ci4/03-components.md",
+      "prompt_length": 101672,
+      "used_adrs": [
+        "ADR-0006-google-oauth",
+        "bun-vitest-dual-runner",
+        "c4-документація-mlmail-ініціалізація",
+        "gmail-inbox-count-стартовий-екран",
+        "gmail-random-message-команда",
+        "gmail-rust-команди-та-auth-store",
+        "oauth-client-ids-runtime-dotenvy",
+        "q-page-flex-center-overflow",
+        "quasar-2-ui-фреймворк-mlmail",
+        "tauri-mock-runtime-тестування",
+        "tauri-storage-endpoints-managed-state",
+        "vi-hoisted-vitest-mock",
+        "міграція-з-vitest-на-bun-test-runner",
+        "файловий-стор-токенів-замість-keychain"
+      ]
+    },
+    "04-code": {
+      "generated_at": "2026-05-19T14:23:22.559Z",
+      "output_hash": "sha256:aede0b94c9b1315446383ab5058c40db7e279c3169c48b95fdc41c03086d3c55",
+      "output_length": 23870,
+      "path": "docs/ci4/04-code.md",
+      "prompt_length": 98092,
+      "used_adrs": [
+        "ADR-0006-google-oauth",
+        "gmail-inbox-count-стартовий-екран",
+        "gmail-random-message-команда",
+        "gmail-rust-команди-та-auth-store",
+        "oauth-client-ids-runtime-dotenvy",
+        "oauth-client-id-у-приватному-репо",
+        "quasar-2-ui-фреймворк-mlmail",
+        "bun-vitest-dual-runner",
+        "міграція-з-vitest-на-bun-test-runner",
+        "tauri-mock-runtime-тестування",
+        "tauri-storage-endpoints-managed-state",
+        "vi-hoisted-vitest-mock",
+        "файловий-стор-токенів-замість-keychain",
+        "q-page-flex-center-overflow",
+        "gitleaks-security-лінтер",
+        "nitra-cursor-rules-compliance",
+        "bun-run-lint-виправлення"
+      ]
+    },
+    "decisions": {
+      "generated_at": "2026-05-19T15:04:24.560Z",
+      "output_hash": "sha256:e316f53b934c786accf27249c31a35c4124254c0230076dd626c38b467d6a717",
+      "output_length": 13914,
+      "path": "docs/ci4/decisions.md",
+      "prompt_length": 87918,
+      "used_adrs": [
+        "ADR-0006-google-oauth",
+        "adr-нормалізація-розмір-батчу-batch5",
+        "adr-нормалізація-ручний-запуск",
+        "bun-run-lint-виправлення",
+        "bun-vitest-dual-runner",
+        "c4-документація-mlmail-ініціалізація",
+        "gitleaks-security-лінтер",
+        "gmail-inbox-count-стартовий-екран",
+        "gmail-random-message-команда",
+        "gmail-rust-команди-та-auth-store",
+        "nitra-cursor-rules-compliance",
+        "nitra-cursor-видалення-з-підпакету",
+        "normalize-decisions-batch-sonnet",
+        "oauth-client-id-у-приватному-репо",
+        "oauth-client-ids-runtime-dotenvy",
+        "q-page-flex-center-overflow",
+        "quasar-2-ui-фреймворк-mlmail",
+        "rust-analyzer-workspace-підтека",
+        "tauri-e2e-macos-webdriver",
+        "tauri-mock-runtime-тестування",
+        "tauri-storage-endpoints-managed-state",
+        "tauri-vs-capacitor-огляд",
+        "tauri-web-таргет-відсутність",
+        "vi-hoisted-vitest-mock",
+        "міграція-з-vitest-на-bun-test-runner",
+        "файловий-стор-токенів-замість-keychain"
+      ]
+    }
+  },
+  "rules": {
+    ".cursor/rules/n-ci4.mdc": {
+      "hash": "sha256:b86c822478c9c5ebe7cbdc69976579f0af5f5078cc7adf28ae199a6a37900683"
+    }
+  },
+  "templates": {
+    "01-context.prompt.md": {
+      "hash": "sha256:68a2950d346869b85f04f152848413f4446c40144952199435eb9327ccb207b0"
+    },
+    "02-containers.prompt.md": {
+      "hash": "sha256:6591aa427dbe28b5db6e52f9c8fd47391487acc9f4498a314b4b206bbc614ca3"
+    },
+    "03-components.prompt.md": {
+      "hash": "sha256:f1db6ef163c92827cfc7d4fcbe77e7d8d80f4a436dcd430ecdac9417582fab42"
+    },
+    "04-code.prompt.md": {
+      "hash": "sha256:cc1588a515366185ff68958cefb9d2e72fbc3e00e90fdffd8e759e4ae94f259b"
+    },
+    "_global.prompt.md": {
+      "hash": "sha256:f39dc30cca044dfbd11cd60f007361099059c50954d8fef5f0814e10c94ba99a"
+    },
+    "decisions.prompt.md": {
+      "hash": "sha256:4a75090dfc3eda3e7b1a49d6b267cbe0770148b1648e533f5c303a4330c3b3ce"
+    }
+  },
+  "tool": {
+    "model": "sonnet",
+    "name": "docs-regen",
+    "version": "0.1.0"
+  },
+  "version": 1
+}

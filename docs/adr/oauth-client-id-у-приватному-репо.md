@@ -52,3 +52,11 @@ Scopes (`openid`, `email`, `gmail.modify`) — через Google Auth Platform U
 Зачіпає: `.gitignore`, `app/src-tauri/.env`, `app/src-tauri/.env.example`, Google Cloud project `vitaliytv`.
 
 Перемикання на External + verification — явна майбутня дія при масштабуванні за межі `nitralabs.com`.
+
+---
+
+**Опрацьовано** 2026-05-19. Проекції:
+- [01-context](../ci4/01-context.md)
+- [02-containers](../ci4/02-containers.md)
+- [04-code](../ci4/04-code.md)
+- [decisions](../ci4/decisions.md)
