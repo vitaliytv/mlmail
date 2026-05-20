@@ -1,0 +1,99 @@
+docs/ci4/02-containers.md
+  s_4c1e4c1920c3fc::t_07fc742dd61cec 117,122-123,172-173,200-201
+docs/superpowers/specs/2026-05-20-foam-graph-design.md
+  s_f6c53d6d7bb72e::t_433a114fab196b 21
+  s_f6c53d6d7bb72e::t_ba9b1d20e0e964 48
+  s_dfcf97109e8457::t_18aa1afdab441c 2,7,9,11,15,17,19,25,27,29,31,33,35,37,39,41-42,45,50-52,54-65,67-69,71,74,81-82,84,86,91,93,95
+  s_f6c53d6d7bb72e::t_412bd72a9f4198 76
+  s_7c2e1123b85138::t_ea3ff3dedcd1d7 1,3-6,8,10,12-14,16,18,20,22-24,26,28,30,32,34,36,38,40,43-44,46-47,49,53,66,70,72-73,75,77-80,83,85,87-90,92,94,96-101
+app/src-tauri/src/lib.rs
+  s_25649fc119d836::t_7727b81f8499a2 10-15
+app/src-tauri/Cargo.toml
+  s_25649fc119d836::t_ece80ba7a339e7 39-41
+package.json
+  s_25649fc119d836::t_177ec8a6ba8456 10-11
+docs/superpowers/plans/2026-05-20-foam-navigation.md
+  s_f6c53d6d7bb72e::t_24f9b777fe6b49 1-174
+docs/superpowers/plans/2026-05-20-foam-in-editor-docs.md
+  s_7c2e1123b85138::t_4be552bd45d58e 1-225,227-250
+  s_7c2e1123b85138::t_55d443c8d18f6e 226
+docs/ci4/04-code.md
+  s_3d6d8d96d07914::t_e59ec159508e05 13,17,21,25,32-33,35,49-50,52,54,83,85-91,95-99,103,116,132,147,169,199,229,231,241,254,256,258,262,268,279,308-309,314,320-322,376,382,391,412,416-426,457-458,461
+docs/ci4/decisions.md
+  s_4c78b8ff3e0e6e::t_595fab4d230df2 9,14,21,25,38,83,86,95,123-127
+.vscode/extensions.json
+  s_94b0bee76cd3d3::t_6385578b427e18 14
+  s_94b0bee76cd3d3::t_d0b94a4b472f8a 15-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.10",
+  "base_commit_sha": "512d13ae7ae223ced50f321500b5c41f0a9fc589",
+  "prompts": {},
+  "sessions": {
+    "s_25649fc119d836": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "04fe87d3-2173-4c1b-af9f-07e63c0d0afb",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_3d6d8d96d07914": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0af2cc6a-d3c6-42a8-8cd5-08782ce5186b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_4c1e4c1920c3fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fbe0a4e4-6f3f-41f4-bdd1-99e4c5918380",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_4c78b8ff3e0e6e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c786bce1-5a8f-44f9-a13c-485e27e52e36",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_7c2e1123b85138": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "74cd5ade-0c55-4247-9bcf-493d2f6787ec",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_94b0bee76cd3d3": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "dc10f063-b9e3-412e-850d-5433a7e5f373",
+        "model": "default"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_dfcf97109e8457": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8e4b609b-e8a6-4333-8176-635850b715eb",
+        "model": "unknown"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_f6c53d6d7bb72e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6067d14-9854-4056-a879-daaadb606746",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
