@@ -7,6 +7,8 @@
   ],
   "type": "module",
   "scripts": {
+    "dev": "bun --cwd=app run tauri dev",
+    "tauri": "bun --cwd=app run tauri",
     "lint": "bun run lint-js && bun run lint-text && bun run lint-style && bun run lint-ga && bun run lint-image && bun run lint-security && oxfmt .",
     "lint-ga": "n-cursor lint-ga",
     "lint-image": "npx @nitra/minify-image --src=. --write",

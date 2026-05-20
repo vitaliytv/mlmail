@@ -36,6 +36,6 @@ Chosen option: "Окремий web-деплой із шаром `platform.ts`", 
 
 ---
 
-**Опрацьовано** 2026-05-19. Проекції:
+**Опрацьовано** 2026-05-20. Проекції:
 - [01-context](../ci4/01-context.md)
 - [decisions](../ci4/decisions.md)

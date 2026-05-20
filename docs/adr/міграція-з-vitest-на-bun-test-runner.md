@@ -55,7 +55,8 @@ GlobalRegistrator.register()
 
 ---
 
-**Опрацьовано** 2026-05-19. Проекції:
+**Опрацьовано** 2026-05-20. Проекції:
+- [02-containers](../ci4/02-containers.md)
 - [03-components](../ci4/03-components.md)
 - [04-code](../ci4/04-code.md)
 - [decisions](../ci4/decisions.md)

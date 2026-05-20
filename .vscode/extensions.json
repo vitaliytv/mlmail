@@ -11,5 +11,12 @@
     "Vue.volar",
     "tauri-apps.tauri-vscode",
     "rust-lang.rust-analyzer"
+  ],
+  "unwantedRecommendations": [
+    "orsenkucher.vscode-graphql",
+    "ms-azuretools.vscode-containers",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "ms-azuretools.vscode-azure-github-copilot",
+    "apidev.azure-api-center"
   ]
 }

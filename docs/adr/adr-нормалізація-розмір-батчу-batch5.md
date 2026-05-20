@@ -59,5 +59,5 @@ Dry-run: додати `ADR_NORMALIZE_DRY=1`. Лог: `.claude/hooks/normalize-de
 
 ---
 
-**Опрацьовано** 2026-05-19. Проекції:
+**Опрацьовано** 2026-05-20. Проекції:
 - [decisions](../ci4/decisions.md)

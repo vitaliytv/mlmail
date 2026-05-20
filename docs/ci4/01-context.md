@@ -58,8 +58,10 @@ Google Identity Services — зовнішня система, що видає ML
 - протокол: HTTPS;
 - flow на macOS: OAuth 2.0 Authorization Code + PKCE через системний браузер + Rust loopback HTTP-server на `127.0.0.1:RANDOM_PORT`;
 - flow на Android: Credential Manager (sign-in → ID token) + Google Identity AuthorizationClient (scope `gmail.modify` → server auth code) через Tauri 2 mobile plugin (Kotlin);
+- зберігання refresh token на macOS: `FileStorage` — `{app_data_dir}/session.json`, права `0600`, атомарний запис через POSIX rename;
+- зберігання refresh token на Android: EncryptedSharedPreferences з master key у Android Keystore;
 - scopes: `https://www.googleapis.com/auth/gmail.modify`;
-- OAuth consent screen: Internal (лише акаунти `*@nitralabs.com`); перехід на External при масштабуванні за межі організації.
+- OAuth consent screen: Internal (`orgInternalOnly: true`, лише акаунти `*@nitralabs.com`); перехід на External при масштабуванні за межі організації.
 
 ## Зовнішня система Gmail REST API MLMaiL
 
@@ -99,7 +101,7 @@ MLMaiL читатиме і записуватиме ці файли через T
 
 ## Use-cases застосунку MLMaiL
 
-**Авторизація через Google.** Користувач MLMaiL відкриває застосунок і натискає «Увійти через Google». На macOS системний браузер відкриває сторінку авторизації Google; після успішного входу refresh token зберігається у файловому сховищі пристрою (`{app_data_dir}/session.json`, права `0600`, атомарний запис через POSIX rename). На Android Credential Manager показує native account picker. При повторному запуску застосунок MLMaiL відновлює сесію автоматично.
+**Авторизація через Google.** Користувач MLMaiL відкриває застосунок і натискає «Увійти через Google». На macOS системний браузер відкриває сторінку авторизації Google; після успішного входу refresh token зберігається у `FileStorage` (`{app_data_dir}/session.json`, права `0600`). На Android Credential Manager показує native account picker. При повторному запуску застосунок MLMaiL відновлює сесію автоматично.
 
 **Перегляд вхідних листів Gmail.** Після авторизації користувач MLMaiL бачить кількість листів у INBOX і може переглянути лист: тему, відправника, дату і тіло.
 
@@ -127,6 +129,7 @@ MLMaiL читатиме і записуватиме ці файли через T
 - OAuth 2.0 авторизація через Google Identity Services: Authorization Code + PKCE на macOS (loopback HTTP-server), Credential Manager на Android; реалізація: `app/src-tauri/src/auth/`;
 - зберігання refresh token: на macOS — `FileStorage` (`{app_data_dir}/session.json`, права `0600`, атомарний запис через POSIX rename); на Android — EncryptedSharedPreferences з master key у Android Keystore; access token — лише в пам'яті Rust-процесу;
 - читання OAuth Client IDs у runtime через `dotenvy` (`app/src-tauri/src/auth/config.rs`); `.env` — публічні Client IDs у приватному репозиторії, `.env.secret` — Desktop `client_secret` (gitignored);
+- OAuth consent screen: Internal (`orgInternalOnly: true`, лише акаунти `*@nitralabs.com`);
 - відображення кількості листів у INBOX через Tauri-команду `gmail_inbox_count` (`users.labels.get?id=INBOX`); реалізація: `app/src-tauri/src/gmail/mod.rs`;
 - відображення випадкового листа з INBOX через Tauri-команду `gmail_random_message` (`users.messages.list` + `users.messages.get`), витяг plain-text тіла, truncate до 10 000 символів; реалізація: `app/src-tauri/src/gmail/message.rs`;
 - Vue Auth Store (`app/src/services/auth-store.js`) — поля `email`, `isAuthenticated`, `inboxCount`, `currentMessage`; без токенів у JS-пам'яті;

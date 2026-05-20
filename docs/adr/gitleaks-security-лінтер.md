@@ -31,6 +31,6 @@ Chosen option: "Додати `.gitleaks.toml` + `lint-security`", because `npx @
 
 ---
 
-**Опрацьовано** 2026-05-19. Проекції:
+**Опрацьовано** 2026-05-20. Проекції:
 - [04-code](../ci4/04-code.md)
 - [decisions](../ci4/decisions.md)

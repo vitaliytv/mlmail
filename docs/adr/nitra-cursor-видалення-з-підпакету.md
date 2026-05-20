@@ -30,5 +30,6 @@ Chosen option: "Видалити з app/package.json", because пакет вик
 
 ---
 
-**Опрацьовано** 2026-05-19. Проекції:
+**Опрацьовано** 2026-05-20. Проекції:
+- [04-code](../ci4/04-code.md)
 - [decisions](../ci4/decisions.md)

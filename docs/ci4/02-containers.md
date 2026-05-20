@@ -114,12 +114,13 @@ TBD: tracing-storage — для команд `gmail_inbox_count` і `gmail_rando
 
 Контейнер `session-store` MLMaiL — це **файл або платформне сховище**, де контейнер `tauri-backend` MLMaiL зберігає refresh token між перезапусками застосунку MLMaiL. Контейнер `session-store` MLMaiL відокремлений від сховища заміток MLMaiL (`notes-store`).
 
-**Дані:** JSON-об'єкт `{ "refresh_token": "...", "email": "..." }`. На macOS — права доступу 0600 (тільки власник). Запис атомарний: temp-файл відкривається з `mode(0o600)` через `OpenOptions::mode`, потім POSIX `rename` замінює цільовий — усуває TOCTOU-вразливість схеми write→chmod. Файловий стор MLMaiL обраний замість macOS Keychain, щоб уникнути системного промпту «Дозволити доступ до Keychain?» при кожній перебудові в dev-режимі.
+**Дані:** JSON-об'єкт `{ "refresh_token": "...", "email": "..." }`. На macOS — права доступу 0600 (тільки власник). Запис атомарний: temp-файл відкривається з `mode(0o600)` через `OpenOptions::mode`, потім POSIX `rename` замінює цільовий — усуває TOCTOU-вразливість схеми write→chmod. Файловий стор MLMaiL обраний замість macOS Keychain, щоб уникнути системного промпту «Дозволити доступ до Keychain?»: на macOS ad-hoc підпис бінарника змінюється між перебудовами і ACL «Завжди дозволяти» прив'язується до конкретного binary hash — файловий стор усуває цю залежність у dev і release.
 
 **Розташування:**
 
 | Платформа | Сховище | Шлях |
-| ----------- | --------- | ------ || macOS | FileStorage (JSON) | `~/Library/Application Support/com.vitaliytv.mlmail/session.json` |
+|-----------|---------|------|
+| macOS | FileStorage (JSON) | `~/Library/Application Support/com.vitaliytv.mlmail/session.json` |
 | Android | EncryptedSharedPreferences (planned) | app-private Keystore пакета `com.vitaliytv.mlmail` |
 
 **Інтерфейси:** контейнер `tauri-backend` MLMaiL читає і пише контейнер `session-store` MLMaiL через трейт `RefreshTokenStorage` з аліасом `SharedStorage = Arc<dyn RefreshTokenStorage>`. Реалізація на macOS — `FileStorage` (`app/src-tauri/src/auth/storage/file.rs`). Реалізація на Android — `AndroidStorage` через Kotlin `SecureStore.kt` (planned).
@@ -168,7 +169,8 @@ notes/
 Конфігурація контейнера `tauri-backend` MLMaiL зберігається у двох файлах:
 
 | Файл | Статус у git | Вміст |
-| ------ | ------------- | ------- || `app/src-tauri/.env` | відстежується у приватному репо | `MLMAIL_GOOGLE_DESKTOP_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID` |
+|------|--------------|-------|
+| `app/src-tauri/.env` | відстежується у приватному репо | `MLMAIL_GOOGLE_DESKTOP_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID` |
 | `app/src-tauri/.env.secret` | `.gitignore` | `MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET` |
 
 Google OAuth Client IDs для нативних застосунків є публічними ідентифікаторами — вони передаються у мережевих запитах і тривіально витягуються з бінарника командою `strings`. Файл `app/src-tauri/.env` відстежується у приватному репозиторії `vitaliytv/mlmail`.
@@ -195,8 +197,8 @@ MLMaiL розгортається як два артефакти:
 ### Реалізовано
 
 - **Контейнер `vue-frontend` MLMaiL** — Vue 3.5 + Quasar 2 з Login-екраном (`app/src/views/Login.vue`), Auth Store (`app/src/services/auth-store.js`) з полями `inboxCount` і `currentMessage`, i18n-таблицею помилок українською (`app/src/i18n/auth-errors.js`), Quasar sass-vars у `app/src/quasar-variables.sass`.
-- **Контейнер `tauri-backend` MLMaiL** — Tauri 2 з повною Google OAuth-підсистемою (`app/src-tauri/src/auth/`), п'ятьма auth-командами `auth_*`, Gmail-модулем (`app/src-tauri/src/gmail/`) з командами `gmail_inbox_count` і `gmail_random_message`, DI через Endpoints (`app/src-tauri/src/endpoints.rs`) і SharedStorage, 32 Rust unit-тести + 5 integration-тестів через Tauri Mock Runtime (`app/src-tauri/tests/`).
-- **Контейнер `session-store` MLMaiL (macOS)** — FileStorage (`app/src-tauri/src/auth/storage/file.rs`), `session.json` з правами 0600, атомарний запис через POSIX `rename`.
+- **Контейнер `tauri-backend` MLMaiL** — Tauri 2 з повною Google OAuth-підсистемою (`app/src-tauri/src/auth/`), п'ятьма auth-командами `auth_*`, Gmail-модулем (`app/src-tauri/src/gmail/`) з командами `gmail_inbox_count` і `gmail_random_message`, DI через `Endpoints` (`app/src-tauri/src/endpoints.rs`) і `SharedStorage`, 32 Rust unit-тести + 5 integration-тестів через Tauri Mock Runtime (`app/src-tauri/tests/`).
+- **Контейнер `session-store` MLMaiL (macOS)** — `FileStorage` (`app/src-tauri/src/auth/storage/file.rs`), `session.json` з правами 0600, атомарний запис через POSIX `rename`.
 - Збірка артефактів MLMaiL під macOS і Android.
 
 ### Planned

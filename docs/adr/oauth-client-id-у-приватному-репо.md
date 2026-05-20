@@ -55,7 +55,7 @@ Scopes (`openid`, `email`, `gmail.modify`) — через Google Auth Platform U
 
 ---
 
-**Опрацьовано** 2026-05-19. Проекції:
+**Опрацьовано** 2026-05-20. Проекції:
 - [01-context](../ci4/01-context.md)
 - [02-containers](../ci4/02-containers.md)
 - [04-code](../ci4/04-code.md)
