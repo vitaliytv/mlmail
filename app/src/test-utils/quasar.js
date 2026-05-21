@@ -1,5 +1,9 @@
 import { mount } from '@vue/test-utils'
-import { QLayout, QPageContainer, Quasar } from 'quasar'
+import * as Quasar from 'quasar'
+
+// `bun test` has no @quasar/vite-plugin to auto-import components per file,
+// so register every Quasar component (QBtn, QPage, …) globally.
+const quasarComponents = Object.fromEntries(Object.entries(Quasar).filter(([name]) => /^Q[A-Z]/.test(name)))
 
 /**
  * @param {object} component Vue component
@@ -7,18 +11,19 @@ import { QLayout, QPageContainer, Quasar } from 'quasar'
  * @returns {object} test wrapper
  */
 export function mountWithQuasar(component, options = {}) {
-  const userPlugins = (options.global && options.global.plugins) || []
+  const userGlobal = options.global || {}
+  const userPlugins = userGlobal.plugins || []
   const wrapper = {
-    components: { QLayout, QPageContainer, Subject: component },
     render() {
-      return h(QLayout, { view: 'hHh lpR fFf' }, () => h(QPageContainer, () => h(component)))
+      return h(Quasar.QLayout, { view: 'hHh lpR fFf' }, () => h(Quasar.QPageContainer, () => h(component)))
     }
   }
   return mount(wrapper, {
     ...options,
     global: {
-      ...options.global,
-      plugins: [...userPlugins, [Quasar, { config: { dark: false } }]]
+      ...userGlobal,
+      components: { ...quasarComponents, ...userGlobal.components },
+      plugins: [...userPlugins, [Quasar.Quasar, { config: { dark: false } }]]
     }
   })
 }

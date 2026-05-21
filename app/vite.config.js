@@ -46,11 +46,5 @@ export default defineConfig(() => ({
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ['**/src-tauri/**']
     }
-  },
-
-  test: {
-    environment: 'jsdom',
-    globals: false,
-    include: ['src/**/*.vitest.{js,vue}']
   }
 }))
