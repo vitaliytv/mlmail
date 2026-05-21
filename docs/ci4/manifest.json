@@ -3,246 +3,132 @@
     "ADR-0006-google-oauth": {
       "path": "docs/adr/ADR-0006-google-oauth.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "adr-нормалізація-розмір-батчу-batch5": {
       "path": "docs/adr/adr-нормалізація-розмір-батчу-batch5.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "decisions"
-      ]
+      "projections": ["decisions"]
     },
     "adr-нормалізація-ручний-запуск": {
       "path": "docs/adr/adr-нормалізація-ручний-запуск.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "decisions"
-      ]
+      "projections": ["decisions"]
     },
     "bun-run-lint-виправлення": {
       "path": "docs/adr/bun-run-lint-виправлення.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["04-code", "decisions"]
     },
     "bun-vitest-dual-runner": {
       "path": "docs/adr/bun-vitest-dual-runner.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "c4-документація-mlmail-ініціалізація": {
       "path": "docs/adr/c4-документація-mlmail-ініціалізація.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "03-components", "04-code", "decisions"]
     },
     "gitleaks-security-лінтер": {
       "path": "docs/adr/gitleaks-security-лінтер.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["04-code", "decisions"]
     },
     "gmail-inbox-count-стартовий-екран": {
       "path": "docs/adr/gmail-inbox-count-стартовий-екран.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "gmail-random-message-команда": {
       "path": "docs/adr/gmail-random-message-команда.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "gmail-rust-команди-та-auth-store": {
       "path": "docs/adr/gmail-rust-команди-та-auth-store.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "nitra-cursor-rules-compliance": {
       "path": "docs/adr/nitra-cursor-rules-compliance.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["04-code", "decisions"]
     },
     "nitra-cursor-видалення-з-підпакету": {
       "path": "docs/adr/nitra-cursor-видалення-з-підпакету.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["04-code", "decisions"]
     },
     "normalize-decisions-batch-sonnet": {
       "path": "docs/adr/normalize-decisions-batch-sonnet.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "decisions"
-      ]
+      "projections": ["decisions"]
     },
     "oauth-client-id-у-приватному-репо": {
       "path": "docs/adr/oauth-client-id-у-приватному-репо.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "04-code", "decisions"]
     },
     "oauth-client-ids-runtime-dotenvy": {
       "path": "docs/adr/oauth-client-ids-runtime-dotenvy.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "q-page-flex-center-overflow": {
       "path": "docs/adr/q-page-flex-center-overflow.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["03-components", "04-code", "decisions"]
     },
     "quasar-2-ui-фреймворк-mlmail": {
       "path": "docs/adr/quasar-2-ui-фреймворк-mlmail.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "rust-analyzer-workspace-підтека": {
       "path": "docs/adr/rust-analyzer-workspace-підтека.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["04-code", "decisions"]
     },
     "tauri-e2e-macos-webdriver": {
       "path": "docs/adr/tauri-e2e-macos-webdriver.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "04-code", "decisions"]
     },
     "tauri-mock-runtime-тестування": {
       "path": "docs/adr/tauri-mock-runtime-тестування.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "tauri-storage-endpoints-managed-state": {
       "path": "docs/adr/tauri-storage-endpoints-managed-state.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     },
     "tauri-vs-capacitor-огляд": {
       "path": "docs/adr/tauri-vs-capacitor-огляд.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "decisions"
-      ]
+      "projections": ["decisions"]
     },
     "tauri-web-таргет-відсутність": {
       "path": "docs/adr/tauri-web-таргет-відсутність.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "decisions"
-      ]
+      "projections": ["01-context", "decisions"]
     },
     "vi-hoisted-vitest-mock": {
       "path": "docs/adr/vi-hoisted-vitest-mock.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["03-components", "04-code", "decisions"]
     },
     "міграція-з-vitest-на-bun-test-runner": {
       "path": "docs/adr/міграція-з-vitest-на-bun-test-runner.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["02-containers", "03-components", "04-code", "decisions"]
     },
     "файловий-стор-токенів-замість-keychain": {
       "path": "docs/adr/файловий-стор-токенів-замість-keychain.md",
       "processed_at": "2026-05-20",
-      "projections": [
-        "01-context",
-        "02-containers",
-        "03-components",
-        "04-code",
-        "decisions"
-      ]
+      "projections": ["01-context", "02-containers", "03-components", "04-code", "decisions"]
     }
   },
   "generated_at": "2026-05-20T03:53:02.516Z",

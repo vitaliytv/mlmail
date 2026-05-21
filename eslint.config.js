@@ -5,6 +5,7 @@ export default [
     ignores: ['**/auto-imports.d.ts', 'app/src-tauri/**', 'app/dist/**', 'docs/**']
   },
   ...getConfig({
+    node: ['scripts'],
     vue: ['app']
   })
 ]

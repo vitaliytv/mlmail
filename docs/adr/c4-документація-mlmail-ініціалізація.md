@@ -35,6 +35,7 @@
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [03-components](../ci4/03-components.md)
 - [04-code](../ci4/04-code.md)

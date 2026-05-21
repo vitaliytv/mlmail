@@ -99,13 +99,13 @@
 
 Регенератор пише **рівно 5 файлів** у `docs/ci4/`:
 
-| Файл | Аудиторія | Призначення |
-| --- | --- | --- |
-| `docs/ci4/01-context.md` | менеджер MLMaiL + інженер MLMaiL | System Context (C4 рівень 1): користувач MLMaiL, зовнішні системи (Google Identity, Gmail API, LLM-провайдер, TTS-провайдер), use-cases (фічі високого рівня), поточний стан |
-| `docs/ci4/02-containers.md` | інженер MLMaiL (менеджер для огляду) | Containers (C4 рівень 2): Vue 3 frontend, Tauri 2 + Rust backend, локальне сховище нотаток `home/`/`work/`, відповідальності, дані, інтерфейси |
-| `docs/ci4/03-components.md` | інженер MLMaiL | Components (C4 рівень 3): логічні компоненти всередині кожного контейнера MLMaiL — `gmail-client`, `oauth-store`, `summary-engine`, `tts-engine`, `notes-store`, `action-handler`, Vue views та stores |
-| `docs/ci4/04-code.md` | інженер MLMaiL | Code (C4 рівень 4): Tauri-команди (сигнатури + файл), Vue-компоненти ключових екранів (props + файл), конфігурація (`tauri.conf.json`, env vars), operations (збірка, запуск) |
-| `docs/ci4/decisions.md` | обидва | Зведення ADR-впливів на C4: хронологічний індекс ADR, для кожного — на які рівні C4 вплинув, зворотний індекс (для кожного рівня C4 — які ADR його сформували), superseded chains |
+| Файл                        | Аудиторія                            | Призначення                                                                                                                                                                                            |
+| --------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs/ci4/01-context.md`    | менеджер MLMaiL + інженер MLMaiL     | System Context (C4 рівень 1): користувач MLMaiL, зовнішні системи (Google Identity, Gmail API, LLM-провайдер, TTS-провайдер), use-cases (фічі високого рівня), поточний стан                           |
+| `docs/ci4/02-containers.md` | інженер MLMaiL (менеджер для огляду) | Containers (C4 рівень 2): Vue 3 frontend, Tauri 2 + Rust backend, локальне сховище нотаток `home/`/`work/`, відповідальності, дані, інтерфейси                                                         |
+| `docs/ci4/03-components.md` | інженер MLMaiL                       | Components (C4 рівень 3): логічні компоненти всередині кожного контейнера MLMaiL — `gmail-client`, `oauth-store`, `summary-engine`, `tts-engine`, `notes-store`, `action-handler`, Vue views та stores |
+| `docs/ci4/04-code.md`       | інженер MLMaiL                       | Code (C4 рівень 4): Tauri-команди (сигнатури + файл), Vue-компоненти ключових екранів (props + файл), конфігурація (`tauri.conf.json`, env vars), operations (збірка, запуск)                          |
+| `docs/ci4/decisions.md`     | обидва                               | Зведення ADR-впливів на C4: хронологічний індекс ADR, для кожного — на які рівні C4 вплинув, зворотний індекс (для кожного рівня C4 — які ADR його сформували), superseded chains                      |
 
 Файл `docs/ci4/README.md` — **рукотворний вступ**, регенератором не чіпається. Якщо людина хоче — оновлює руками.
 
@@ -165,24 +165,30 @@ docs/ci4/_templates/
 # Інструкції LLM для генерації <projection-name>.md
 
 ## Аудиторія
+
 <хто читає>
 
 ## Призначення файлу
+
 <що цей файл відповідає на>
 
 ## Обов'язкові секції
+
 1. <секція>: <опис, що тут має бути>
-...
+   ...
 
 ## Інваріанти
+
 - <інваріант>
 - ...
 
 ## Формат виводу
+
 JSON: { "content": "<повний markdown файлу>", "used_adrs": ["<slug>", ...] }
 
 ## Приклади формулювань
-"Контейнер `tauri-backend` MLMaiL реалізує..."  не "Backend реалізує..."
+
+"Контейнер `tauri-backend` MLMaiL реалізує..." не "Backend реалізує..."
 ```
 
 ### Зміст обов'язкових секцій по проекціях
@@ -249,6 +255,7 @@ JSON: { "content": "<повний markdown файлу>", "used_adrs": ["<slug>",
 ---
 
 **Опрацьовано** 2026-05-18. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [03-components](../ci4/03-components.md)
 - [decisions](../ci4/decisions.md)
@@ -301,12 +308,12 @@ Sentinel **не** використовує HTML-коментар `<!-- ... -->`,
     ".cursor/rules/n-ci4.mdc": { "hash": "sha256:..." }
   },
   "templates": {
-    "_global.prompt.md":     { "hash": "sha256:..." },
-    "01-context.prompt.md":  { "hash": "sha256:..." },
-    "02-containers.prompt.md":{ "hash": "sha256:..." },
-    "03-components.prompt.md":{ "hash": "sha256:..." },
-    "04-code.prompt.md":     { "hash": "sha256:..." },
-    "decisions.prompt.md":   { "hash": "sha256:..." }
+    "_global.prompt.md": { "hash": "sha256:..." },
+    "01-context.prompt.md": { "hash": "sha256:..." },
+    "02-containers.prompt.md": { "hash": "sha256:..." },
+    "03-components.prompt.md": { "hash": "sha256:..." },
+    "04-code.prompt.md": { "hash": "sha256:..." },
+    "decisions.prompt.md": { "hash": "sha256:..." }
   },
   "adrs": {
     "ADR-0006-google-oauth": {
@@ -402,7 +409,7 @@ Sentinel **не** використовує HTML-коментар `<!-- ... -->`,
    - Жодного CLI у PATH — exit з ненульовим кодом, нічого не пишеться.
    - Передача через stdin.
 3. **Розпарсити відповідь LLM:**
-   - Знайти JSON-обʼєкт. Якщо тіло обгорнуте у ```` ```json … ``` ```` — відрізати fence.
+   - Знайти JSON-обʼєкт. Якщо тіло обгорнуте у ` ```json … ``` ` — відрізати fence.
    - Валідувати наявність полів `content` (рядок) і `used_adrs` (масив рядків).
    - Якщо парсинг провалився — retry 1 раз з підказкою «верни лише JSON, без markdown-fence». Другий провал → exit з ненульовим кодом, проекція **не** оновлюється, manifest **не** чіпається.
 4. **Записати проекцію:**
@@ -588,19 +595,19 @@ Press Ctrl-C within 3s to abort, otherwise proceeding...
 
 ## Edge cases
 
-| Сценарій | Поведінка |
-| --- | --- |
-| LLM повернув не-JSON / битий JSON | Retry 1 раз. Другий провал → exit 1, проекція не оновлюється, manifest не чіпається. |
-| LLM повернув `used_adrs` з невідомим slug | Warn у лог, content приймаємо. Невідомий slug у мітку не йде. |
-| ADR має preexisting мітку, LLM не використав цього разу | Мітка переписується на «Проекції: жодної.» |
-| `docs/ci4/<name>.md` не існує (перший запуск) | LLM створює з нуля. `current_content` у inputs — порожній рядок. |
-| `_templates/<name>.prompt.md` відсутній | Регенератор створює зі вбудованих констант. Логує `templates bootstrapped: <list>`. |
-| Жодного clean ADR | Кожна проекція отримує тіло `> Документація не може бути регенерована: відсутні clean ADR у docs/adr/`. |
-| ADR slug collision | Exit 2 з повідомленням `ADR slug collision: <slug> (paths: ...)`. Розробник вирішує руками. |
-| Битий manifest (невалідний JSON) | Exit 2. Розробник видаляє руками — наступний запуск стартує з порожнього. |
-| Жодного LLM CLI (`claude`, `cursor-agent`) у PATH | Exit 1 з повідомленням «No LLM CLI available». |
-| Конкурентний запуск (lock зайнятий) | Exit 0 з повідомленням «Another docs:regen is running». |
-| Репо в `MERGE_HEAD` / `rebase` | Exit 0 з повідомленням «Repository is in merge/rebase state, aborting». |
+| Сценарій                                                | Поведінка                                                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| LLM повернув не-JSON / битий JSON                       | Retry 1 раз. Другий провал → exit 1, проекція не оновлюється, manifest не чіпається.                    |
+| LLM повернув `used_adrs` з невідомим slug               | Warn у лог, content приймаємо. Невідомий slug у мітку не йде.                                           |
+| ADR має preexisting мітку, LLM не використав цього разу | Мітка переписується на «Проекції: жодної.»                                                              |
+| `docs/ci4/<name>.md` не існує (перший запуск)           | LLM створює з нуля. `current_content` у inputs — порожній рядок.                                        |
+| `_templates/<name>.prompt.md` відсутній                 | Регенератор створює зі вбудованих констант. Логує `templates bootstrapped: <list>`.                     |
+| Жодного clean ADR                                       | Кожна проекція отримує тіло `> Документація не може бути регенерована: відсутні clean ADR у docs/adr/`. |
+| ADR slug collision                                      | Exit 2 з повідомленням `ADR slug collision: <slug> (paths: ...)`. Розробник вирішує руками.             |
+| Битий manifest (невалідний JSON)                        | Exit 2. Розробник видаляє руками — наступний запуск стартує з порожнього.                               |
+| Жодного LLM CLI (`claude`, `cursor-agent`) у PATH       | Exit 1 з повідомленням «No LLM CLI available».                                                          |
+| Конкурентний запуск (lock зайнятий)                     | Exit 0 з повідомленням «Another docs:regen is running».                                                 |
+| Репо в `MERGE_HEAD` / `rebase`                          | Exit 0 з повідомленням «Repository is in merge/rebase state, aborting».                                 |
 
 ### Обмеження по токенах
 

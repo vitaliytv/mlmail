@@ -3,5 +3,5 @@
   "exitCode": 1,
   "reporters": ["console"],
   "minLines": 25,
-  "ignore": ["**/dist/**", "**/src-tauri/target/**", "**/src-tauri/gen/**"]
+  "ignore": ["**/dist/**", "**/src-tauri/target/**", "**/src-tauri/gen/**", "scripts/docs-regen/default-templates/**"]
 }

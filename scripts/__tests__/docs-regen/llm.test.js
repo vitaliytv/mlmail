@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'bun:test'
 import { parseLlmResponse } from '../../docs-regen/llm.js'
 
+const PARSE_ERROR_RE = /parse/i
+const CONTENT_ERROR_RE = /content/
+const USED_ADRS_ERROR_RE = /used_adrs/
+
 describe('parseLlmResponse', () => {
   it('parses raw JSON', () => {
     const raw = '{"content":"# Hello","used_adrs":["foo","bar"]}'
@@ -29,18 +33,18 @@ describe('parseLlmResponse', () => {
   })
 
   it('throws on broken JSON', () => {
-    expect(() => parseLlmResponse('{ not json')).toThrow(/parse/i)
+    expect(() => parseLlmResponse('{ not json')).toThrow(PARSE_ERROR_RE)
   })
 
   it('throws when content field missing', () => {
-    expect(() => parseLlmResponse('{"used_adrs":[]}')).toThrow(/content/)
+    expect(() => parseLlmResponse('{"used_adrs":[]}')).toThrow(CONTENT_ERROR_RE)
   })
 
   it('throws when used_adrs missing', () => {
-    expect(() => parseLlmResponse('{"content":"x"}')).toThrow(/used_adrs/)
+    expect(() => parseLlmResponse('{"content":"x"}')).toThrow(USED_ADRS_ERROR_RE)
   })
 
   it('throws when used_adrs is not an array', () => {
-    expect(() => parseLlmResponse('{"content":"x","used_adrs":"foo"}')).toThrow(/used_adrs/)
+    expect(() => parseLlmResponse('{"content":"x","used_adrs":"foo"}')).toThrow(USED_ADRS_ERROR_RE)
   })
 })

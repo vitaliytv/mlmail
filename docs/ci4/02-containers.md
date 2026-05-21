@@ -80,21 +80,21 @@ Access token і refresh token у JS-пам'яті відсутні — вони 
 
 **Відповідальність:** контейнер `tauri-backend` MLMaiL реалізує сім Tauri-команд.
 
-*Auth-команди* (`auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`):
+_Auth-команди_ (`auth_start_login`, `auth_get_access_token`, `auth_is_authenticated`, `auth_current_email`, `auth_logout`):
 
 - macOS: Authorization Code + PKCE через системний браузер + Rust loopback HTTP-server на `127.0.0.1:RANDOM_PORT`;
 - Android: Credential Manager (sign-in → ID token) + Google Identity AuthorizationClient (scope `gmail.modify` → server auth code) через Tauri 2 mobile plugin (Kotlin `MlmailAuthPlugin`);
 - обмін authorization code на access/refresh tokens — `oauth2.googleapis.com/token` (`app/src-tauri/src/auth/token_exchange.rs`);
 - refresh-on-401: `AuthState.expiry: Option<Instant>` із 30-секундним freshness-буфером;
-- зберігання refresh token — контейнер `session-store` MLMaiL через трейт `RefreshTokenStorage`.
+- зберігання refresh token — контейнер `session-store` MLMaiL через trait `RefreshTokenStorage`.
 
-*Gmail-команди* (`gmail_inbox_count`, `gmail_random_message`):
+_Gmail-команди_ (`gmail_inbox_count`, `gmail_random_message`):
 
 - `gmail_inbox_count`: `GET /gmail/v1/users/me/labels/INBOX` → поле `messagesTotal` (тип `u64`);
 - `gmail_random_message`: `GET messages?labelIds=INBOX&maxResults=100` → випадковий ID → `GET messages/<id>?format=full` → plain-text тіло до 10 000 символів; пріоритет `text/plain` над `text/html`; `GmailError::Empty` для порожньої скриньки;
 - обидві команди використовують helper `acquire_access_token` з авто-refresh.
 
-*(planned)* читання/запис `.md`-заміток у контейнері `notes-store` MLMaiL.
+_(planned)_ читання/запис `.md`-заміток у контейнері `notes-store` MLMaiL.
 
 **Дані:** контейнер `tauri-backend` MLMaiL зберігає access token у пам'яті процесу (`AuthState`). Refresh token зберігається у контейнері `session-store` MLMaiL. Токени ніколи не передаються у JS-пам'ять контейнера `vue-frontend` MLMaiL.
 
@@ -102,7 +102,7 @@ Access token і refresh token у JS-пам'яті відсутні — вони 
 
 - контейнер `tauri-backend` MLMaiL приймає Tauri IPC від контейнера `vue-frontend` MLMaiL;
 - контейнер `tauri-backend` MLMaiL виконує HTTPS до Google Identity Services (`oauth2.googleapis.com/token`) і Gmail REST API (`gmail.googleapis.com`);
-- контейнер `tauri-backend` MLMaiL читає і пише контейнер `session-store` MLMaiL через трейт `RefreshTokenStorage`.
+- контейнер `tauri-backend` MLMaiL читає і пише контейнер `session-store` MLMaiL через trait `RefreshTokenStorage`.
 
 **Розгортання:** macOS — бінарник `mlmail` у `.app`-бандлі; Android — shared library у APK. Конфігурація збірки — `app/src-tauri/tauri.conf.json` і `app/src-tauri/capabilities/default.json`.
 
@@ -118,12 +118,12 @@ TBD: tracing-storage — для команд `gmail_inbox_count` і `gmail_rando
 
 **Розташування:**
 
-| Платформа | Сховище | Шлях |
-|-----------|---------|------|
-| macOS | FileStorage (JSON) | `~/Library/Application Support/com.vitaliytv.mlmail/session.json` |
-| Android | EncryptedSharedPreferences (planned) | app-private Keystore пакета `com.vitaliytv.mlmail` |
+| Платформа | Сховище                              | Шлях                                                              |
+| --------- | ------------------------------------ | ----------------------------------------------------------------- |
+| macOS     | FileStorage (JSON)                   | `~/Library/Application Support/com.vitaliytv.mlmail/session.json` |
+| Android   | EncryptedSharedPreferences (planned) | app-private Keystore пакета `com.vitaliytv.mlmail`                |
 
-**Інтерфейси:** контейнер `tauri-backend` MLMaiL читає і пише контейнер `session-store` MLMaiL через трейт `RefreshTokenStorage` з аліасом `SharedStorage = Arc<dyn RefreshTokenStorage>`. Реалізація на macOS — `FileStorage` (`app/src-tauri/src/auth/storage/file.rs`). Реалізація на Android — `AndroidStorage` через Kotlin `SecureStore.kt` (planned).
+**Інтерфейси:** контейнер `tauri-backend` MLMaiL читає і пише контейнер `session-store` MLMaiL через trait `RefreshTokenStorage` з аліасом `SharedStorage = Arc<dyn RefreshTokenStorage>`. Реалізація на macOS — `FileStorage` (`app/src-tauri/src/auth/storage/file.rs`). Реалізація на Android — `AndroidStorage` через Kotlin `SecureStore.kt` (planned).
 
 **Розгортання:** файл `session.json` у `app_data_dir` Tauri на macOS. На Android — app-private Keystore (planned).
 
@@ -168,10 +168,10 @@ notes/
 
 Конфігурація контейнера `tauri-backend` MLMaiL зберігається у двох файлах:
 
-| Файл | Статус у git | Вміст |
-|------|--------------|-------|
-| `app/src-tauri/.env` | відстежується у приватному репо | `MLMAIL_GOOGLE_DESKTOP_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID` |
-| `app/src-tauri/.env.secret` | `.gitignore` | `MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET` |
+| Файл                        | Статус у git                    | Вміст                                                                                                       |
+| --------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `app/src-tauri/.env`        | відстежується у приватному репо | `MLMAIL_GOOGLE_DESKTOP_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_CLIENT_ID`, `MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID` |
+| `app/src-tauri/.env.secret` | `.gitignore`                    | `MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET`                                                                       |
 
 Google OAuth Client IDs для нативних застосунків є публічними ідентифікаторами — вони передаються у мережевих запитах і тривіально витягуються з бінарника командою `strings`. Файл `app/src-tauri/.env` відстежується у приватному репозиторії `vitaliytv/mlmail`.
 
@@ -179,7 +179,7 @@ Google OAuth Client IDs для нативних застосунків є пуб
 
 **OAuth consent screen:** Internal тип (`orgInternalOnly: true`, лише для `@nitralabs.com`), що знімає вимогу Google App Verification для sensitive scope `gmail.modify` на ранньому етапі MLMaiL. Перехід на External + verification — явна майбутня дія при масштабуванні за межі організації `nitralabs.com`.
 
-**Межі довіри:** контейнер `tauri-backend` MLMaiL — довірений контекст (нативний Rust-процес). Контейнер `vue-frontend` MLMaiL (WebView/JavaScript) — недовірений: токени не передаються у JS-пам'ять. IPC-виклики від контейнера `vue-frontend` MLMaiL до контейнера `tauri-backend` MLMaiL обмежені capability `default` у `app/src-tauri/capabilities/default.json`.
+**Межі довіри:** контейнер `tauri-backend` MLMaiL — довірений контекст (нативний Rust-процес). Контейнер `vue-frontend` MLMaiL (WebView/JavaScript) — ненадійний: токени не передаються у JS-пам'ять. IPC-виклики від контейнера `vue-frontend` MLMaiL до контейнера `tauri-backend` MLMaiL обмежені capability `default` у `app/src-tauri/capabilities/default.json`.
 
 ## Розгортання MLMaiL
 
@@ -203,9 +203,9 @@ MLMaiL розгортається як два артефакти:
 
 ### Planned
 
-- Контейнер `session-store` MLMaiL (Android) — `EncryptedSharedPreferences` через Kotlin `SecureStore.kt` (код наявний у `app/src-tauri/gen/android/`, не інтегрований з `RefreshTokenStorage`-трейтом).
+- Контейнер `session-store` MLMaiL (Android) — `EncryptedSharedPreferences` через Kotlin `SecureStore.kt` (код наявний у `app/src-tauri/gen/android/`, не інтегрований з trait `RefreshTokenStorage`).
 - Контейнер `notes-store` MLMaiL — теки `notes/work/`, `notes/home/` ще відсутні; ADR для схеми `.md`-файлу не написаний.
-- Gmail-команди для Android-таргету контейнера `tauri-backend` MLMaiL.
+- Gmail-команди для Android-цілі контейнера `tauri-backend` MLMaiL.
 - LLM/TTS-інтеграція — напрямок (Frontend чи Backend) визначить окремий ADR.
 - Reply Drafter — чернетки відповіді на лист у контейнері `vue-frontend` MLMaiL.
 - Router/layouts у контейнері `vue-frontend` MLMaiL — `App.vue` наразі показує лише `<Login/>`.

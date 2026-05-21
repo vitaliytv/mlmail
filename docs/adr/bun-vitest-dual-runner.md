@@ -27,6 +27,7 @@ Chosen option: "Dual-runner: bun:test для pure-JS, Vitest для Vue SFC", be
 ## More Information
 
 Конкретні зміни:
+
 - `auth-store.js`: додано явний `import { readonly, ref } from 'vue'` замість auto-import.
 - `auth-store.test.js`, `auth-errors.test.js`: переписано під `bun:test` API (`mock()`, `mock.module()`).
 - `Login.test.js` → `Login.vitest.js` (залишається під Vitest).
@@ -38,6 +39,7 @@ Chosen option: "Dual-runner: bun:test для pure-JS, Vitest для Vue SFC", be
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [02-containers](../ci4/02-containers.md)
 - [03-components](../ci4/03-components.md)

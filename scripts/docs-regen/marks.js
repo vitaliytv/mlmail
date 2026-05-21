@@ -19,7 +19,9 @@ export function hasMark(rawContent) {
 export function stripMark(rawContent) {
   const idx = findMarkStart(rawContent)
   if (idx === -1) return rawContent
-  return rawContent.slice(0, idx).replaceAll(/\n*$/g, '\n')
+  let body = rawContent.slice(0, idx)
+  while (body.endsWith('\n')) body = body.slice(0, -1)
+  return body + '\n'
 }
 
 /**
@@ -32,7 +34,7 @@ export function formatMark(date, projections) {
   if (projections.length === 0) {
     return `${MARK_HEADER} ${date}. Проекції: жодної.`
   }
-  const lines = projections.map((p) => `- [${p}](../ci4/${p}.md)`)
+  const lines = projections.map(p => `- [${p}](../ci4/${p}.md)`)
   return `${MARK_HEADER} ${date}. Проекції:\n${lines.join('\n')}`
 }
 
@@ -49,6 +51,11 @@ export function applyMark(rawContent, date, projections) {
   return body + '\n---\n\n' + formatMark(date, projections) + '\n'
 }
 
+/**
+ * Find the offset where the trailing mark block starts.
+ * @param {string} rawContent Raw ADR file content.
+ * @returns {number} Offset of the mark's `---` separator, or `-1` if absent.
+ */
 function findMarkStart(rawContent) {
   const lines = rawContent.split('\n')
   for (let i = lines.length - 1; i >= 0; i--) {

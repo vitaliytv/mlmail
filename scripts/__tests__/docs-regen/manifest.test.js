@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { mkdir, rm, writeFile, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -7,7 +8,7 @@ import { defaultManifest, loadManifest, saveManifest } from '../../docs-regen/ma
 let TMP
 
 beforeEach(async () => {
-  TMP = join(tmpdir(), `manifest-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  TMP = join(tmpdir(), `manifest-test-${Date.now()}-${randomUUID()}`)
   await mkdir(join(TMP, 'docs', 'ci4'), { recursive: true })
 })
 
@@ -40,7 +41,7 @@ describe('loadManifest', () => {
       adrs: { 'foo-adr': { path: 'docs/adr/foo-adr.md', processed_at: '2026-05-18', projections: ['01-context'] } },
       projections: {},
       templates: {},
-      rules: {},
+      rules: {}
     }
     await writeFile(join(TMP, 'docs', 'ci4', 'manifest.json'), JSON.stringify(stored), 'utf8')
     const m = await loadManifest(TMP)
@@ -60,11 +61,11 @@ describe('saveManifest', () => {
       tool: { name: 'docs-regen', version: '0.1.0' },
       adrs: {
         'z-adr': { path: 'docs/adr/z-adr.md', projections: [] },
-        'a-adr': { path: 'docs/adr/a-adr.md', projections: ['01-context'] },
+        'a-adr': { path: 'docs/adr/a-adr.md', projections: ['01-context'] }
       },
       projections: {},
       templates: {},
-      rules: {},
+      rules: {}
     }
     await saveManifest(TMP, m)
     const text = await readFile(join(TMP, 'docs', 'ci4', 'manifest.json'), 'utf8')
@@ -84,10 +85,10 @@ describe('saveManifest', () => {
       tool: { name: 'docs-regen', version: '0.1.0' },
       adrs: { foo: { path: 'docs/adr/foo.md', processed_at: '2026-05-18', projections: ['01-context'] } },
       projections: {
-        '01-context': { path: 'docs/ci4/01-context.md', output_hash: 'sha256:abc', used_adrs: ['foo'] },
+        '01-context': { path: 'docs/ci4/01-context.md', output_hash: 'sha256:abc', used_adrs: ['foo'] }
       },
       templates: { '_global.prompt.md': { hash: 'sha256:def' } },
-      rules: { '.cursor/rules/n-ci4.mdc': { hash: 'sha256:ghi' } },
+      rules: { '.cursor/rules/n-ci4.mdc': { hash: 'sha256:ghi' } }
     }
     await saveManifest(TMP, m)
     const loaded = await loadManifest(TMP)

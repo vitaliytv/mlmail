@@ -35,19 +35,24 @@
 Чотири compliance-рішення з однієї сесії `npx @nitra/cursor check` (пакет `@nitra/cursor@1.13.13`):
 
 ### Gitleaks як обов'язковий security-лінтер (n-security.mdc)
+
 `npx @nitra/cursor check` повертав три помилки: відсутній `.gitleaks.toml`, відсутній `scripts.lint-security`, `lint-security` не інтегровано в агрегований `lint`. Рішення: створити `.gitleaks.toml` (`[extend] useDefault = true`, `[allowlist]` ігнорує `node_modules`, `.git`, `dist`, `build`, `*.lock`, `fixtures`) і додати `scripts.lint-security = "gitleaks detect --no-banner"` до `package.json` з викликом у агрегованому `lint`. Результат: `12/12 правил без зауважень`.
 
 ### Виключення `.claude/worktrees/` з `.gitignore` (jscpd)
+
 `bun run lint` падав на кроці `jscpd` через виявлення дублікатів між робочими файлами та `.claude/worktrees/hopeful-cori-9cef9b/`. `jscpd` поважає `.gitignore` (`gitignore: true` в конфігурації). Рішення: додати `.claude/worktrees/` до `.gitignore`.
 
 ### Виключення `.cursor/rules/**` з markdownlint
+
 `bun run lint-text` перевіряв файли в `.cursor/rules/`, які перезаписуються при синхронізації `@nitra/cursor`. Рішення: додати `".cursor/rules/**"` до масиву `ignores` у `.markdownlint-cli2.jsonc`.
 
 ### Додавання файлів без Schema Store до `.v8rignore`
+
 `.cursor/hooks.json` та `.gitleaks.toml` не мають схем у Schema Store — `v8r` завершував помилкою `Could not find a schema to validate`. Рішення: додати обидва файли до `.v8rignore` відповідно до `n-text.mdc`.
 
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [04-code](../ci4/04-code.md)
 - [decisions](../ci4/decisions.md)

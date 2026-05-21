@@ -1,6 +1,7 @@
-#!/usr/bin/env bun
 import { readFile, writeFile, stat } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
+import { env } from 'node:process'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 
 import { parseCliArgs } from './docs-regen/cli.js'
@@ -12,11 +13,7 @@ import { acquireLock } from './docs-regen/lock.js'
 import { Logger } from './docs-regen/log.js'
 import { regenerateProjection } from './docs-regen/projection.js'
 import { sha256 } from './docs-regen/hash.js'
-import {
-  bootstrapTemplates,
-  loadTemplates,
-  templateHashes,
-} from './docs-regen/templates.js'
+import { bootstrapTemplates, loadTemplates, templateHashes } from './docs-regen/templates.js'
 
 const ROOT_DIR = process.cwd()
 const RULE_FILE = '.cursor/rules/n-ci4.mdc'
@@ -24,6 +21,10 @@ const PROJECTIONS = ['01-context', '02-containers', '03-components', '04-code', 
 const LOCK_PATH = '.claude/hooks/.docs-regen.lock'
 const TOOL_VERSION = '0.1.0'
 
+/**
+ * Entry point: acquire the docs-regen lock and run the regeneration pipeline.
+ * @returns {Promise<number>} Process exit code.
+ */
 async function main() {
   const args = parseCliArgs(process.argv.slice(2))
   const logger = new Logger(ROOT_DIR)
@@ -41,6 +42,12 @@ async function main() {
   }
 }
 
+/**
+ * Run the docs-regen pipeline: detect drift, regenerate projections, update marks and manifest.
+ * @param {{projection?: string, all: boolean, dry: boolean, noMark: boolean, check: boolean}} args Parsed CLI options.
+ * @param {Logger} logger Logger instance for progress output.
+ * @returns {Promise<number>} Process exit code.
+ */
 async function run(args, logger) {
   if (await isInMergeOrRebase()) {
     logger.warn('Repository is in merge/rebase state, aborting')
@@ -67,11 +74,11 @@ async function run(args, logger) {
     adrs,
     manifest,
     ruleHash,
-    templateHashes: tplHashes,
+    templateHashes: tplHashes
   })
   logger.info(
     `Triggers: ${triggers.unmarked.length} unmarked, ${triggers.removed.length} removed, ` +
-      `rules changed: ${triggers.rulesChanged ? 'yes' : 'no'}, templates changed: ${triggers.templatesChanged ? 'yes' : 'no'}`,
+      `rules changed: ${triggers.rulesChanged ? 'yes' : 'no'}, templates changed: ${triggers.templatesChanged ? 'yes' : 'no'}`
   )
 
   const needRegen =
@@ -106,9 +113,7 @@ async function run(args, logger) {
     projectionsToRun = PROJECTIONS
   }
 
-  logger.info(
-    `Will regenerate ${projectionsToRun.length} projection(s): ${projectionsToRun.join(', ')}`,
-  )
+  logger.info(`Will regenerate ${projectionsToRun.length} projection(s): ${projectionsToRun.join(', ')}`)
   if (args.dry) {
     logger.info('--dry: stopping before LLM calls')
     return 0
@@ -128,8 +133,8 @@ async function run(args, logger) {
       adrs,
       currentContent,
       templates,
-      model: process.env.DOCS_REGEN_MODEL,
-      rootDir: ROOT_DIR,
+      model: env.DOCS_REGEN_MODEL,
+      rootDir: ROOT_DIR
     })
     await writeFile(currentPath, result.content, 'utf8')
     projectionResults[name] = {
@@ -138,7 +143,7 @@ async function run(args, logger) {
       generated_at: new Date().toISOString(),
       used_adrs: result.used_adrs,
       prompt_length: result.prompt_length,
-      output_length: result.output_length,
+      output_length: result.output_length
     }
     logger.info(`  → wrote, ${result.used_adrs.length} ADRs used`)
   }
@@ -156,7 +161,7 @@ async function run(args, logger) {
   } else {
     const todayMark = isoDate()
     for (const adr of adrs) {
-      const projectionsUsed = [...(adrToProjections.get(adr.slug) ?? [])].sort()
+      const projectionsUsed = (adrToProjections.get(adr.slug) ?? []).toSorted()
       const updated = applyMark(adr.rawContent, todayMark, projectionsUsed)
       if (updated !== adr.rawContent) {
         await writeFile(join(ROOT_DIR, adr.path), updated, 'utf8')
@@ -172,23 +177,21 @@ async function run(args, logger) {
     tool: {
       name: 'docs-regen',
       version: TOOL_VERSION,
-      model: process.env.DOCS_REGEN_MODEL || 'sonnet',
+      model: env.DOCS_REGEN_MODEL || 'sonnet'
     },
     rules: { [RULE_FILE]: { hash: ruleHash } },
-    templates: Object.fromEntries(
-      Object.entries(tplHashes).map(([n, h]) => [n, { hash: h }]),
-    ),
+    templates: Object.fromEntries(Object.entries(tplHashes).map(([n, h]) => [n, { hash: h }])),
     adrs: Object.fromEntries(
-      adrs.map((a) => [
+      adrs.map(a => [
         a.slug,
         {
           path: a.path,
           processed_at: today,
-          projections: [...(adrToProjections.get(a.slug) ?? [])].sort(),
-        },
-      ]),
+          projections: (adrToProjections.get(a.slug) ?? []).toSorted()
+        }
+      ])
     ),
-    projections: {},
+    projections: {}
   }
 
   for (const name of PROJECTIONS) {
@@ -205,6 +208,10 @@ async function run(args, logger) {
   return 0
 }
 
+/**
+ * Check whether the repository is mid-merge or mid-rebase.
+ * @returns {Promise<boolean>} True if a merge or rebase is in progress.
+ */
 async function isInMergeOrRebase() {
   // Resolve real git-dir (handles worktrees where `.git` is a file pointer).
   let gitDir
@@ -212,7 +219,7 @@ async function isInMergeOrRebase() {
     const proc = Bun.spawn(['git', 'rev-parse', '--git-dir'], {
       cwd: ROOT_DIR,
       stdout: 'pipe',
-      stderr: 'pipe',
+      stderr: 'pipe'
     })
     const stdout = await new Response(proc.stdout).text()
     const exit = await proc.exited
@@ -233,20 +240,24 @@ async function isInMergeOrRebase() {
   return false
 }
 
+/**
+ * Compute the SHA-256 hash of a file's content (empty string if missing).
+ * @param {string} rootDir Repository root directory.
+ * @param {string} relPath File path relative to `rootDir`.
+ * @returns {Promise<string>} Hash of the file content.
+ */
 async function fileHash(rootDir, relPath) {
   const content = await readFile(join(rootDir, relPath), 'utf8').catch(() => '')
   return sha256(content)
 }
 
+/**
+ * Return today's date in ISO `YYYY-MM-DD` format.
+ * @returns {string} Current date string.
+ */
 function isoDate() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function sleep(ms) {
-  // setTimeout returns void; wrapping in a Promise is the standard idiom.
-  // eslint-disable-next-line promise/avoid-new
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-const exitCode = await main()
-process.exit(exitCode)
+// Set the exit code and let the runtime exit naturally once the event loop drains.
+process.exitCode = await main()

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { mkdir, rm, access } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -7,7 +8,7 @@ import { acquireLock } from '../../docs-regen/lock.js'
 let LOCK_DIR
 
 beforeEach(async () => {
-  LOCK_DIR = join(tmpdir(), `lock-test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  LOCK_DIR = join(tmpdir(), `lock-test-${Date.now()}-${randomUUID()}`)
   await mkdir(LOCK_DIR, { recursive: true })
 })
 

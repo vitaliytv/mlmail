@@ -1,9 +1,10 @@
 {
   "name": "mlmail",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "workspaces": [
-    "app"
+    "app",
+    "scripts"
   ],
   "type": "module",
   "scripts": {
@@ -13,7 +14,7 @@
     "lint-ga": "n-cursor lint-ga",
     "lint-image": "npx @nitra/minify-image --src=. --write",
     "lint-js": "bunx oxlint --fix && bunx eslint --fix . && bunx jscpd . && bunx knip --no-config-hints",
-    "lint-security": "gitleaks detect --no-banner",
+    "lint-security": "trufflehog filesystem . --no-update --exclude-paths .trufflehog-exclude --results=verified,unknown --fail",
     "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
     "lint-text": "n-cursor lint-text",
     "docs:regen": "bun run scripts/docs-regen.js",
@@ -21,11 +22,9 @@
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
-    "@nitra/cursor": "^1.13.52",
+    "@nitra/cursor": "^1.13.68",
     "@nitra/eslint-config": "^3.9.2",
-    "@nitra/stylelint-config": "^1.4.0",
-    "globby": "^14.0.2",
-    "gray-matter": "^4.0.3"
+    "@nitra/stylelint-config": "^1.4.0"
   },
   "stylelint": {
     "extends": "@nitra/stylelint-config"

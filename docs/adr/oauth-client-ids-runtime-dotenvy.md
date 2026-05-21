@@ -41,7 +41,7 @@ Chosen option: "`std::env::var()` + `dotenvy` runtime", because зміни у `.
 
 ### Розділення `.env` і `.env.secret`; `client_secret` у token exchange
 
-Конфігурація розбита на два файли: `.env` (публічні Client IDs, трекується у git) та `.env.secret` (Desktop `client_secret`, у `.gitignore`). `dotenvy` завантажує обидва при старті, другий не перезаписує перший.
+Конфігурація розбита на два файли: `.env` (публічні Client IDs, відстежується у git) та `.env.secret` (Desktop `client_secret`, у `.gitignore`). `dotenvy` завантажує обидва при старті, другий не перезаписує перший.
 
 `auth/token_exchange.rs`: `exchange_code_at` і `exchange_refresh_at` приймають `Option<&str>` для `client_secret`; Desktop flow — `Some(secret)`, Android flow — `None` (автентифікація SHA-1 fingerprint).
 
@@ -50,6 +50,7 @@ Chosen option: "`std::env::var()` + `dotenvy` runtime", because зміни у `.
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [02-containers](../ci4/02-containers.md)
 - [03-components](../ci4/03-components.md)

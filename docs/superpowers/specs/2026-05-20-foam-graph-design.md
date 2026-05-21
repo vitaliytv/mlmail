@@ -29,11 +29,11 @@
 
 Foam пасивно індексує весь markdown у воркспейсі й будує граф з наявних лінків:
 
-| Тип ребра | Джерело | Ціль |
-| --- | --- | --- |
-| ADR → проекції | sentinel-блок `**Опрацьовано**` у кожному ADR | `docs/ci4/01-context.md` тощо |
-| decisions → ADR | `docs/ci4/decisions.md` | `docs/adr/*.md` |
-| README-хаб → C4 | `docs/ci4/README.md` | `docs/ci4/01-context.md` … `decisions.md` |
+| Тип ребра       | Джерело                                       | Ціль                                      |
+| --------------- | --------------------------------------------- | ----------------------------------------- |
+| ADR → проекції  | sentinel-блок `**Опрацьовано**` у кожному ADR | `docs/ci4/01-context.md` тощо             |
+| decisions → ADR | `docs/ci4/decisions.md`                       | `docs/adr/*.md`                           |
+| README-хаб → C4 | `docs/ci4/README.md`                          | `docs/ci4/01-context.md` … `decisions.md` |
 
 26 ADR-вузлів + 5 C4-вузлів + 1 README-хаб ≈ 32 вузли. Ребра ADR→проекція беруться з sentinel-міток (кожен ADR посилається на 1-5 проекцій).
 

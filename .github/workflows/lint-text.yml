@@ -49,5 +49,13 @@ jobs:
 
       - uses: ./.github/actions/setup-bun-deps
 
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Install dotenv-linter
+        run: >-
+          curl -sSfL https://git.io/JLbXn
+          | sh -s -- -b /usr/local/bin
+
       - name: Lint text
         run: bun run lint-text

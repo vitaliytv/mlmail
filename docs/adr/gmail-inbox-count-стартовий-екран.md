@@ -16,7 +16,7 @@ MLMaiL має показувати на стартовому екрані (Login
 
 ## Decision Outcome
 
-Chosen option: "`users.labels.get?id=INBOX`", because це канонічний однозапитний шлях з точним числом листів INBOX; HTTP-виклик у Rust узгоджується з наявним патерном команд `auth_*`, не виносить access token у JS і виключає CORS-проблеми у WebView.
+Chosen option: "`users.labels.get?id=INBOX`", because це канонічний шлях з одним запитом і точним числом листів INBOX; HTTP-виклик у Rust узгоджується з наявним патерном команд `auth_*`, не виносить access token у JS і виключає CORS-проблеми у WebView.
 
 ### Consequences
 
@@ -46,6 +46,7 @@ Chosen option: "`users.labels.get?id=INBOX`", because це канонічний 
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [02-containers](../ci4/02-containers.md)
 - [03-components](../ci4/03-components.md)

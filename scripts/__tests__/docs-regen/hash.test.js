@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'bun:test'
 import { sha256 } from '../../docs-regen/hash.js'
 
+const SHA256_HEX_RE = /^sha256:[0-9a-f]{64}$/
+
 describe('sha256', () => {
   it('returns sha256: prefixed hex for non-empty string', () => {
     const result = sha256('hello')
@@ -14,7 +16,7 @@ describe('sha256', () => {
 
   it('handles unicode (українська)', () => {
     const result = sha256('файловий стор токенів')
-    expect(result).toMatch(/^sha256:[0-9a-f]{64}$/)
+    expect(result).toMatch(SHA256_HEX_RE)
   })
 
   it('produces deterministic output for same input', () => {

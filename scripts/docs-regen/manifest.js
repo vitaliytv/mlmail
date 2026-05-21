@@ -3,6 +3,10 @@ import { join, dirname } from 'node:path'
 
 const MANIFEST_REL_PATH = 'docs/ci4/manifest.json'
 
+/**
+ * Build an empty docs-regen manifest.
+ * @returns {object} Fresh manifest with default fields.
+ */
 export function defaultManifest() {
   return {
     version: 1,
@@ -11,10 +15,15 @@ export function defaultManifest() {
     rules: {},
     templates: {},
     adrs: {},
-    projections: {},
+    projections: {}
   }
 }
 
+/**
+ * Load the docs-regen manifest, returning a default one if absent.
+ * @param {string} rootDir Repository root directory.
+ * @returns {Promise<object>} Parsed manifest object.
+ */
 export async function loadManifest(rootDir) {
   const path = join(rootDir, MANIFEST_REL_PATH)
   let text
@@ -27,6 +36,12 @@ export async function loadManifest(rootDir) {
   return JSON.parse(text)
 }
 
+/**
+ * Atomically write the docs-regen manifest with deterministically sorted keys.
+ * @param {string} rootDir Repository root directory.
+ * @param {object} manifest Manifest object to persist.
+ * @returns {Promise<void>} Resolves once the manifest is written.
+ */
 export async function saveManifest(rootDir, manifest) {
   const path = join(rootDir, MANIFEST_REL_PATH)
   const tmpPath = path + '.tmp'
@@ -37,11 +52,16 @@ export async function saveManifest(rootDir, manifest) {
   await rename(tmpPath, path)
 }
 
+/**
+ * Recursively sort object keys to produce deterministic JSON output.
+ * @param {unknown} value Value to normalize.
+ * @returns {unknown} Value with all nested object keys sorted alphabetically.
+ */
 function sortKeysDeep(value) {
-  if (Array.isArray(value)) return value.map(sortKeysDeep)
+  if (Array.isArray(value)) return value.map(item => sortKeysDeep(item))
   if (value !== null && typeof value === 'object') {
     const out = {}
-    for (const key of Object.keys(value).sort()) {
+    for (const key of Object.keys(value).toSorted()) {
       out[key] = sortKeysDeep(value[key])
     }
     return out

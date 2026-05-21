@@ -179,7 +179,6 @@ Expected: файл із секціями `## Що таке MLMaiL`, `## Рівн
 - **Панель Connections** (Foam) — backlinks: які ADR сформували поточний
   C4-файл MLMaiL.
 - **Foam: Show Graph** — загальна карта зв'язків ADR↔C4 моделі MLMaiL.
-
 ```
 
 - [ ] **Step 3: Перевірити структуру файлу**
@@ -214,7 +213,7 @@ Run: `git status && git diff docs/ci4/README.md`
 - [ ] **Step 2: Перевірити рендер Mermaid**
 
 Відкрити `docs/ci4/01-context.md` → `Cmd+K V` (Markdown Preview).
-Expected: Mermaid-діаграма рендериться як графіка, не як сирий ```` ```mermaid ```` блок.
+Expected: Mermaid-діаграма рендериться як графіка, не як сирий ` ```mermaid ` блок.
 
 - [ ] **Step 3: Перевірити навігацію по лінках**
 

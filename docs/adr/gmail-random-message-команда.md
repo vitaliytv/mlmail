@@ -42,6 +42,7 @@ MLMaiL показує один випадковий лист з INBOX після
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [02-containers](../ci4/02-containers.md)
 - [03-components](../ci4/03-components.md)

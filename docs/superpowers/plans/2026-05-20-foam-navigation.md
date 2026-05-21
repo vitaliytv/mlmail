@@ -15,6 +15,7 @@
 ### Task 1: Add extensions to `.vscode/extensions.json`
 
 **Files:**
+
 - Modify: `.vscode/extensions.json`
 
 Current `recommendations` array has 11 extensions. Add two at the end.
@@ -62,6 +63,7 @@ git status && git diff .vscode/extensions.json
 ### Task 2: Add `foam.files.ignore` to `.vscode/settings.json`
 
 **Files:**
+
 - Modify: `.vscode/settings.json`
 
 Adds one top-level key to the existing settings object to prevent noisy files from appearing in the Foam graph.
@@ -106,6 +108,7 @@ git status && git diff .vscode/settings.json
 ### Task 3: Add navigation guide to `docs/ci4/README.md`
 
 **Files:**
+
 - Modify: `docs/ci4/README.md`
 
 Add a short Ukrainian-language section. This file is hand-authored and not touched by docs:regen.

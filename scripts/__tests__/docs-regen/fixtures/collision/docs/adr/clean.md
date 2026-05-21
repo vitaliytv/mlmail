@@ -1,1 +1,1 @@
-# Перший clean ADR.
+# Перший clean ADR

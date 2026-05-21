@@ -1,26 +1,26 @@
-# Tauri — відсутність web-таргета та архітектурні наслідки
+# Tauri — відсутність web-цілі та архітектурні наслідки
 
 **Status:** Accepted
 **Date:** 2026-05-14
 
 ## Context and Problem Statement
 
-Команда використовує Tauri для desktop+mobile у проєкті MLMaiL і потребувала пояснення, чи можна ту саму Tauri-збірку задеплоїти у браузер, як це дозволяє Capacitor.
+Команда використовує Tauri для desktop+mobile у проєкті MLMaiL і потребувала пояснення, чи можна ту саму Tauri-збірку розгорнути у браузер, як це дозволяє Capacitor.
 
 ## Considered Options
 
-- Окремий web-деплой через Vite як PWA з шаром абстракції `platform.ts`
-- Компіляція Rust-логіки у WASM через `wasm-bindgen` для web (парсери, crypto, ембединги)
+- Окреме web-розгортання через Vite як PWA з шаром абстракції `platform.ts`
+- Компіляція Rust-логіки у WASM через `wasm-bindgen` для web (парсери, crypto, векторні представлення)
 - Capacitor `@capacitor/web` з no-op заглушками — одна збірка для WebView і браузера
 - Інші варіанти в transcript не обговорювалися.
 
 ## Decision Outcome
 
-Chosen option: "Окремий web-деплой із шаром `platform.ts`", because Tauri не має `web`-платформи і frontend деплоїться окремо через Vite; тонкий шар `platform.ts` абстрагує IPC (Tauri: `invoke`, web: `fetch`/WASM).
+Chosen option: "Окреме web-розгортання із шаром `platform.ts`", because Tauri не має `web`-платформи і frontend розгортається окремо через Vite; тонкий шар `platform.ts` абстрагує IPC (Tauri: `invoke`, web: `fetch`/WASM).
 
 ### Consequences
 
-- Good, because Rust-бізнес-логіку (парсери, crypto, ембединги) можна компілювати у WASM через `wasm-bindgen` для web.
+- Good, because Rust-бізнес-логіку (парсери, crypto, векторні представлення) можна компілювати у WASM через `wasm-bindgen` для web.
 - Good, because `candle` і `ort` мають WASM-збірки — inference у браузері без GPU можливий.
 - Bad, because FS, keychain і OS API недоступні у WASM — там потрібен окремий бекенд.
 - Bad, because для важких моделей inference у браузері потребує серверного бекенду.
@@ -30,12 +30,13 @@ Chosen option: "Окремий web-деплой із шаром `platform.ts`", 
 
 **Шар абстракції:** `app/src/platform.ts` — на Tauri: `invoke('cmd', args)`, на web: `fetch('/api/cmd')` або WASM-виклик.
 
-**Потенційні файли:** `src-tauri/src/` (Rust-команди), `wasm/` (пакет для web-таргета).
+**Потенційні файли:** `src-tauri/src/` (Rust-команди), `wasm/` (пакет для web-цілі).
 
-Додаткової інформації в transcript не зафіксовано щодо конкретного плану реалізації web-деплою для MLMaiL.
+Додаткової інформації в transcript не зафіксовано щодо конкретного плану реалізації web-розгортання для MLMaiL.
 
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [decisions](../ci4/decisions.md)

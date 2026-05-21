@@ -331,8 +331,8 @@ describe('formatMark', () => {
     const result = formatMark('2026-05-18', ['01-context', '03-components'])
     expect(result).toBe(
       '**Опрацьовано** 2026-05-18. Проекції:\n' +
-      '- [01-context](../ci4/01-context.md)\n' +
-      '- [03-components](../ci4/03-components.md)'
+        '- [01-context](../ci4/01-context.md)\n' +
+        '- [03-components](../ci4/03-components.md)'
     )
   })
 })
@@ -340,9 +340,9 @@ describe('formatMark', () => {
 describe('applyMark', () => {
   it('appends mark when none present', () => {
     const result = applyMark(BODY_PLAIN, '2026-05-18', ['01-context'])
-    expect(result.endsWith(
-      '\n---\n\n**Опрацьовано** 2026-05-18. Проекції:\n- [01-context](../ci4/01-context.md)\n'
-    )).toBe(true)
+    expect(
+      result.endsWith('\n---\n\n**Опрацьовано** 2026-05-18. Проекції:\n- [01-context](../ci4/01-context.md)\n')
+    ).toBe(true)
     expect(result.startsWith(BODY_PLAIN.trimEnd())).toBe(true)
   })
 
@@ -393,7 +393,7 @@ export function formatMark(date, projections) {
   if (projections.length === 0) {
     return `${MARK_HEADER} ${date}. Проекції: жодної.`
   }
-  const lines = projections.map((p) => `- [${p}](../ci4/${p}.md)`)
+  const lines = projections.map(p => `- [${p}](../ci4/${p}.md)`)
   return `${MARK_HEADER} ${date}. Проекції:\n${lines.join('\n')}`
 }
 
@@ -532,13 +532,13 @@ const FIXTURE_ROOT = join(import.meta.dir, 'fixtures', 'discover')
 describe('discoverCleanAdrs', () => {
   it('returns only clean ADRs, ignoring drafts and _inbox', async () => {
     const adrs = await discoverCleanAdrs(FIXTURE_ROOT)
-    const slugs = adrs.map((a) => a.slug).sort()
+    const slugs = adrs.map(a => a.slug).sort()
     expect(slugs).toEqual(['clean', 'clean-status', 'with-mark'])
   })
 
   it('detects hasMark correctly per ADR', async () => {
     const adrs = await discoverCleanAdrs(FIXTURE_ROOT)
-    const bySlug = Object.fromEntries(adrs.map((a) => [a.slug, a]))
+    const bySlug = Object.fromEntries(adrs.map(a => [a.slug, a]))
     expect(bySlug['clean'].hasMark).toBe(false)
     expect(bySlug['clean-status'].hasMark).toBe(false)
     expect(bySlug['with-mark'].hasMark).toBe(true)
@@ -546,17 +546,13 @@ describe('discoverCleanAdrs', () => {
 
   it('returns path relative to rootDir', async () => {
     const adrs = await discoverCleanAdrs(FIXTURE_ROOT)
-    const paths = adrs.map((a) => a.path).sort()
-    expect(paths).toEqual([
-      'docs/adr/clean-status.md',
-      'docs/adr/clean.md',
-      'docs/adr/with-mark.md',
-    ])
+    const paths = adrs.map(a => a.path).sort()
+    expect(paths).toEqual(['docs/adr/clean-status.md', 'docs/adr/clean.md', 'docs/adr/with-mark.md'])
   })
 
   it('returns body and rawContent for each ADR', async () => {
     const adrs = await discoverCleanAdrs(FIXTURE_ROOT)
-    const clean = adrs.find((a) => a.slug === 'clean')
+    const clean = adrs.find(a => a.slug === 'clean')
     expect(clean.rawContent).toContain('Clean ADR без frontmatter')
     expect(clean.body).toContain('Clean ADR без frontmatter')
   })
@@ -605,7 +601,7 @@ import { hasMark } from './marks.js'
 export async function discoverCleanAdrs(rootDir) {
   const paths = await globby(['docs/adr/**/*.md'], {
     cwd: rootDir,
-    ignore: ['docs/adr/_inbox/**'],
+    ignore: ['docs/adr/_inbox/**']
   })
 
   const adrs = []
@@ -619,9 +615,7 @@ export async function discoverCleanAdrs(rootDir) {
 
     const slug = basename(relPath, '.md')
     if (slugs.has(slug)) {
-      throw new Error(
-        `ADR slug collision: ${slug} (paths: ${slugs.get(slug)}, ${relPath})`
-      )
+      throw new Error(`ADR slug collision: ${slug} (paths: ${slugs.get(slug)}, ${relPath})`)
     }
     slugs.set(slug, relPath)
 
@@ -630,7 +624,7 @@ export async function discoverCleanAdrs(rootDir) {
       path: relPath,
       body: parsed.content,
       rawContent,
-      hasMark: hasMark(rawContent),
+      hasMark: hasMark(rawContent)
     })
   }
   return adrs
@@ -706,7 +700,7 @@ describe('loadManifest', () => {
       adrs: { 'foo-adr': { path: 'docs/adr/foo-adr.md', processed_at: '2026-05-18', projections: ['01-context'] } },
       projections: {},
       templates: {},
-      rules: {},
+      rules: {}
     }
     await writeFile(join(TMP, 'docs', 'ci4', 'manifest.json'), JSON.stringify(stored), 'utf8')
     const m = await loadManifest(TMP)
@@ -726,11 +720,11 @@ describe('saveManifest', () => {
       tool: { name: 'docs-regen', version: '0.1.0' },
       adrs: {
         'z-adr': { path: 'docs/adr/z-adr.md', projections: [] },
-        'a-adr': { path: 'docs/adr/a-adr.md', projections: ['01-context'] },
+        'a-adr': { path: 'docs/adr/a-adr.md', projections: ['01-context'] }
       },
       projections: {},
       templates: {},
-      rules: {},
+      rules: {}
     }
     await saveManifest(TMP, m)
     const text = await readFile(join(TMP, 'docs', 'ci4', 'manifest.json'), 'utf8')
@@ -747,10 +741,10 @@ describe('saveManifest', () => {
       tool: { name: 'docs-regen', version: '0.1.0' },
       adrs: { foo: { path: 'docs/adr/foo.md', processed_at: '2026-05-18', projections: ['01-context'] } },
       projections: {
-        '01-context': { path: 'docs/ci4/01-context.md', output_hash: 'sha256:abc', used_adrs: ['foo'] },
+        '01-context': { path: 'docs/ci4/01-context.md', output_hash: 'sha256:abc', used_adrs: ['foo'] }
       },
       templates: { '_global.prompt.md': { hash: 'sha256:def' } },
-      rules: { '.cursor/rules/n-ci4.mdc': { hash: 'sha256:ghi' } },
+      rules: { '.cursor/rules/n-ci4.mdc': { hash: 'sha256:ghi' } }
     }
     await saveManifest(TMP, m)
     const loaded = await loadManifest(TMP)
@@ -782,7 +776,7 @@ export function defaultManifest() {
     rules: {},
     templates: {},
     adrs: {},
-    projections: {},
+    projections: {}
   }
 }
 
@@ -864,29 +858,29 @@ describe('detectTriggers', () => {
     version: 1,
     adrs: {
       foo: { path: 'docs/adr/foo.md', processed_at: '2026-05-18', projections: [] },
-      bar: { path: 'docs/adr/bar.md', processed_at: '2026-05-18', projections: ['01-context'] },
+      bar: { path: 'docs/adr/bar.md', processed_at: '2026-05-18', projections: ['01-context'] }
     },
     templates: { '_global.prompt.md': { hash: 'sha256:t1' } },
     rules: { '.cursor/rules/n-ci4.mdc': { hash: 'sha256:r1' } },
-    projections: {},
+    projections: {}
   })
 
   it('returns all empty when nothing changed', () => {
     const adrs = [
       { slug: 'foo', hasMark: true },
-      { slug: 'bar', hasMark: true },
+      { slug: 'bar', hasMark: true }
     ]
     const result = detectTriggers({
       adrs,
       manifest: baseManifest(),
       ruleHash: 'sha256:r1',
-      templateHashes: { '_global.prompt.md': 'sha256:t1' },
+      templateHashes: { '_global.prompt.md': 'sha256:t1' }
     })
     expect(result).toEqual({
       unmarked: [],
       removed: [],
       rulesChanged: false,
-      templatesChanged: false,
+      templatesChanged: false
     })
   })
 
@@ -894,13 +888,13 @@ describe('detectTriggers', () => {
     const adrs = [
       { slug: 'foo', hasMark: false },
       { slug: 'bar', hasMark: true },
-      { slug: 'new-adr', hasMark: false },
+      { slug: 'new-adr', hasMark: false }
     ]
     const result = detectTriggers({
       adrs,
       manifest: baseManifest(),
       ruleHash: 'sha256:r1',
-      templateHashes: { '_global.prompt.md': 'sha256:t1' },
+      templateHashes: { '_global.prompt.md': 'sha256:t1' }
     })
     expect(result.unmarked.sort()).toEqual(['foo', 'new-adr'])
     expect(result.removed).toEqual([])
@@ -912,7 +906,7 @@ describe('detectTriggers', () => {
       adrs,
       manifest: baseManifest(),
       ruleHash: 'sha256:r1',
-      templateHashes: { '_global.prompt.md': 'sha256:t1' },
+      templateHashes: { '_global.prompt.md': 'sha256:t1' }
     })
     expect(result.removed).toEqual(['bar'])
   })
@@ -920,13 +914,13 @@ describe('detectTriggers', () => {
   it('detects rule hash drift', () => {
     const adrs = [
       { slug: 'foo', hasMark: true },
-      { slug: 'bar', hasMark: true },
+      { slug: 'bar', hasMark: true }
     ]
     const result = detectTriggers({
       adrs,
       manifest: baseManifest(),
       ruleHash: 'sha256:r2-NEW',
-      templateHashes: { '_global.prompt.md': 'sha256:t1' },
+      templateHashes: { '_global.prompt.md': 'sha256:t1' }
     })
     expect(result.rulesChanged).toBe(true)
   })
@@ -934,13 +928,13 @@ describe('detectTriggers', () => {
   it('detects template hash drift', () => {
     const adrs = [
       { slug: 'foo', hasMark: true },
-      { slug: 'bar', hasMark: true },
+      { slug: 'bar', hasMark: true }
     ]
     const result = detectTriggers({
       adrs,
       manifest: baseManifest(),
       ruleHash: 'sha256:r1',
-      templateHashes: { '_global.prompt.md': 'sha256:t2-NEW' },
+      templateHashes: { '_global.prompt.md': 'sha256:t2-NEW' }
     })
     expect(result.templatesChanged).toBe(true)
   })
@@ -953,8 +947,8 @@ describe('detectTriggers', () => {
       ruleHash: 'sha256:r1',
       templateHashes: {
         '_global.prompt.md': 'sha256:t1',
-        '01-context.prompt.md': 'sha256:newone',
-      },
+        '01-context.prompt.md': 'sha256:newone'
+      }
     })
     expect(result.templatesChanged).toBe(true)
   })
@@ -974,10 +968,10 @@ Create `scripts/docs-regen/triggers.js`:
 const RULE_FILE = '.cursor/rules/n-ci4.mdc'
 
 export function detectTriggers({ adrs, manifest, ruleHash, templateHashes }) {
-  const unmarked = adrs.filter((a) => !a.hasMark).map((a) => a.slug)
+  const unmarked = adrs.filter(a => !a.hasMark).map(a => a.slug)
 
-  const currentSlugs = new Set(adrs.map((a) => a.slug))
-  const removed = Object.keys(manifest.adrs || {}).filter((s) => !currentSlugs.has(s))
+  const currentSlugs = new Set(adrs.map(a => a.slug))
+  const removed = Object.keys(manifest.adrs || {}).filter(s => !currentSlugs.has(s))
 
   const rulesChanged = (manifest.rules?.[RULE_FILE]?.hash ?? null) !== ruleHash
 
@@ -1030,7 +1024,7 @@ Expected: всі тести pass.
 
 Create `scripts/__tests__/docs-regen/llm.test.js`:
 
-```js
+````js
 import { describe, it, expect } from 'bun:test'
 import { parseLlmResponse } from '../../docs-regen/llm.js'
 
@@ -1077,7 +1071,7 @@ describe('parseLlmResponse', () => {
     expect(() => parseLlmResponse('{"content":"x","used_adrs":"foo"}')).toThrow(/used_adrs/)
   })
 })
-```
+````
 
 - [ ] **Step 2: Запустити тест, переконатися, що падає**
 
@@ -1088,7 +1082,7 @@ Expected: FAIL з `Cannot find module '../../docs-regen/llm.js'`.
 
 Create `scripts/docs-regen/llm.js`:
 
-```js
+````js
 import { Readable } from 'node:stream'
 
 export function parseLlmResponse(raw) {
@@ -1128,14 +1122,14 @@ export function parseLlmResponse(raw) {
 const CLI_CANDIDATES = [
   {
     name: 'claude',
-    args: (model) => ['-p', '--model', model],
-    defaultModel: 'sonnet',
+    args: model => ['-p', '--model', model],
+    defaultModel: 'sonnet'
   },
   {
     name: 'cursor-agent',
-    args: (model) => ['-p', '--mode', 'ask', '--output-format', 'text', '--model', model],
-    defaultModel: 'claude-4.6-sonnet-medium',
-  },
+    args: model => ['-p', '--mode', 'ask', '--output-format', 'text', '--model', model],
+    defaultModel: 'claude-4.6-sonnet-medium'
+  }
 ]
 
 export async function callLlm(prompt, opts = {}) {
@@ -1148,7 +1142,7 @@ export async function callLlm(prompt, opts = {}) {
       const proc = Bun.spawn([cli, ...args], {
         stdin: Readable.from([prompt]),
         stdout: 'pipe',
-        stderr: 'pipe',
+        stderr: 'pipe'
       })
       const stdout = await new Response(proc.stdout).text()
       const exit = await proc.exited
@@ -1168,7 +1162,7 @@ export async function callLlm(prompt, opts = {}) {
   }
   throw new Error('No LLM CLI available:\n' + errors.join('\n'))
 }
-```
+````
 
 - [ ] **Step 4: Запустити тест, переконатися, що проходить**
 
@@ -1271,10 +1265,10 @@ export async function acquireLock(path) {
   return {
     acquired: true,
     release: async () => {
-      await unlink(path).catch((e) => {
+      await unlink(path).catch(e => {
         if (e.code !== 'ENOENT') throw e
       })
-    },
+    }
   }
 }
 ```
@@ -1362,17 +1356,17 @@ export function parseCliArgs(argv) {
       all: { type: 'boolean', default: false },
       dry: { type: 'boolean', default: false },
       'no-mark': { type: 'boolean', default: false },
-      check: { type: 'boolean', default: false },
+      check: { type: 'boolean', default: false }
     },
     strict: true,
-    allowPositionals: false,
+    allowPositionals: false
   })
   return {
     projection: values.projection,
     all: values.all,
     dry: values.dry,
     noMark: values['no-mark'],
-    check: values.check,
+    check: values.check
   }
 }
 ```
@@ -1415,7 +1409,7 @@ export const TEMPLATE_NAMES = [
   '02-containers.prompt.md',
   '03-components.prompt.md',
   '04-code.prompt.md',
-  'decisions.prompt.md',
+  'decisions.prompt.md'
 ]
 
 const TEMPLATE_DIR_REL = 'docs/ci4/_templates'
@@ -1780,16 +1774,10 @@ Create `scripts/docs-regen/default-templates/decisions.prompt.md`:
 
 Create `scripts/docs-regen/projection.js`:
 
-```js
+````js
 import { callLlm, parseLlmResponse } from './llm.js'
 
-export async function regenerateProjection({
-  name,
-  adrs,
-  currentContent,
-  templates,
-  model,
-}) {
+export async function regenerateProjection({ name, adrs, currentContent, templates, model }) {
   const prompt = buildPrompt({ name, adrs, currentContent, templates })
   const raw = await callLlm(prompt, { model })
   const parsed = parseLlmResponse(raw)
@@ -1797,7 +1785,7 @@ export async function regenerateProjection({
     content: parsed.content,
     used_adrs: parsed.used_adrs,
     prompt_length: prompt.length,
-    output_length: raw.length,
+    output_length: raw.length
   }
 }
 
@@ -1805,12 +1793,7 @@ function buildPrompt({ name, adrs, currentContent, templates }) {
   const globalRules = templates['_global.prompt.md']
   const projectionTemplate = templates[`${name}.prompt.md`]
 
-  const adrSection = adrs
-    .map(
-      (a) =>
-        `### ADR: ${a.slug}\n\n${stripExistingMark(a.body)}`
-    )
-    .join('\n\n')
+  const adrSection = adrs.map(a => `### ADR: ${a.slug}\n\n${stripExistingMark(a.body)}`).join('\n\n')
 
   return [
     '# Глобальні правила оформлення',
@@ -1846,7 +1829,7 @@ function buildPrompt({ name, adrs, currentContent, templates }) {
     '{ "content": "<повний markdown файлу>", "used_adrs": ["<slug>", ...] }',
     '```',
     '',
-    `Файл, який ти генеруєш: docs/ci4/${name}.md. Зроби його повним, самодостатнім, готовим до коміту.`,
+    `Файл, який ти генеруєш: docs/ci4/${name}.md. Зроби його повним, самодостатнім, готовим до коміту.`
   ].join('\n')
 }
 
@@ -1860,7 +1843,7 @@ function stripExistingMark(body) {
   }
   return body.slice(0, idx).trimEnd()
 }
-```
+````
 
 - [ ] **Step 2: Run `git status && git diff` і зупинка**
 
@@ -1949,12 +1932,7 @@ import { acquireLock } from './docs-regen/lock.js'
 import { Logger } from './docs-regen/log.js'
 import { regenerateProjection } from './docs-regen/projection.js'
 import { sha256 } from './docs-regen/hash.js'
-import {
-  TEMPLATE_NAMES,
-  bootstrapTemplates,
-  loadTemplates,
-  templateHashes,
-} from './docs-regen/templates.js'
+import { TEMPLATE_NAMES, bootstrapTemplates, loadTemplates, templateHashes } from './docs-regen/templates.js'
 
 const ROOT_DIR = process.cwd()
 const RULE_FILE = '.cursor/rules/n-ci4.mdc'
@@ -2012,7 +1990,7 @@ async function run(args, logger) {
     adrs,
     manifest,
     ruleHash,
-    templateHashes: tplHashes,
+    templateHashes: tplHashes
   })
   logger.info(
     `Triggers: ${triggers.unmarked.length} unmarked, ${triggers.removed.length} removed, ` +
@@ -2043,18 +2021,14 @@ async function run(args, logger) {
   }
 
   // 9. Filter projections (--projection)
-  const projectionsToRun = args.projection
-    ? [args.projection].filter((p) => PROJECTIONS.includes(p))
-    : PROJECTIONS
+  const projectionsToRun = args.projection ? [args.projection].filter(p => PROJECTIONS.includes(p)) : PROJECTIONS
   if (args.projection && projectionsToRun.length === 0) {
     logger.error(`Unknown projection: ${args.projection}`)
     return 2
   }
 
   // 10. Pre-run sanity report
-  logger.info(
-    `Will regenerate ${projectionsToRun.length} projection(s): ${projectionsToRun.join(', ')}`
-  )
+  logger.info(`Will regenerate ${projectionsToRun.length} projection(s): ${projectionsToRun.join(', ')}`)
   if (args.dry) {
     logger.info('--dry: stopping before LLM calls')
     return 0
@@ -2077,7 +2051,7 @@ async function run(args, logger) {
       adrs,
       currentContent,
       templates,
-      model: process.env.DOCS_REGEN_MODEL,
+      model: process.env.DOCS_REGEN_MODEL
     })
     await writeFile(currentPath, result.content, 'utf8')
     projectionResults[name] = {
@@ -2086,7 +2060,7 @@ async function run(args, logger) {
       generated_at: new Date().toISOString(),
       used_adrs: result.used_adrs,
       prompt_length: result.prompt_length,
-      output_length: result.output_length,
+      output_length: result.output_length
     }
     logger.info(`  → wrote, ${result.used_adrs.length} ADRs used`)
   }
@@ -2123,29 +2097,24 @@ async function run(args, logger) {
     tool: {
       name: 'docs-regen',
       version: TOOL_VERSION,
-      model: process.env.DOCS_REGEN_MODEL || 'sonnet',
+      model: process.env.DOCS_REGEN_MODEL || 'sonnet'
     },
     rules: { [RULE_FILE]: { hash: ruleHash } },
-    templates: Object.fromEntries(
-      Object.entries(tplHashes).map(([n, h]) => [n, { hash: h }])
-    ),
+    templates: Object.fromEntries(Object.entries(tplHashes).map(([n, h]) => [n, { hash: h }])),
     adrs: Object.fromEntries(
-      adrs.map((a) => [
+      adrs.map(a => [
         a.slug,
         {
           path: a.path,
           processed_at: today,
-          projections: [...(adrToProjections.get(a.slug) ?? [])].sort(),
-        },
+          projections: [...(adrToProjections.get(a.slug) ?? [])].sort()
+        }
       ])
     ),
     projections: Object.fromEntries(
       // зберігаємо ВСІ projections — для тих, що не регенерувались, копіюємо з попереднього manifest
-      PROJECTIONS.map((name) => [
-        name,
-        projectionResults[name] ?? manifest.projections?.[name] ?? null,
-      ])
-    ),
+      PROJECTIONS.map(name => [name, projectionResults[name] ?? manifest.projections?.[name] ?? null])
+    )
   }
   // Викинути null значення з projections (якщо проекція ніколи не регенерувалась)
   for (const [name, val] of Object.entries(newManifest.projections)) {
@@ -2180,7 +2149,7 @@ function isoDate() {
 }
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 const exitCode = await main()
@@ -2191,6 +2160,7 @@ process.exit(exitCode)
 
 Run: `bun run docs:regen --dry`
 Expected behavior:
+
 - скрипт читає `docs/adr/`, знаходить 26 clean ADR;
 - bootstrap-ить 6 шаблонів у `docs/ci4/_templates/` (якщо їх ще нема);
 - виводить «Will regenerate 5 projection(s): ..., --dry: stopping before LLM calls»;
@@ -2225,6 +2195,7 @@ Expected: шлях до бінарю + версія. Якщо нема — `whic
 
 Run: `bun run docs:regen`
 Expected:
+
 - лог про знайдені 26 ADR;
 - лог `Will regenerate 5 projection(s): 01-context, 02-containers, 03-components, 04-code, decisions`;
 - 3-секундна пауза;
@@ -2246,6 +2217,7 @@ tail -10 docs/adr/ADR-0006-google-oauth.md
 ```
 
 Expected:
+
 - `docs/ci4/manifest.json` створено, містить 26 ADR з `processed_at`, 5 проекцій з `output_hash`/`used_adrs`, хеші шаблонів і `n-ci4.mdc`.
 - ADR `ADR-0006-google-oauth.md` має блок `**Опрацьовано** 2026-05-18. Проекції: ...` в кінці.
 - 5 файлів у `docs/ci4/` оновлені (timestamp змінився).
@@ -2256,6 +2228,7 @@ Run: `bunx markdownlint-cli2 'docs/ci4/01-context.md' 'docs/ci4/02-containers.md
 Expected: 0 issues.
 
 Якщо є issues:
+
 - знайти, які саме правила порушені;
 - вирішити, чи додати їх у `_global.prompt.md` як заборону для LLM, чи це баг шаблону;
 - зафіксити, перезапустити `bun run docs:regen --all`.
@@ -2284,6 +2257,7 @@ Expected: лог про регенерацію тільки `01-context.md`, exi
 - [ ] **Step 8: Run `git status && git diff` і зупинка**
 
 Очікувано:
+
 - модифіковані `docs/ci4/01-context.md`, `02-containers.md`, `03-components.md`, `04-code.md`, `decisions.md`;
 - модифіковані 26 файлів у `docs/adr/`;
 - новий `docs/ci4/manifest.json`;

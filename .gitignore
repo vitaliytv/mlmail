@@ -37,3 +37,8 @@ app/auto-imports.d.ts
 docs/ci4/.regen.log
 docs/ci4/.regen-debug/
 .claude/hooks/.docs-regen.lock
+# @nitra/cursor (adr) — локальні артефакти Stop-hook, не коміти
+node_modules/
+dist/
+.claude/hooks/*.log
+.claude/hooks/.normalize.lock

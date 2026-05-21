@@ -1,1 +1,1 @@
-# Другий clean ADR з тим самим slug.
+# Другий clean ADR з тим самим slug

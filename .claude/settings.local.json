@@ -1,7 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "WebFetch(domain:docs.foamnotes.com)"
-    ]
+    "allow": ["WebFetch(domain:docs.foamnotes.com)"]
   }
 }

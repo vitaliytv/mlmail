@@ -2,14 +2,18 @@ import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { callLlm, parseLlmResponse } from './llm.js'
 
-export async function regenerateProjection({
-  name,
-  adrs,
-  currentContent,
-  templates,
-  model,
-  rootDir,
-}) {
+/**
+ * Regenerate a single CI4 projection file via the LLM, with one retry on parse failure.
+ * @param {object} root0 Projection regeneration parameters.
+ * @param {string} root0.name Projection name (e.g. `01-context`).
+ * @param {Array<object>} root0.adrs Clean ADRs to feed into the prompt.
+ * @param {string} root0.currentContent Current projection file content.
+ * @param {Record<string, string>} root0.templates Loaded prompt templates by file name.
+ * @param {string} [root0.model] LLM model override.
+ * @param {string} root0.rootDir Repository root directory (used for debug dumps).
+ * @returns {Promise<{content: string, used_adrs: string[], prompt_length: number, output_length: number}>} Regeneration result.
+ */
+export async function regenerateProjection({ name, adrs, currentContent, templates, model, rootDir }) {
   const prompt = buildPrompt({ name, adrs, currentContent, templates })
 
   let raw = await callLlm(prompt, { model })
@@ -37,9 +41,10 @@ export async function regenerateProjection({
       parsed = parseLlmResponse(raw)
     } catch (retryError) {
       throw new Error(
-        `Projection ${name}: LLM response unparseable after retry. ` +
+        `Projection ${name}: LLM response could not be parsed after retry. ` +
           `First: ${error.message}. Second: ${retryError.message}. ` +
           `Raw outputs saved to docs/ci4/.regen-debug/`,
+        { cause: retryError }
       )
     }
   }
@@ -48,17 +53,24 @@ export async function regenerateProjection({
     content: parsed.content,
     used_adrs: parsed.used_adrs,
     prompt_length: prompt.length,
-    output_length: raw.length,
+    output_length: raw.length
   }
 }
 
+/**
+ * Build the full LLM prompt for a projection.
+ * @param {object} root0 Prompt parameters.
+ * @param {string} root0.name Projection name.
+ * @param {Array<object>} root0.adrs Clean ADRs to include in the prompt.
+ * @param {string} root0.currentContent Current projection file content.
+ * @param {Record<string, string>} root0.templates Loaded prompt templates by file name.
+ * @returns {string} Assembled prompt text.
+ */
 function buildPrompt({ name, adrs, currentContent, templates }) {
   const globalRules = templates['_global.prompt.md']
   const projectionTemplate = templates[`${name}.prompt.md`]
 
-  const adrSection = adrs
-    .map((a) => `### ADR: ${a.slug}\n\n${stripExistingMark(a.body)}`)
-    .join('\n\n')
+  const adrSection = adrs.map(a => `### ADR: ${a.slug}\n\n${stripExistingMark(a.body)}`).join('\n\n')
 
   return [
     '# Глобальні правила оформлення',
@@ -94,10 +106,18 @@ function buildPrompt({ name, adrs, currentContent, templates }) {
     '{ "content": "<повний markdown файлу>", "used_adrs": ["<slug>", ...] }',
     '```',
     '',
-    `Файл, який ти генеруєш: docs/ci4/${name}.md. Зроби його повним, самодостатнім, готовим до коміту.`,
+    `Файл, який ти генеруєш: docs/ci4/${name}.md. Зроби його повним, самодостатнім, готовим до коміту.`
   ].join('\n')
 }
 
+/**
+ * Best-effort dump of a raw LLM response for debugging.
+ * @param {string} rootDir Repository root directory.
+ * @param {string} name Projection name.
+ * @param {string} suffix Attempt suffix (e.g. `attempt1`).
+ * @param {string} raw Raw LLM output to save.
+ * @returns {Promise<void>} Resolves once the dump is attempted.
+ */
 async function saveDebug(rootDir, name, suffix, raw) {
   const debugDir = join(rootDir, 'docs/ci4/.regen-debug')
   try {
@@ -109,6 +129,11 @@ async function saveDebug(rootDir, name, suffix, raw) {
   }
 }
 
+/**
+ * Strip a trailing "Опрацьовано" mark block from an ADR body.
+ * @param {string} body ADR body text.
+ * @returns {string} Body without the trailing mark block.
+ */
 function stripExistingMark(body) {
   const idx = body.lastIndexOf('\n---\n\n**Опрацьовано**')
   if (idx === -1) {

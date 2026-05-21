@@ -27,6 +27,7 @@ Chosen option: "Tauri managed state", because це стандартний мех
 ## More Information
 
 Конкретні зміни:
+
 - `Box<dyn RefreshTokenStorage>` → `Arc<dyn RefreshTokenStorage>` під аліасом `SharedStorage`; реєструється через `.manage()` у `lib.rs::run()`.
 - Новий файл `src-tauri/src/endpoints.rs`: `Endpoints { google_token, gmail_label_inbox, gmail_messages_list }` з `impl Default` (реальні Google URLs); реєструється через `.manage(Endpoints::default())`.
 - `acquire_access_token` і `finalize_login` тепер приймають URL-рядок і `&dyn RefreshTokenStorage` явно, не беруть їх зсередини.
@@ -36,6 +37,7 @@ Chosen option: "Tauri managed state", because це стандартний мех
 ---
 
 **Опрацьовано** 2026-05-20. Проекції:
+
 - [01-context](../ci4/01-context.md)
 - [02-containers](../ci4/02-containers.md)
 - [03-components](../ci4/03-components.md)

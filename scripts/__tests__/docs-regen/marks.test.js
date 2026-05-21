@@ -85,8 +85,8 @@ describe('formatMark', () => {
     const result = formatMark('2026-05-18', ['01-context', '03-components'])
     expect(result).toBe(
       '**Опрацьовано** 2026-05-18. Проекції:\n' +
-      '- [01-context](../ci4/01-context.md)\n' +
-      '- [03-components](../ci4/03-components.md)'
+        '- [01-context](../ci4/01-context.md)\n' +
+        '- [03-components](../ci4/03-components.md)'
     )
   })
 })
@@ -94,9 +94,9 @@ describe('formatMark', () => {
 describe('applyMark', () => {
   it('appends mark when none present', () => {
     const result = applyMark(BODY_PLAIN, '2026-05-18', ['01-context'])
-    expect(result.endsWith(
-      '\n---\n\n**Опрацьовано** 2026-05-18. Проекції:\n- [01-context](../ci4/01-context.md)\n'
-    )).toBe(true)
+    expect(
+      result.endsWith('\n---\n\n**Опрацьовано** 2026-05-18. Проекції:\n- [01-context](../ci4/01-context.md)\n')
+    ).toBe(true)
     expect(result.startsWith(BODY_PLAIN.trimEnd())).toBe(true)
   })
 

@@ -1,19 +1,32 @@
+/**
+ * Parse a raw LLM response into the expected projection result shape.
+ * @param {string} raw Raw text returned by the LLM CLI.
+ * @returns {{content: string, used_adrs: string[]}} Parsed projection payload.
+ */
 export function parseLlmResponse(raw) {
   let text = raw.trim()
-  const fenceMatch = text.match(/^```(?:json)?\s*\n([\s\S]*?)\n```\s*$/m)
-  if (fenceMatch) {
-    text = fenceMatch[1].trim()
+  // Unwrap a ```json … ``` (or bare ```) fenced block without regex backtracking.
+  if (text.startsWith('```')) {
+    const firstNewline = text.indexOf('\n')
+    const closingFence = text.lastIndexOf('\n```')
+    if (firstNewline !== -1 && closingFence > firstNewline) {
+      text = text.slice(firstNewline + 1, closingFence).trim()
+    }
   }
+  // Drop any surrounding prose by keeping the outermost { … } span.
   if (!text.startsWith('{')) {
-    const objMatch = text.match(/\{[\s\S]*\}/)
-    if (objMatch) text = objMatch[0]
+    const start = text.indexOf('{')
+    const end = text.lastIndexOf('}')
+    if (start !== -1 && end > start) {
+      text = text.slice(start, end + 1)
+    }
   }
 
   let parsed
   try {
     parsed = JSON.parse(text)
   } catch (error) {
-    throw new Error(`Failed to parse LLM response as JSON: ${error.message}`)
+    throw new Error(`Failed to parse LLM response as JSON: ${error.message}`, { cause: error })
   }
 
   if (typeof parsed.content !== 'string') {
@@ -33,16 +46,22 @@ export function parseLlmResponse(raw) {
 const CLI_CANDIDATES = [
   {
     name: 'claude',
-    args: (model) => ['-p', '--model', model],
-    defaultModel: 'sonnet',
+    args: model => ['-p', '--model', model],
+    defaultModel: 'sonnet'
   },
   {
     name: 'cursor-agent',
-    args: (model) => ['-p', '--mode', 'ask', '--output-format', 'text', '--model', model],
-    defaultModel: 'claude-4.6-sonnet-medium',
-  },
+    args: model => ['-p', '--mode', 'ask', '--output-format', 'text', '--model', model],
+    defaultModel: 'claude-4.6-sonnet-medium'
+  }
 ]
 
+/**
+ * Call the first available LLM CLI with the given prompt.
+ * @param {string} prompt Prompt text sent to the CLI via stdin.
+ * @param {{model?: string}} [opts] Call options.
+ * @returns {Promise<string>} Raw stdout from the LLM CLI.
+ */
 export async function callLlm(prompt, opts = {}) {
   const errors = []
   for (const candidate of CLI_CANDIDATES) {
@@ -53,7 +72,7 @@ export async function callLlm(prompt, opts = {}) {
       const proc = Bun.spawn([cli, ...args], {
         stdin: 'pipe',
         stdout: 'pipe',
-        stderr: 'pipe',
+        stderr: 'pipe'
       })
       proc.stdin.write(prompt)
       await proc.stdin.end()
