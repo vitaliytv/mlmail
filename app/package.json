@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,9 @@
     "android": "tauri android dev",
     "test": "bun test --preload ./test/happy-dom.preload.js src",
     "test:watch": "bun test --watch --preload ./test/happy-dom.preload.js src",
+    "test:coverage": "bun test --coverage --preload ./test/happy-dom.preload.js src",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
     "test:all": "bun run test && bun run test:rust"
   },
   "dependencies": {

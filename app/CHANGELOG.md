@@ -4,6 +4,18 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
 
+## [0.1.2] - 2026-05-21
+
+### Added
+
+- Скрипт `test:coverage` (`bun test --coverage`) для звіту покриття JS.
+- Скрипт `test:rust:coverage` (`cargo llvm-cov`) для звіту покриття Rust.
+- Тести для `App.vue`.
+
+### Changed
+
+- `test-utils/quasar.js`: додано хелпер `mountQuasar` для монтування компонентів із власним layout.
+
 ## [0.1.1] - 2026-05-21
 
 ### Added
