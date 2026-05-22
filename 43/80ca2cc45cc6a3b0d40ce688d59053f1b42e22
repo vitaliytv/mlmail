@@ -1,0 +1,32 @@
+docs/adr/20260521-232450-міграція-тестового-середовища-з-jsdom-vitest-на-happy-dom-bu.md
+  s_0054a0b0d64526::t_83b64c5f59a137 10,14-16,19,23-25,28,40,44-47,50,54-57,60
+app/src/test-utils/quasar.js
+  s_0054a0b0d64526::t_3a2ef4d6ed2dac 9-31,42
+app/CHANGELOG.md
+  s_0054a0b0d64526::t_b57af8f580de46 7-10,13-18
+  s_0054a0b0d64526::t_901f8a7764a72e 11-12
+app/src/App.test.js
+  s_0054a0b0d64526::t_dd9a6880a702a2 1-35
+app/package.json
+  s_0054a0b0d64526::t_df8a586ebd84a0 16
+  s_0054a0b0d64526::t_ddf304e7ed1e3a 3
+  s_0054a0b0d64526::t_1ad922051ab586 14
+docs/adr/20260521-232732-a8164e48.md
+  s_0054a0b0d64526::t_83b64c5f59a137 1-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "4380ca2cc45cc6a3b0d40ce688d59053f1b42e22",
+  "prompts": {},
+  "sessions": {
+    "s_0054a0b0d64526": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a8164e48-3940-47fa-99f6-2db9a40bb757",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
