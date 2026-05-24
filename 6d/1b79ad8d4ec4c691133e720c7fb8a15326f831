@@ -1,0 +1,17 @@
+docs/adr/20260520-063717-tauri-plugin-window-state.md
+  ai_agent 1-36
+docs/adr/20260524-074427-видалення-ts-nocheck-замість-глушіння-помилок-typescript.md
+  ai_agent 1-45
+docs/adr/20260521-120902-виділення-scripts-workspace-bun.md
+  ai_agent 1-38
+docs/adr/20260520-053434-tauri-проксі-скрипти-bun-cwd.md
+  ai_agent 1-33
+docs/adr/20260520-053425-docs-regen-llm-pipeline.md
+  ai_agent 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "6d1b79ad8d4ec4c691133e720c7fb8a15326f831",
+  "prompts": {}
+}
