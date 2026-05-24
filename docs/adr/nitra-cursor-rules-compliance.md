@@ -56,3 +56,7 @@
 
 - [04-code](../ci4/04-code.md)
 - [decisions](../ci4/decisions.md)
+
+## Update 2026-05-21
+
+Виявлено прогалину: правило `n-vue.mdc` v1.9 (рядок 120) забороняє `jsdom` у Vue-проєктах на користь `happy-dom`, але `npx @nitra/cursor check` цю заборону не перевіряє — `check.mjs` і `package_json.rego` у `rules/vue/` не містять токену `jsdom`/`vitest`. Через це `app/package.json` з `"jsdom": "^29.1.1"` і `"vitest": "^4.1.7"` не дає `❌`. Підготовлено патч для `@nitra/cursor` (через `/n-llm-patch`) для додавання перевірки у `rules/vue/policy/package_json/package_json.rego` і `rules/vue/fix/packages/check.mjs` (версія 1.13.72). Поточні порушення у репо: `app/package.json:29` — `jsdom ^29.1.1`; `app/package.json:34` — `vitest ^4.1.7`; `happy-dom` відсутній.
