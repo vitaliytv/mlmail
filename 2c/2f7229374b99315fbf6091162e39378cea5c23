@@ -1,0 +1,54 @@
+app/src/services/auth-store.js
+  s_414533ecf1b2fa::t_eb403d97c88b07 186-188
+  s_414533ecf1b2fa::t_f4c6d9cf3cd3bb 159-161,167-169
+  s_414533ecf1b2fa::t_fccbb9e375e7f0 53,55,69-95
+  s_414533ecf1b2fa::t_0703255c534259 12-14
+  s_414533ecf1b2fa::t_4029533d691196 144-146
+app/src/views/Login.vue
+  s_414533ecf1b2fa::t_bdcf3b9a550bf5 8-12,16-18,32-38,72-74,91-121,131-136
+app/src-tauri/src/gmail/mod.rs
+  s_414533ecf1b2fa::t_9f994ff1fb8583 243-267
+  s_414533ecf1b2fa::t_3293c5f74c046e 607-639
+  s_414533ecf1b2fa::t_e05735a81dfdae 177
+  s_414533ecf1b2fa::t_e0d6c1ec01a715 181-195,199-222
+  s_414533ecf1b2fa::t_e0ec18da9cc8a8 535-606
+  s_414533ecf1b2fa::t_8851d18b0181ae 73-88,92
+  s_414533ecf1b2fa::t_bafdd27c0c8867 126-130
+app/src/services/auth-store.test.js
+  s_414533ecf1b2fa::t_a6e92d2b6ac915 304-432
+package.json
+  s_d528a24be5c98b::t_4a78e67c355e72 13-14
+app/src-tauri/src/lib.rs
+  s_414533ecf1b2fa::t_fb47405aac15ae 34
+  s_414533ecf1b2fa::t_410f555c110a96 33
+app/src-tauri/src/gmail/message.rs
+  s_414533ecf1b2fa::t_5421fdb1b9085f 24-97
+  s_414533ecf1b2fa::t_c36e86dd614021 329-436
+  s_414533ecf1b2fa::t_bbe3879f42232f 21
+.vscode/extensions.json
+  s_d528a24be5c98b::t_0b5f4147981f57 13-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "2c2f7229374b99315fbf6091162e39378cea5c23",
+  "prompts": {},
+  "sessions": {
+    "s_414533ecf1b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae4f836e-0b41-4f34-a3d2-00b89102ef22",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_d528a24be5c98b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ac8d4370-b71a-4d92-813c-f3e5ec260b84",
+        "model": "composer-2.5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
