@@ -301,3 +301,132 @@ describe('useAuthStore random message', () => {
     expect(store.currentMessage.value).toBe(null)
   })
 })
+
+describe('useAuthStore.unsubscribeFromCurrent', () => {
+  const newsletter = {
+    id: 'm1',
+    from: 'n@l',
+    subject: 's',
+    date: 'd',
+    body: 'b',
+    unsubscribe: { kind: 'OneClick', url: 'https://l.com/u/x' }
+  }
+
+  it('invokes gmail_unsubscribe with action from currentMessage', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message') return Promise.resolve(newsletter)
+      if (cmd === 'gmail_unsubscribe') return Promise.resolve()
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.unsubscribeFromCurrent()
+    expect(invokeMock).toHaveBeenCalledWith('gmail_unsubscribe', { action: newsletter.unsubscribe })
+  })
+
+  it('loads next random message after successful unsubscribe', async () => {
+    let randomCall = 0
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message') {
+        randomCall += 1
+        return Promise.resolve({ ...newsletter, id: `m${randomCall}` })
+      }
+      if (cmd === 'gmail_unsubscribe') return Promise.resolve()
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    expect(store.currentMessage.value.id).toBe('m1')
+    await store.unsubscribeFromCurrent()
+    expect(store.currentMessage.value.id).toBe('m2')
+  })
+
+  it('is a no-op when currentMessage has no unsubscribe action', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message')
+        return Promise.resolve({ ...newsletter, unsubscribe: null })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.unsubscribeFromCurrent()
+    expect(invokeMock).not.toHaveBeenCalledWith('gmail_unsubscribe', expect.anything())
+  })
+
+  it('captures error.kind when gmail_unsubscribe fails', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message') return Promise.resolve(newsletter)
+      if (cmd === 'gmail_unsubscribe')
+        return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.unsubscribeFromCurrent()
+    expect(store.unsubscribeErrorKind.value).toBe('Http')
+    // currentMessage is NOT replaced on failure
+    expect(store.currentMessage.value.id).toBe('m1')
+  })
+
+  it('resets isUnsubscribing to false after completion', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message') return Promise.resolve(newsletter)
+      if (cmd === 'gmail_unsubscribe') return Promise.resolve()
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.unsubscribeFromCurrent()
+    expect(store.isUnsubscribing.value).toBe(false)
+  })
+})
+
+describe('useAuthStore.onlyNewsletters', () => {
+  it('routes loadRandomMessage to gmail_random_newsletter when enabled', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_newsletter')
+        return Promise.resolve({ id: 'n1', from: 'a', subject: 's', date: 'd', body: 'b', unsubscribe: null })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    store.setOnlyNewsletters(true)
+    await store.loadRandomMessage()
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_newsletter')
+    expect(store.currentMessage.value.id).toBe('n1')
+  })
+
+  it('uses gmail_random_message when disabled (default)', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message')
+        return Promise.resolve({ id: 'r1', from: 'a', subject: 's', date: 'd', body: 'b', unsubscribe: null })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.loadRandomMessage()
+    expect(store.onlyNewsletters.value).toBe(false)
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')
+  })
+})

@@ -30,6 +30,8 @@ pub fn run() {
             auth::auth_logout,
             gmail::gmail_inbox_count,
             gmail::gmail_random_message,
+            gmail::gmail_random_newsletter,
+            gmail::gmail_unsubscribe,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

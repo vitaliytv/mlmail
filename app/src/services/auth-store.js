@@ -9,6 +9,9 @@ const _inboxErrorKind = ref(null)
 const _currentMessage = ref(null)
 const _messageErrorKind = ref(null)
 const _isMessageLoading = ref(false)
+const _isUnsubscribing = ref(false)
+const _unsubscribeErrorKind = ref(null)
+const _onlyNewsletters = ref(false)
 
 /**
  * @returns {Promise<string>} access token
@@ -47,8 +50,9 @@ export function useAuthStore() {
     if (!_isAuthenticated.value) return
     _isMessageLoading.value = true
     _messageErrorKind.value = null
+    const command = _onlyNewsletters.value ? 'gmail_random_newsletter' : 'gmail_random_message'
     try {
-      _currentMessage.value = await invoke('gmail_random_message')
+      _currentMessage.value = await invoke(command)
     } catch (error) {
       const kind = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
       _currentMessage.value = null
@@ -59,6 +63,36 @@ export function useAuthStore() {
       }
     } finally {
       _isMessageLoading.value = false
+    }
+  }
+
+  /**
+   * @param {boolean} value
+   */
+  function setOnlyNewsletters(value) {
+    _onlyNewsletters.value = Boolean(value)
+  }
+
+  /**
+   *
+   */
+  async function unsubscribeFromCurrent() {
+    const action = _currentMessage.value?.unsubscribe
+    if (!action) return
+    _isUnsubscribing.value = true
+    _unsubscribeErrorKind.value = null
+    try {
+      await invoke('gmail_unsubscribe', { action })
+      await loadRandomMessage()
+    } catch (error) {
+      const kind = error && typeof error === 'object' && error.kind ? error.kind : 'Unknown'
+      _unsubscribeErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    } finally {
+      _isUnsubscribing.value = false
     }
   }
 
@@ -107,6 +141,9 @@ export function useAuthStore() {
     _currentMessage.value = null
     _messageErrorKind.value = null
     _isMessageLoading.value = false
+    _isUnsubscribing.value = false
+    _unsubscribeErrorKind.value = null
+    _onlyNewsletters.value = false
   }
 
   return {
@@ -119,12 +156,17 @@ export function useAuthStore() {
     currentMessage: readonly(_currentMessage),
     messageErrorKind: readonly(_messageErrorKind),
     isMessageLoading: readonly(_isMessageLoading),
+    isUnsubscribing: readonly(_isUnsubscribing),
+    unsubscribeErrorKind: readonly(_unsubscribeErrorKind),
+    onlyNewsletters: readonly(_onlyNewsletters),
     initialize,
     login,
     getAccessToken,
     logout,
     refreshInboxCount,
-    loadRandomMessage
+    loadRandomMessage,
+    unsubscribeFromCurrent,
+    setOnlyNewsletters
   }
 }
 
@@ -141,4 +183,7 @@ export function _resetForTest() {
   _currentMessage.value = null
   _messageErrorKind.value = null
   _isMessageLoading.value = false
+  _isUnsubscribing.value = false
+  _unsubscribeErrorKind.value = null
+  _onlyNewsletters.value = false
 }

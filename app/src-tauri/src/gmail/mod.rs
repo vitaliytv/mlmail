@@ -70,14 +70,26 @@ pub(crate) async fn list_inbox_ids_at(
     endpoint: &str,
     access_token: &str,
 ) -> Result<Vec<String>, GmailError> {
+    list_inbox_ids_at_q(endpoint, access_token, "").await
+}
+
+pub(crate) async fn list_inbox_ids_at_q(
+    endpoint: &str,
+    access_token: &str,
+    q: &str,
+) -> Result<Vec<String>, GmailError> {
+    let mut params: Vec<(&str, &str)> = vec![
+        ("labelIds", "INBOX"),
+        ("maxResults", "100"),
+        ("fields", "messages/id"),
+    ];
+    if !q.is_empty() {
+        params.push(("q", q));
+    }
     let resp = reqwest::Client::new()
         .get(endpoint)
         .bearer_auth(access_token)
-        .query(&[
-            ("labelIds", "INBOX"),
-            ("maxResults", "100"),
-            ("fields", "messages/id"),
-        ])
+        .query(&params)
         .send()
         .await?;
 
@@ -111,7 +123,11 @@ pub(crate) async fn list_inbox_ids_at(
     Ok(ids)
 }
 
-use crate::gmail::message::{extract_header, extract_plain_text, GmailMessage};
+use crate::gmail::message::{
+    extract_header, extract_plain_text, parse_unsubscribe, GmailMessage, UnsubscribeAction,
+};
+use tauri::AppHandle;
+use tauri_plugin_opener::OpenerExt;
 
 pub(crate) async fn get_message_at(
     base_endpoint: &str,
@@ -158,7 +174,50 @@ pub(crate) async fn get_message_at(
         subject: extract_header(headers, "Subject"),
         date: extract_header(headers, "Date"),
         body: body_truncated,
+        unsubscribe: parse_unsubscribe(headers),
     })
+}
+
+pub(crate) async fn post_one_click(url: &str) -> Result<(), GmailError> {
+    let resp = reqwest::Client::new()
+        .post(url)
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body("List-Unsubscribe=One-Click")
+        .send()
+        .await?;
+    let status = resp.status();
+    if status.is_success() {
+        return Ok(());
+    }
+    let body = resp.text().await.unwrap_or_default();
+    Err(GmailError::Http {
+        status: status.as_u16(),
+        body,
+    })
+}
+
+#[tauri::command]
+pub async fn gmail_unsubscribe(
+    app: AppHandle,
+    action: UnsubscribeAction,
+) -> Result<(), GmailError> {
+    match action {
+        UnsubscribeAction::OneClick { url } => post_one_click(&url).await,
+        UnsubscribeAction::Url { url } => app
+            .opener()
+            .open_url(&url, None::<&str>)
+            .map_err(|e| GmailError::Platform(format!("open browser: {e}"))),
+        UnsubscribeAction::Mailto { to, subject } => {
+            let mut url = format!("mailto:{to}");
+            if let Some(s) = subject {
+                url.push_str("?subject=");
+                url.push_str(&s);
+            }
+            app.opener()
+                .open_url(&url, None::<&str>)
+                .map_err(|e| GmailError::Platform(format!("open mailto: {e}")))
+        }
+    }
 }
 
 #[tauri::command]
@@ -174,6 +233,31 @@ pub async fn gmail_random_message(
     )
     .await?;
     let ids = list_inbox_ids_at(&endpoints.gmail_messages_list, &token).await?;
+    if ids.is_empty() {
+        return Err(GmailError::Empty);
+    }
+    let i = rand::random::<u64>() as usize % ids.len();
+    get_message_at(&endpoints.gmail_messages_list, &token, &ids[i]).await
+}
+
+#[tauri::command]
+pub async fn gmail_random_newsletter(
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<GmailMessage, GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let ids = list_inbox_ids_at_q(
+        &endpoints.gmail_messages_list,
+        &token,
+        "has:list-unsubscribe",
+    )
+    .await?;
     if ids.is_empty() {
         return Err(GmailError::Empty);
     }
@@ -350,6 +434,29 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn list_inbox_ids_passes_q_param_when_non_empty() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("labelIds".into(), "INBOX".into()),
+                mockito::Matcher::UrlEncoded("q".into(), "has:list-unsubscribe".into()),
+            ]))
+            .with_status(200)
+            .with_body(r#"{"messages":[{"id":"n1"}]}"#)
+            .create_async()
+            .await;
+        let ids = list_inbox_ids_at_q(
+            &format!("{}/messages", server.url()),
+            "AT-1",
+            "has:list-unsubscribe",
+        )
+        .await
+        .unwrap();
+        assert_eq!(ids, vec!["n1"]);
+    }
+
+    #[tokio::test]
     async fn list_inbox_ids_maps_5xx_to_http() {
         let mut server = mockito::Server::new_async().await;
         server
@@ -422,6 +529,112 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(err, GmailError::ReauthRequired));
+    }
+
+    #[tokio::test]
+    async fn get_message_parses_one_click_unsubscribe_header() {
+        use crate::gmail::message::UnsubscribeAction;
+        use base64::Engine;
+        let data = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(b"hi");
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_body(
+                serde_json::json!({
+                    "id": "m1",
+                    "payload": {
+                        "mimeType": "text/plain",
+                        "headers": [
+                            {"name": "From",    "value": "n@l"},
+                            {"name": "Subject", "value": "s"},
+                            {"name": "Date",    "value": "d"},
+                            {"name": "List-Unsubscribe",
+                             "value": "<mailto:u@l.com>, <https://l.com/u/abc>"},
+                            {"name": "List-Unsubscribe-Post",
+                             "value": "List-Unsubscribe=One-Click"}
+                        ],
+                        "body": {"data": data}
+                    }
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let msg = get_message_at(&format!("{}/messages", server.url()), "AT-1", "m1")
+            .await
+            .unwrap();
+        assert_eq!(
+            msg.unsubscribe,
+            Some(UnsubscribeAction::OneClick {
+                url: "https://l.com/u/abc".into(),
+            })
+        );
+    }
+
+    #[tokio::test]
+    async fn get_message_unsubscribe_is_none_when_header_absent() {
+        use base64::Engine;
+        let data = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(b"hi");
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_body(
+                serde_json::json!({
+                    "id": "m1",
+                    "payload": {
+                        "mimeType": "text/plain",
+                        "headers": [{"name": "From", "value": "a@b"}],
+                        "body": {"data": data}
+                    }
+                })
+                .to_string(),
+            )
+            .create_async()
+            .await;
+
+        let msg = get_message_at(&format!("{}/messages", server.url()), "AT-1", "m1")
+            .await
+            .unwrap();
+        assert_eq!(msg.unsubscribe, None);
+    }
+
+    #[tokio::test]
+    async fn post_one_click_sends_form_body() {
+        let mut server = mockito::Server::new_async().await;
+        let m = server
+            .mock("POST", "/unsub")
+            .match_header("content-type", "application/x-www-form-urlencoded")
+            .match_body("List-Unsubscribe=One-Click")
+            .with_status(200)
+            .create_async()
+            .await;
+        post_one_click(&format!("{}/unsub", server.url()))
+            .await
+            .unwrap();
+        m.assert_async().await;
+    }
+
+    #[tokio::test]
+    async fn post_one_click_maps_5xx_to_http_error() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("POST", "/unsub")
+            .with_status(503)
+            .with_body("down")
+            .create_async()
+            .await;
+        let err = post_one_click(&format!("{}/unsub", server.url()))
+            .await
+            .unwrap_err();
+        match err {
+            GmailError::Http { status, .. } => assert_eq!(status, 503),
+            other => panic!("expected Http, got {other:?}"),
+        }
     }
 
     #[tokio::test]

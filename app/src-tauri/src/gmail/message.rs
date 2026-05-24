@@ -18,6 +18,83 @@ pub struct GmailMessage {
     pub subject: String,
     pub date: String,
     pub body: String,
+    pub unsubscribe: Option<UnsubscribeAction>,
+}
+
+/// RFC 2369 / 8058 `List-Unsubscribe` action. JS sees this tagged as
+/// `{ kind: 'OneClick' | 'Url' | 'Mailto', ... }`.
+#[derive(Debug, Serialize, serde::Deserialize, Clone, PartialEq, Eq)]
+#[serde(tag = "kind")]
+pub enum UnsubscribeAction {
+    /// RFC 8058 one-click: HTTPS URL plus
+    /// `List-Unsubscribe-Post: List-Unsubscribe=One-Click` header. The client
+    /// POSTs `List-Unsubscribe=One-Click` with no user interaction.
+    OneClick { url: String },
+    /// Plain HTTP/HTTPS unsubscribe page — open in the user's browser.
+    Url { url: String },
+    /// Send an empty mail to `to` with optional `subject`.
+    Mailto {
+        to: String,
+        subject: Option<String>,
+    },
+}
+
+pub fn parse_unsubscribe(headers: &[Value]) -> Option<UnsubscribeAction> {
+    let raw = extract_header(headers, "List-Unsubscribe");
+    if raw.is_empty() {
+        return None;
+    }
+
+    let mut https_url: Option<String> = None;
+    let mut http_url: Option<String> = None;
+    let mut mailto: Option<(String, Option<String>)> = None;
+
+    for chunk in raw.split(',') {
+        let trimmed = chunk.trim();
+        let Some(inside) = trimmed.strip_prefix('<').and_then(|s| s.strip_suffix('>')) else {
+            continue;
+        };
+        let inside = inside.trim();
+        if let Some(rest) = inside.strip_prefix("mailto:") {
+            if mailto.is_none() {
+                mailto = Some(parse_mailto(rest));
+            }
+        } else if inside.starts_with("https://") {
+            if https_url.is_none() {
+                https_url = Some(inside.to_string());
+            }
+        } else if inside.starts_with("http://") && http_url.is_none() {
+            http_url = Some(inside.to_string());
+        }
+    }
+
+    let one_click = extract_header(headers, "List-Unsubscribe-Post")
+        .eq_ignore_ascii_case("List-Unsubscribe=One-Click");
+
+    if let Some(url) = https_url {
+        if one_click {
+            return Some(UnsubscribeAction::OneClick { url });
+        }
+        return Some(UnsubscribeAction::Url { url });
+    }
+    if let Some(url) = http_url {
+        return Some(UnsubscribeAction::Url { url });
+    }
+    mailto.map(|(to, subject)| UnsubscribeAction::Mailto { to, subject })
+}
+
+fn parse_mailto(rest: &str) -> (String, Option<String>) {
+    let (to, query) = match rest.split_once('?') {
+        Some((t, q)) => (t.trim(), Some(q)),
+        None => (rest.trim(), None),
+    };
+    let subject = query.and_then(|q| {
+        q.split('&').find_map(|pair| {
+            let (k, v) = pair.split_once('=')?;
+            k.eq_ignore_ascii_case("subject").then(|| v.to_string())
+        })
+    });
+    (to.to_string(), subject)
 }
 
 pub fn extract_header(headers: &[Value], name: &str) -> String {
@@ -248,5 +325,113 @@ mod tests {
             "body": { "data": data }
         });
         assert_eq!(extract_plain_text(&payload), "Привіт");
+    }
+
+    #[test]
+    fn parse_unsubscribe_returns_none_when_header_missing() {
+        let headers = vec![json!({"name": "From", "value": "x@y"})];
+        assert_eq!(parse_unsubscribe(&headers), None);
+    }
+
+    #[test]
+    fn parse_unsubscribe_parses_https_url() {
+        let headers = vec![
+            json!({"name": "List-Unsubscribe", "value": "<https://example.com/unsub?id=1>"}),
+        ];
+        assert_eq!(
+            parse_unsubscribe(&headers),
+            Some(UnsubscribeAction::Url {
+                url: "https://example.com/unsub?id=1".into(),
+            })
+        );
+    }
+
+    #[test]
+    fn parse_unsubscribe_parses_mailto() {
+        let headers = vec![
+            json!({"name": "List-Unsubscribe", "value": "<mailto:unsub@example.com>"}),
+        ];
+        assert_eq!(
+            parse_unsubscribe(&headers),
+            Some(UnsubscribeAction::Mailto {
+                to: "unsub@example.com".into(),
+                subject: None,
+            })
+        );
+    }
+
+    #[test]
+    fn parse_unsubscribe_parses_mailto_with_subject() {
+        let headers = vec![json!({
+            "name": "List-Unsubscribe",
+            "value": "<mailto:unsub@example.com?subject=unsubscribe>"
+        })];
+        assert_eq!(
+            parse_unsubscribe(&headers),
+            Some(UnsubscribeAction::Mailto {
+                to: "unsub@example.com".into(),
+                subject: Some("unsubscribe".into()),
+            })
+        );
+    }
+
+    #[test]
+    fn parse_unsubscribe_prefers_https_over_mailto_when_no_one_click() {
+        let headers = vec![json!({
+            "name": "List-Unsubscribe",
+            "value": "<mailto:u@x.com>, <https://x.com/u>"
+        })];
+        assert_eq!(
+            parse_unsubscribe(&headers),
+            Some(UnsubscribeAction::Url {
+                url: "https://x.com/u".into(),
+            })
+        );
+    }
+
+    #[test]
+    fn parse_unsubscribe_upgrades_to_one_click_when_post_header_present() {
+        let headers = vec![
+            json!({
+                "name": "List-Unsubscribe",
+                "value": "<mailto:u@x.com>, <https://x.com/u>"
+            }),
+            json!({
+                "name": "List-Unsubscribe-Post",
+                "value": "List-Unsubscribe=One-Click"
+            }),
+        ];
+        assert_eq!(
+            parse_unsubscribe(&headers),
+            Some(UnsubscribeAction::OneClick {
+                url: "https://x.com/u".into(),
+            })
+        );
+    }
+
+    #[test]
+    fn parse_unsubscribe_ignores_one_click_for_http_url() {
+        // RFC 8058 §3.1: one-click requires HTTPS — fall back to plain URL.
+        let headers = vec![
+            json!({"name": "List-Unsubscribe", "value": "<http://x.com/u>"}),
+            json!({
+                "name": "List-Unsubscribe-Post",
+                "value": "List-Unsubscribe=One-Click"
+            }),
+        ];
+        assert_eq!(
+            parse_unsubscribe(&headers),
+            Some(UnsubscribeAction::Url {
+                url: "http://x.com/u".into(),
+            })
+        );
+    }
+
+    #[test]
+    fn parse_unsubscribe_returns_none_when_no_angle_brackets() {
+        let headers = vec![
+            json!({"name": "List-Unsubscribe", "value": "https://x.com/u"}),
+        ];
+        assert_eq!(parse_unsubscribe(&headers), None);
     }
 }
