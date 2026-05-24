@@ -1,5 +1,6 @@
 <script setup>
 import { errorMessage } from '../i18n/auth-errors.js'
+import { loginMessages } from '../i18n/login.js'
 import { useAuthStore } from '../services/auth-store.js'
 
 const auth = useAuthStore()
@@ -8,7 +9,7 @@ onMounted(() => auth.initialize())
 
 <template>
   <q-page class="column items-center q-gutter-md q-pa-md">
-    <div class="text-h4">MLMaiL</div>
+    <div class="text-h4">{{ loginMessages.appTitle }}</div>
 
     <template v-if="auth.isAuthenticated.value">
       <div class="text-body1">Ви увійшли як {{ auth.email.value }}</div>
@@ -54,16 +55,6 @@ onMounted(() => auth.initialize())
       </q-banner>
       <q-banner v-else class="bg-grey-2" rounded dense> Скринька порожня. </q-banner>
 
-      <div class="row q-gutter-sm">
-        <q-btn
-          @click="auth.loadRandomMessage()"
-          color="primary"
-          icon="sym_o_refresh"
-          :loading="auth.isMessageLoading.value">
-          Показати інший
-        </q-btn>
-        <q-btn @click="auth.logout()" flat color="grey-8" icon="sym_o_logout"> Вийти </q-btn>
-      </div>
     </template>
 
     <q-btn
