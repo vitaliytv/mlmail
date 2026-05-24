@@ -1,0 +1,19 @@
+.github/workflows/lint-rust.yml
+  s_d528a24be5c98b::t_e304b71023db8e 1-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "18b4222cabbeda150eeb4bd80026e81a05178523",
+  "prompts": {},
+  "sessions": {
+    "s_d528a24be5c98b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ac8d4370-b71a-4d92-813c-f3e5ec260b84",
+        "model": "composer-2.5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
