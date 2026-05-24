@@ -10,10 +10,19 @@
     "image-compress",
     "js-lint",
     "js-run",
+    "rust",
     "security",
     "style-lint",
     "text",
     "vue"
   ],
-  "skills": ["adr-normalize", "fix", "lint", "llm-patch", "publish-telegram", "start-check", "taze"]
+  "skills": [
+    "adr-normalize",
+    "fix",
+    "lint",
+    "llm-patch",
+    "publish-telegram",
+    "start-check",
+    "taze"
+  ]
 }

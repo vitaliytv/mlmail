@@ -10,7 +10,7 @@ alwaysApply: true
 
 1. **`version`** у `<ws>/package.json` (або `[project].version` у `pyproject.toml`) → **patch +1** відносно `git show HEAD:<ws>/package.json`, якщо ще не піднято.
 2. **`CHANGELOG.md`** того workspace → **нова** секція `## [версія] - YYYY-MM-DD` **зверху** (не bullet-и в стару версію).
-3. **`npx @nitra/cursor check changelog`** (у репо `@nitra/cursor`: `bun ./npm/bin/n-cursor.js check changelog`) → exit **`0`**.
+3. **`npx @nitra/cursor fix changelog`** (у репо `@nitra/cursor`: `bun ./npm/bin/n-cursor.js check changelog`) → exit **`0`**.
 
 **Тригер шляхів (приклади):** `npm/**`, `packages/foo/**`, будь-який каталог з власним `package.json` / `pyproject.toml`, куди потрапили правки.
 
@@ -43,7 +43,7 @@ alwaysApply: true
 
 **Вимагають bump + нову секцію CHANGELOG** — усі інші зміни в каталозі workspace (код, rego, правила, скіли, конфіги, тести тощо). Виняток `.cursor/` / `.claude/` **не** поширюється на джерело правил у репо `@nitra/cursor` — воно лежить під `npm/`, тож зміни в ньому далі вимагають bump.
 
-Перевірка програмна (`changelog/fix/consistency/check.mjs`).
+Перевірка програмна (`changelog/js/consistency.mjs`).
 
 ## Дві моделі бази порівняння
 

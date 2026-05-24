@@ -9,6 +9,7 @@
 @.cursor/rules/n-image-compress.mdc
 @.cursor/rules/n-js-lint.mdc
 @.cursor/rules/n-js-run.mdc
+@.cursor/rules/n-rust.mdc
 @.cursor/rules/n-security.mdc
 @.cursor/rules/n-style-lint.mdc
 @.cursor/rules/n-text.mdc
@@ -33,5 +34,7 @@
   Команда: `/n-llm-patch`
 - `.cursor/skills/n-publish-telegram/SKILL.md` — Підготовка матеріалу з поточного контексту для публікації в Telegram-каналі команди
   Команда: `/n-publish-telegram`
+- `.cursor/skills/n-start-check/SKILL.md` — Smoke-перевірка bun-монорепо: зайти в кожен воркспейс зі `start`-скриптом, прогнати `start` і зафіксувати, чи проєкт взагалі запускається без негайного краху
+  Команда: `/n-start-check`
 - `.cursor/skills/n-taze/SKILL.md` — Оновлення версій модулів проекту з аналізом major-змін і автоматичним рефакторингом несумісного коду
   Команда: `/n-taze`

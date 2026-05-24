@@ -1,0 +1,90 @@
+---
+description: Перевірка Rust коду
+globs: "**/{Cargo.toml,Cargo.lock,rustfmt.toml,clippy.toml,.vscode/extensions.json,package.json},**/*.rs"
+alwaysApply: false
+version: '1.0'
+---
+
+**rustfmt** ([rust-lang/rustfmt](https://github.com/rust-lang/rustfmt)) — форматер; **clippy** ([rust-lang/rust-clippy](https://github.com/rust-lang/rust-clippy)) — лінтер. У скрипті **`lint-rust`** локально йдуть три кроки в одному рядку: `cargo fmt --all` → `cargo clippy --fix --allow-staged --allow-dirty --all-targets --all-features` → фінальний `cargo clippy --all-targets --all-features -- -D warnings`. У CI — без `--fix`: `cargo fmt --all -- --check` і `cargo clippy ... -- -D warnings` (див. `lint-rust.yml`).
+
+`cargo`, `rustfmt`, `clippy` не додавай у `devDependencies` — це Rust toolchain, ставиться через `rustup` локально або через `dtolnay/rust-toolchain@stable` у CI.
+
+Канон `scripts.lint-rust` (substring requirement): `package.json`:
+
+```json
+{
+  "scripts": {
+    "lint-rust": [
+      "cargo fmt --all",
+      "cargo clippy --fix --allow-staged --allow-dirty",
+      "cargo clippy --all-targets --all-features -- -D warnings"
+    ]
+  }
+}
+```
+
+У `.vscode/extensions.json` `recommendations` мають містити `rust-lang.rust-analyzer` і `tamasfe.even-better-toml`: `extensions.json`:
+
+```json
+{ "recommendations": ["rust-lang.rust-analyzer", "tamasfe.even-better-toml"] }
+```
+
+Канон workflow `.github/workflows/lint-rust.yml`: `lint-rust.yml`:
+
+```yaml
+name: Lint Rust
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+      - '**/rustfmt.toml'
+      - '**/clippy.toml'
+
+  pull_request:
+    branches:
+      - dev
+      - main
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Rustfmt
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+```
+
+Перед **`./.github/actions/setup-bun-deps`** в інших workflows йде **`actions/checkout@v6`** (див. **ga.mdc**). У **lint-rust.yml** після checkout — `dtolnay/rust-toolchain@stable` (з `components: rustfmt, clippy`) + `Swatinem/rust-cache@v2` для кешу `~/.cargo` і `target/`. Bun composite дії тут не потрібен — toolchain ставиться напряму.
+
+## Композиція з Tauri
+
+Tauri-проєкт завжди має `src-tauri/Cargo.toml`, тому правило `rust` активується автоматично разом з `tauri`. Поділ обов'язків:
+
+- `rust` — `lint-rust` скрипт, `rust-analyzer`, `even-better-toml`, CI workflow.
+- `tauri` — `tauri-apps.tauri-vscode` (див. **tauri.mdc**).
+
+Обидва правила перевіряють `.vscode/extensions.json` за `contains`-семантикою; конкурентного запису немає.

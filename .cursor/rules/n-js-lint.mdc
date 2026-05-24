@@ -2,7 +2,7 @@
 description: Перевірка JavaScript коду
 globs: "**/{.oxlintrc.json,eslint.config.js,.jscpd.json,knip.json,package.json},**/*.{js,mjs,cjs,jsx,ts,tsx}"
 alwaysApply: false
-version: '1.23'
+version: '1.24'
 ---
 
 **oxlint**, **ESLint**, **jscpd**, **knip**. У скрипті **`lint-js`** і в CI — **`bunx oxlint`**, **`bunx eslint`**, **`bunx jscpd`**, **`bunx knip`** (у CI без **`--fix`** для oxlint/eslint — див. приклад workflow нижче). Без **prettier** і **@nitra/prettier-config**. У **`devDependencies`** має бути **`@nitra/eslint-config` мінімум `^3.9.2`** (з **3.8.0** правило `no-restricted-syntax` забороняє `for...in`; з **3.9.2** у `getConfig` вбудовано ignore для **`**/adr/**`** — ADR-документи не валідуються ESLint, локально цей glob додавати не потрібно; також транзитивно йде **`@e18e/eslint-plugin`** для oxlint); пакет **`@e18e/eslint-plugin`** окремо не додавай. Пакети oxlint/eslint/jscpd/knip не додавай без потреби монорепо.
@@ -40,7 +40,7 @@ version: '1.23'
 }
 ```
 
-У корені має бути **`.oxlintrc.json`**, який **збігається з каноном** oxlint з пакета **`@nitra/cursor`**: файл **`npm/scripts/utils/oxlint-canonical.json`** (plugins, jsPlugins з **`@e18e/eslint-plugin`**, categories, повний набір **rules** із канону — додаткові записи в **`rules`** дозволені; також **`settings`**, **`env`**, **`globals`**). Поле **`ignorePatterns`** працює як **`rules`**: канонічні патерни з **`oxlint-canonical.json`** (наразі **`**/schema.graphql`**, **`**/auto-imports.d.ts`**) мають бути присутні, додаткові локальні glob-и дозволені. Оновити канон можна з репозиторію пакета або скопіювавши файл після **`bun ./scripts/utils/rebuild-oxlint-canonical.mjs`** (джерело правил — **`oxlint-rules.tsv`** + скелет **`oxlint-canonical-skeleton.json`**). Модуль **`@e18e/eslint-plugin`** не оголошуй окремо в **`package.json`** — він уже в залежностях **`@nitra/eslint-config`** (з **3.8.0**), oxlint підвантажує його з **`node_modules`**.
+У корені має бути **`.oxlintrc.json`**, який **збігається з каноном** oxlint з пакета **`@nitra/cursor`**: файл **`npm/rules/js-lint/js/tooling/oxlint-canonical.json`** (plugins, jsPlugins з **`@e18e/eslint-plugin`**, categories, повний набір **rules** із канону — додаткові записи в **`rules`** дозволені; також **`settings`**, **`env`**, **`globals`**). Поле **`ignorePatterns`** працює як **`rules`**: канонічні патерни з **`oxlint-canonical.json`** (наразі **`**/schema.graphql`**, **`**/auto-imports.d.ts`**) мають бути присутні, додаткові локальні glob-и дозволені. Оновити канон можна з репозиторію пакета або скопіювавши файл після **`bun ./rules/js-lint/js/tooling/rebuild-oxlint-canonical.mjs`** (джерело правил — **`oxlint-rules.tsv`** + скелет **`oxlint-canonical-skeleton.json`**). Модуль **`@e18e/eslint-plugin`** не оголошуй окремо в **`package.json`** — він уже в залежностях **`@nitra/eslint-config`** (з **3.8.0**), oxlint підвантажує його з **`node_modules`**.
 
 Мінімум для розуміння структури (реальний корінь конфігу має збігатися з каноном повністю):
 
@@ -86,9 +86,9 @@ version: '1.23'
 
 Перевірку невикористаних залежностей і експортів виконує **knip** (заміна `depcheck`). Викликається у скрипті `lint-js` і в CI разом з oxlint/eslint/jscpd — окремий крок у CI не потрібен.
 
-У корені проєкту має бути **`knip.json`**, який стартує з канонічного baseline з пакета `@nitra/cursor` — файл [`npm/scripts/utils/knip-canonical.json`](../scripts/utils/knip-canonical.json). Він покриває типові false-positives для наших правил: `entry` зі CLI-конфігами (eslint, stylelint, oxlint, jscpd, markdownlint-cli2, `commitlint`), `project` для `**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`, `ignore` для `**/__fixtures__/**`, `ignoreDependencies` для пакетів, посилання на які є лише в не-JS-конфігах (`@nitra/cspell-dict`, `/@cspell\/dict-.+/`), і `ignoreBinaries` для CLI, які канон вимагає викликати через `npx`/`bunx` і яких заборонено додавати в `devDependencies` (`actionlint`, `cspell`, `depcheck`, `eslint`, `git-ai`, `jscpd`, `markdownlint-cli2`, `oxfmt`, `oxlint`, `shellcheck`, `uvx`, `v8r`, `zizmor`).
+У корені проєкту має бути **`knip.json`**, який стартує з канонічного baseline з пакета `@nitra/cursor` — файл [`npm/rules/js-lint/js/tooling/knip-canonical.json`](./js/tooling/knip-canonical.json). Він покриває типові false-positives для наших правил: `entry` зі CLI-конфігами (eslint, stylelint, oxlint, jscpd, markdownlint-cli2, `commitlint`), `project` для `**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`, `ignore` для `**/__fixtures__/**`, `ignoreDependencies` для пакетів, посилання на які є лише в не-JS-конфігах (`@nitra/cspell-dict`, `/@cspell\/dict-.+/`), і `ignoreBinaries` для CLI, які канон вимагає викликати через `npx`/`bunx` і яких заборонено додавати в `devDependencies` (`actionlint`, `cspell`, `depcheck`, `eslint`, `git-ai`, `jscpd`, `markdownlint-cli2`, `oxfmt`, `oxlint`, `shellcheck`, `uvx`, `v8r`, `zizmor`).
 
-Якщо `knip.json` відсутній — `npx @nitra/cursor check js-lint` копіює канон у корінь проєкту (side effect). Після створення модифікуй файл під свій проєкт як завгодно: перевіряємо лише наявність, зміст подальших змін не валідується.
+Якщо `knip.json` відсутній — `npx @nitra/cursor fix js-lint` копіює канон у корінь проєкту (side effect). Після створення модифікуй файл під свій проєкт як завгодно: перевіряємо лише наявність, зміст подальших змін не валідується.
 
 Пакет `knip` окремо в `devDependencies` не додавай — `bunx knip` тягне його ad-hoc, як oxlint/eslint/jscpd.
 
@@ -102,6 +102,16 @@ version: '1.23'
 Так ти уникаєш **хибних обходів** перевірки: розширення `ignore` чи завищення `minLines` лише щоб прибрати звіт — не заміна рефакторингу для справжніх клонів. Якщо збіг **семантично випадковий** (генерований код, формальні шаблони без спільної логіки), після оцінки допустимо точковий `ignore` або зміна порогу — з коротким обґрунтуванням.
 
 Але обов'язково перед рефакторингом перевір чи є тести на блоки які підлягають зміні, а саме Bun.test для js та playwright для vue. Якщо є, то перевір чи вони покривають блоки які підлягають зміні. Якщо не покривають або тестів немає — спочатку створи їх, перевір що вони покривають і відпрацьовують коректно, а потім роби рефакторинг і ще раз запускай тести, але якщо тести не відпрацьовують коректно після рефакторингу, то не роби рефакторинг.
+
+## Структура спільних модулів: `utils/` vs `lib/`
+
+Коли спільні методи виносяться з кількох JS-файлів в окремий каталог — назву каталога обирай за призначенням модулів усередині.
+
+- **`utils/`** — низькорівневі, чисті, generic helpers без бізнес-логіки і без залежностей від домену проєкту. Те, що могло б жити в окремому npm-пакеті. Приклади: `formatDate()`, `chunk(array, size)`, `retry(fn, opts)`, `deepMerge()`, `parseDuration('5m')`, `sleep(ms)`.
+
+- **`lib/`** — внутрішні модулі / підсистеми проєкту, які знають про домен. Більші за `utils/`, часто з власним state, конфігом або side effects. Приклади: `lib/gmail-client.js`, `lib/circuit-breaker.js`, `lib/skill-loader.js`, `lib/safety/dry-run.js`.
+
+Швидкий тест: якщо файл завтра можна опублікувати окремим npm-пакетом без переписування — це `utils/`; якщо він тримає domain-state, читає конфіг проєкту або викликає зовнішні сервіси/файли — це `lib/`. Не плутай із чужими каталогами на кшталт `shared/` чи `common/`: канонічні назви — лише `utils/` і `lib/`.
 
 Додай workflow:
 
