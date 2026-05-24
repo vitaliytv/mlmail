@@ -1,7 +1,15 @@
 use base64::Engine;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::alphabet;
+use base64::engine::{DecodePaddingMode, GeneralPurpose, GeneralPurposeConfig};
 use serde::Serialize;
 use serde_json::Value;
+
+/// base64url decoder that tolerates optional `=` padding. Gmail returns
+/// `body.data` as standard (padded) base64url, not the no-pad variant.
+const BASE64URL: GeneralPurpose = GeneralPurpose::new(
+    &alphabet::URL_SAFE,
+    GeneralPurposeConfig::new().with_decode_padding_mode(DecodePaddingMode::Indifferent),
+);
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq)]
 pub struct GmailMessage {
@@ -44,7 +52,7 @@ fn find_part(node: &Value, target_mime: &str) -> Option<String> {
         .unwrap_or("");
     if mime == target_mime {
         if let Some(data) = node.get("body").and_then(|b| b.get("data")).and_then(Value::as_str) {
-            return decode_base64url(data);
+            return decode_part(data, &part_charset(node));
         }
         return None;
     }
@@ -58,9 +66,30 @@ fn find_part(node: &Value, target_mime: &str) -> Option<String> {
     None
 }
 
-fn decode_base64url(data: &str) -> Option<String> {
-    let bytes = URL_SAFE_NO_PAD.decode(data.as_bytes()).ok()?;
-    String::from_utf8(bytes).ok()
+/// Extracts the `charset` parameter from a part's `Content-Type` header.
+/// Returns an empty string when absent — callers fall back to UTF-8.
+fn part_charset(node: &Value) -> String {
+    let Some(headers) = node.get("headers").and_then(Value::as_array) else {
+        return String::new();
+    };
+    let content_type = extract_header(headers, "Content-Type").to_ascii_lowercase();
+    for param in content_type.split(';') {
+        if let Some(value) = param.trim().strip_prefix("charset=") {
+            return value.trim().trim_matches('"').to_string();
+        }
+    }
+    String::new()
+}
+
+/// Decodes Gmail `body.data` (base64url) and converts the bytes to a `String`
+/// using the part's declared charset, falling back to UTF-8 for an absent or
+/// unknown charset. Decoding is lossy, so non-empty data always yields text.
+fn decode_part(data: &str, charset: &str) -> Option<String> {
+    let bytes = BASE64URL.decode(data.as_bytes()).ok()?;
+    let encoding =
+        encoding_rs::Encoding::for_label(charset.as_bytes()).unwrap_or(encoding_rs::UTF_8);
+    let (text, _, _) = encoding.decode(&bytes);
+    Some(text.into_owned())
 }
 
 fn strip_html(html: &str) -> String {
@@ -184,5 +213,40 @@ mod tests {
     fn extract_plain_text_returns_empty_for_missing_data() {
         let payload = json!({"mimeType": "text/plain"});
         assert_eq!(extract_plain_text(&payload), "");
+    }
+
+    #[test]
+    fn extract_plain_text_decodes_padded_base64url() {
+        // Gmail returns body.data as standard base64url WITH `=` padding;
+        // "aGVsbG8=" is "hello" (5 bytes → one padding char).
+        let payload = json!({
+            "mimeType": "text/plain",
+            "body": { "data": "aGVsbG8=" }
+        });
+        assert_eq!(extract_plain_text(&payload), "hello");
+    }
+
+    #[test]
+    fn extract_plain_text_decodes_iso_8859_1_body() {
+        // "café" in ISO-8859-1 — é is byte 0xE9, which is invalid as UTF-8.
+        let data = base64::engine::general_purpose::URL_SAFE.encode([b'c', b'a', b'f', 0xE9_u8]);
+        let payload = json!({
+            "mimeType": "text/plain",
+            "headers": [{"name": "Content-Type", "value": "text/plain; charset=ISO-8859-1"}],
+            "body": { "data": data }
+        });
+        assert_eq!(extract_plain_text(&payload), "café");
+    }
+
+    #[test]
+    fn extract_plain_text_decodes_windows_1251_body() {
+        let (bytes, _, _) = encoding_rs::WINDOWS_1251.encode("Привіт");
+        let data = base64::engine::general_purpose::URL_SAFE.encode(bytes.as_ref());
+        let payload = json!({
+            "mimeType": "text/plain",
+            "headers": [{"name": "Content-Type", "value": "text/plain; charset=windows-1251"}],
+            "body": { "data": data }
+        });
+        assert_eq!(extract_plain_text(&payload), "Привіт");
     }
 }

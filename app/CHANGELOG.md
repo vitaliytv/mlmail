@@ -4,6 +4,17 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
 
+## [0.1.3] - 2026-05-22
+
+### Added
+
+- Мутаційне тестування: скрипти `test:mutation` (StrykerJS, JS/Vue) та `test:rust:mutation` (`cargo mutants`, Rust).
+- `stryker.config.mjs` — конфігурація StrykerJS: command-runner на `bun test`, `inPlace: true`, мутує `src/**/*.{js,vue}` мінус тести та `main.js`, звіт у `reports/stryker/mutation.json`.
+
+### Fixed
+
+- Порожнє тіло листа для частини повідомлень: Gmail повертає `body.data` як base64url із `=`-паддингом, який код раніше відхиляв. Декодування зроблено толерантним до паддингу, а байти тепер конвертуються в текст за `charset` із заголовка MIME-частини (через `encoding_rs`, fallback — UTF-8), тож листи в ISO-8859-1, windows-1251 тощо більше не показують порожнє тіло.
+
 ## [0.1.2] - 2026-05-21
 
 ### Added

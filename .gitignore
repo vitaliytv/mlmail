@@ -33,6 +33,11 @@ app/auto-imports.d.ts
 *.sw?
 .claude/hooks/.normalize-state
 
+# Stryker mutation testing reports (summary lives in COVERAGE.md)
+app/reports/
+# cargo-mutants artifacts (mutants.out/ + mutants.out.old/ після повторних прогонів)
+mutants.out*/
+
 # docs:regen
 docs/ci4/.regen.log
 docs/ci4/.regen-debug/
@@ -42,3 +47,6 @@ node_modules/
 dist/
 .claude/hooks/*.log
 .claude/hooks/.normalize.lock
+
+# coverage.js single-run lock
+.coverage.lock

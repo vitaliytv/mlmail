@@ -6,7 +6,8 @@ const invokeMock = mock()
 mock.module('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
 
 const { _resetForTest } = await import('./services/auth-store.js')
-const App = (await import('./App.vue')).default
+const AppModule = await import('./App.vue')
+const App = AppModule.default
 
 beforeEach(() => {
   invokeMock.mockReset()

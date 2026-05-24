@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,6 +14,8 @@
     "test:coverage": "bun test --coverage --preload ./test/happy-dom.preload.js src",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
+    "test:rust:mutation": "bun ../scripts/with-lock.js cargo mutants --in-place -o /tmp/cargo-mutants-out --manifest-path src-tauri/Cargo.toml",
+    "test:mutation": "bun ../scripts/with-lock.js bunx stryker run",
     "test:all": "bun run test && bun run test:rust"
   },
   "dependencies": {
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.9.0",
     "@quasar/vite-plugin": "^1.11.0",
+    "@stryker-mutator/core": "^9.0.0",
     "@tauri-apps/cli": "^2.11.2",
     "@types/bun": "^1.3.14",
     "@vitejs/plugin-vue": "^6.0.7",

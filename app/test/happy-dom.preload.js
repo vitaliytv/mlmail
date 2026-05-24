@@ -1,3 +1,5 @@
+/* global Bun */
+
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { mock } from 'bun:test'
 
@@ -9,13 +11,15 @@ GlobalRegistrator.register()
 // --- Vue SFC loader -------------------------------------------------------
 // `bun test` has no Vite transform, so `.vue` files would load as raw text.
 // Compile them on the fly with @vue/compiler-sfc (script setup + inline
-// template; <style> blocks are irrelevant to behaviour assertions).
+// template; <style> blocks are irrelevant to behavior assertions).
 const { parse, compileScript } = await import('@vue/compiler-sfc')
+
+const VUE_FILE_RE = /\.vue$/
 
 Bun.plugin({
   name: 'vue-sfc',
   setup(build) {
-    build.onLoad({ filter: /\.vue$/ }, async args => {
+    build.onLoad({ filter: VUE_FILE_RE }, async args => {
       const source = await Bun.file(args.path).text()
       const { descriptor, errors } = parse(source, { filename: args.path })
       if (errors.length > 0) {
@@ -31,8 +35,7 @@ Bun.plugin({
 // `bun test` has no unplugin-auto-import either, so expose the auto-imported
 // Vue / Vue Router APIs (vite.config.js AutoImport presets) as globals — source
 // files use bare `ref`, `computed`, `h`, `onMounted`, … without imports.
-for (const path of ['vue', 'vue-router']) {
-  const mod = await import(path)
+for (const mod of [await import('vue'), await import('vue-router')]) {
   for (const [name, value] of Object.entries(mod)) {
     if (name !== 'default' && !(name in globalThis)) globalThis[name] = value
   }

@@ -9,47 +9,28 @@ This file is the entry point for all AI agents working with this repository.
 The primary development rules are stored in the Cursor rules directory:
 
 - .cursor/rules/n-adr.mdc
-
 - .cursor/rules/n-bun.mdc
-
 - .cursor/rules/n-changelog.mdc
-
 - .cursor/rules/n-ci4.mdc
-
 - .cursor/rules/n-ga.mdc
-
 - .cursor/rules/n-image-avif.mdc
-
 - .cursor/rules/n-image-compress.mdc
-
 - .cursor/rules/n-js-lint.mdc
-
 - .cursor/rules/n-js-run.mdc
-
 - .cursor/rules/n-security.mdc
-
 - .cursor/rules/n-style-lint.mdc
-
 - .cursor/rules/n-text.mdc
-
 - .cursor/rules/n-vue.mdc
-
 - .cursor/rules/vue.mdc
 
 ## Skills
 
 - `.cursor/skills/docs-regen/SKILL.md`
-
 - `.cursor/skills/n-adr-normalize/SKILL.md` — Ручний запуск ADR-нормалізації — обхід порогу й min-interval, прогон одного батчу чернеток через LLM, перегляд результату через git diff
-
 - `.cursor/skills/n-fix/SKILL.md` — Виправити проєкт відповідно до всіх правил в .cursor/rules/
-
 - `.cursor/skills/n-lint/SKILL.md` — Запустити кореневий bun run lint, виправити порушення й підтвердити чистий вихід
-
 - `.cursor/skills/n-llm-patch/SKILL.md` — Підготовка самодостатнього текстового промпта для іншого Claude/Cursor-агента — read-only аналіз CWD без жодних змін у поточному репо
-
 - `.cursor/skills/n-publish-telegram/SKILL.md` — Підготовка матеріалу з поточного контексту для публікації в Telegram-каналі команди
-
 - `.cursor/skills/n-taze/SKILL.md` — Оновлення версій модулів проекту з аналізом major-змін і автоматичним рефакторингом несумісного коду
 
 ## Commands
@@ -57,27 +38,16 @@ The primary development rules are stored in the Cursor rules directory:
 Generated from the root `package.json` on each `npx @nitra/cursor` sync. Prefer `bun run <script>` for project scripts.
 
 - **Залежності**: `bun i`
-
 - **lint**: `bun run lint`
-
 - **lint-js**: `bun run lint-js`
-
 - **lint-text**: `bun run lint-text`
-
 - **lint-ga**: `bun run lint-ga`
-
 - **dev**: `bun run dev`
-
 - **lint-image**: `bun run lint-image`
-
 - **lint-security**: `bun run lint-security`
-
 - **lint-style**: `bun run lint-style`
-
 - **Оновити правила та AGENTS.md** (після змін у правилах/шаблоні CLI): `npx @nitra/cursor`
-
 - **Перевірки правил (programmatic)**: `npx @nitra/cursor check`
-
 - **knip (невикористані залежності та експорти)**: `bunx knip`
 
 ## Instructions for all agents

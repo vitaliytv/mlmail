@@ -18,11 +18,12 @@
     "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
     "lint-text": "n-cursor lint-text",
     "docs:regen": "bun run scripts/docs-regen.js",
-    "test:scripts": "bun test scripts/__tests__"
+    "test:scripts": "bun test scripts/__tests__",
+    "coverage": "bun scripts/with-lock.js bun scripts/coverage.js"
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
-    "@nitra/cursor": "^1.13.74",
+    "@nitra/cursor": "^1.13.76",
     "@nitra/eslint-config": "^3.9.4",
     "@nitra/stylelint-config": "^1.4.1"
   },

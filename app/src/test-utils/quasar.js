@@ -3,7 +3,8 @@ import * as Quasar from 'quasar'
 
 // `bun test` has no @quasar/vite-plugin to auto-import components per file,
 // so register every Quasar component (QBtn, QPage, …) globally.
-const quasarComponents = Object.fromEntries(Object.entries(Quasar).filter(([name]) => /^Q[A-Z]/.test(name)))
+const QUASAR_COMPONENT_RE = /^Q[A-Z]/
+const quasarComponents = Object.fromEntries(Object.entries(Quasar).filter(([name]) => QUASAR_COMPONENT_RE.test(name)))
 
 /**
  * @param {object} [userGlobal] caller's `global` mount option
