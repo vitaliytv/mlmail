@@ -1,0 +1,202 @@
+scripts/package.json
+  s_0054a0b0d64526::t_873809fd918225 3
+docs/adr/20260522-204026-міграція-тестового-середовища-vue-jsdom-vitest-happy-dom-bun.md
+  s_0054a0b0d64526::t_03e165f2265eb7 10-160
+docs/adr/20260522-210555-обєднаний-скрипт-покриття-з-мутаційним-тестуванням.md
+  s_ca8bfdc6ee4fda::t_eb913221181e2d 9-41
+docs/adr/20260522-212246-міграція-тестового-стеку-з-jsdom-vitest-на-happy-dom-bun-tes.md
+  s_b3dc9c3c140472::t_504935d31c27a2 10-137
+app/src-tauri/Cargo.toml
+  s_15a11b0d800fa5::t_79d8b5e4a959bd 35
+.cspell.json
+  s_20aabf478873c4::t_5e64e9f9e445c8 220-250
+docs/adr/20260522-201037-міграція-тестового-середовища-з-jsdomvitest-на-happy-dombun.md
+  s_15a11b0d800fa5::t_654c8dbe09a34f 1-138
+docs/adr/20260522-212350-a8164e48.md
+  s_b3dc9c3c140472::t_504935d31c27a2 16-46
+.n-cursor.json
+  s_15a11b0d800fa5::t_654c8dbe09a34f 18
+docs/adr/20260521-121134-cb2d346c.md
+  s_20aabf478873c4::t_9d6fa44dcedd58 38
+COVERAGE.md
+  s_0054a0b0d64526::t_099f52d156fd68 1
+  s_ca8bfdc6ee4fda::t_5081eac35fe13c 2
+  s_0054a0b0d64526::t_9d584100334d6d 3
+docs/adr/20260521-234400-міграція-тестового-середовища-з-jsdomvitest-на-happy-dombun.md
+  s_e0f8de34091bd3::t_ebd69ec121c734 10,14-16,19,23-25,28,36,40-43,46,50-52,55,63,67-70,73,77-79,82
+docs/adr/20260522-074324-міграція-тестового-середовища-vue-з-jsdom-vitest-на-happy-do.md
+  s_0054a0b0d64526::t_386234a8e2df09 1-91
+app/src/test-utils/quasar.js
+  s_20aabf478873c4::t_a1da8531edf3f0 6-7
+docs/adr/20260522-193545-e51cb74a.md
+  s_15a11b0d800fa5::t_654c8dbe09a34f 12-25,89-266
+  s_20aabf478873c4::t_7a22f8b4f70344 39
+docs/adr/20260522-213720-єдиний-оркестратор-scripts-coverage-js-для-покриття-і-мутаці.md
+  s_5c50100d3323ad::t_06fe1ea4a9d943 1-116
+docs/adr/20260522-203553-міграція-тестового-середовища-з-jsdomvitest-на-happy-dombun.md
+  s_b3dc9c3c140472::t_9468684d0ae803 1-9,11-14,18,20-23,27,29-38,40-43,48,50-52,56-57,59-67,69-71,77-78,80-83,87,89-97,99-102,107,109-112,116,118-127,129-132,136,138-141,145,147-149
+  s_0054a0b0d64526::t_03e165f2265eb7 10,15-17,19,24-26,28,39,44-47,49,53-55,58,68,72-76,79,84-86,88,98,103-106,108,113-115,117,128,133-135,137,142-144,146
+app/package.json
+  s_5c50100d3323ad::t_bba47ab5f5c761 17
+  s_0054a0b0d64526::t_d70ff2564a1af9 18
+  s_ca8bfdc6ee4fda::t_bb1fe44c671ab4 30
+  s_ca8bfdc6ee4fda::t_aa3312c4e31dbf 3
+docs/superpowers/plans/2026-05-22-mutation-testing.md
+  s_0eccc96a538f4c::t_a11e5624759e9e 5,7,9,30-36,38,44,46,52,56,61,63,65,71,73-76,78,80-84,86-87,89-94,98,100-103,105,113,116,119,123,129,131,134-136,139,143,149,151,154-165,167-169,173,177,181-183,186-190,193,195-199,203,205,209-215,217-218,220-240,244,246,250,253-259,261,263-266,271,274,277,281,283,285-288,290,292,294,296-297,299,301-302,305,307-317,321,323,329,339,343,345,347,349-350,353,356,358-363,366,368,370-372,374,377-379,381,384,387,391-401
+  s_06ddf1465f387c::t_ac77a27bd2d96f 1-4,6,8,10-14,25-29,37,39-43,45,47-51,53-55,57-58,60,62,64,67-70,77,79,85,95-97,104,106-112,114-115,117-118,120-122,124-125,127-128,130,133,137-138,140-142,144-145,147-148,150,152-153,174-176,178-180,184-185,191-192,200-202,204,206-208,216,241-243,245,247-249,251-252,260,262,267-270,272-273,275-276,278-280,282,289,291,293,295,298,300,303-304,306,318-320,322,324-328,330-338,340-342,344,346,348,351-352,355,357,364-365,367,369,373,376,380,382-383,385-386,388-390
+  s_15a11b0d800fa5::t_654c8dbe09a34f 15-24,59,66,72,88,99,126,132,146,166,170-172,194,219,284,354,375
+docs/superpowers/specs/2026-05-22-mutation-testing-design.md
+  s_15a11b0d800fa5::t_654c8dbe09a34f 32-35,44,50,64,86-90,98,106
+  s_06ddf1465f387c::t_f66718b1cdad54 1-31,36-43,45-49,51-63,65-80,82-85,91-97,99-105,107-127,129-135
+  s_06ddf1465f387c::t_2ef4c76eb0afac 81
+  s_06ddf1465f387c::t_0e359453381f4b 128
+app/src-tauri/src/gmail/message.rs
+  s_15a11b0d800fa5::t_f79d53cf4d93d7 228-251
+  s_15a11b0d800fa5::t_89dff5d61e4442 88
+  s_15a11b0d800fa5::t_01cb303bf4f5ed 55
+  s_15a11b0d800fa5::t_cb2f4b4558f3bd 217-227
+  s_15a11b0d800fa5::t_e719844bdf2690 69-87,89-92
+  s_15a11b0d800fa5::t_5c0be3db5d3ce0 2-3,7-12
+app/test/happy-dom.preload.js
+  s_20aabf478873c4::t_0923655aceee69 14
+  s_20aabf478873c4::t_d61b2c6a875176 1
+  s_20aabf478873c4::t_4de40b73036c16 38
+  s_20aabf478873c4::t_4a5feeb29bd4f3 17-18,22
+app/CHANGELOG.md
+  s_15a11b0d800fa5::t_85294993ef3814 14-17
+  s_ca8bfdc6ee4fda::t_208f0dc9955ed1 7-13
+scripts/coverage.js
+  s_0054a0b0d64526::t_d70ff2564a1af9 1,197,202-209,213-227
+  s_0054a0b0d64526::t_0ce5bf1699a8e5 2-3,6-9,17-27,32-34,40-47,52,58-59,63-69,228,230,232-235
+  s_0054a0b0d64526::t_9b5e145ec5cdd2 10-16,28-31,35-39,48-51,53-57,60-62,70-76,78,80-86,92-97,103,105-107,109-110,112-119,121-126,129-137,142-151,154-161,164-169,173-184,186-192,195-196,198-199,231
+  s_5c50100d3323ad::t_bcd09966a0fc03 120
+  s_0054a0b0d64526::t_50e944311c5d91 104,111
+  s_5c50100d3323ad::t_bd49dfb095f232 201,210-212
+  s_e0f8de34091bd3::t_2dc97048a3281a 4-5
+  s_b3dc9c3c140472::t_49e72f0bc83535 77,79,88-91,98,100,138-141,152,162,170,185,200
+  s_ca8bfdc6ee4fda::t_274e88c940d592 87,99,101-102,108,127-128,153,163,171-172,193-194,229
+docs/adr/20260522-203622-толерантне-декодування-base64url-відповідей-gmail-api.md
+  s_0054a0b0d64526::t_03e165f2265eb7 10-57
+docs/adr/20260522-201529-стратегія-витягування-тіла-email-повідомлення-у-gmail-mime-п.md
+  s_15a11b0d800fa5::t_654c8dbe09a34f 14-40
+app/src/App.test.js
+  s_20aabf478873c4::t_275d6477aeae67 9-10
+docs/adr/20260522-193305-міграція-тестового-середовища-vue-з-jsdom-vitest-на-happy-do.md
+  s_15a11b0d800fa5::t_654c8dbe09a34f 1-82
+app/stryker.config.mjs
+  s_ca8bfdc6ee4fda::t_e1a7665733dc7c 16-19
+  s_ca8bfdc6ee4fda::t_83ff2f3cf0ae9e 1-15,20-24
+docs/adr/20260522-201930-тимчасовий-діагностичний-дамп-mime-дерева-через-eprintln.md
+  s_15a11b0d800fa5::t_654c8dbe09a34f 10-30
+docs/adr/20260522-202906-міграція-тестового-середовища-vue-з-jsdom-vitest-на-happy-do.md
+  s_0054a0b0d64526::t_03e165f2265eb7 10-118
+.gitignore
+  s_ca8bfdc6ee4fda::t_e0ee7c35b06f77 40
+  s_414533ecf1b2fa::t_7c7cdd37df389f 38-39
+  s_0054a0b0d64526::t_292e4c80b5869b 50-52
+  s_0054a0b0d64526::t_873809fd918225 36-37
+package.json
+  s_e0f8de34091bd3::t_d3efb869a13cb0 21
+  s_0054a0b0d64526::t_d70ff2564a1af9 22
+knip.json
+  s_20aabf478873c4::t_9591cc9f0d1ffb 23-33
+scripts/CHANGELOG.md
+  s_e0f8de34091bd3::t_7647b8a84037e4 7-10,13
+  s_0054a0b0d64526::t_873809fd918225 11
+  s_0054a0b0d64526::t_50e944311c5d91 12
+scripts/with-lock.js
+  s_0054a0b0d64526::t_d70ff2564a1af9 1-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.0",
+  "base_commit_sha": "56905b4778787a720b63b789e05b82557b196104",
+  "prompts": {},
+  "humans": {
+    "h_74546f1f1ded3e": {
+      "author": "vitaliytv <v@nitra.ai>"
+    }
+  },
+  "sessions": {
+    "s_0054a0b0d64526": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a8164e48-3940-47fa-99f6-2db9a40bb757",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_06ddf1465f387c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "342a2169-66f6-4d7e-aa7c-d35e54801760",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_0eccc96a538f4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d06dcdb8-aa2e-4219-958f-9524d2eb6c48",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_15a11b0d800fa5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "53ef6147-d634-4c79-83c9-77b9a15c8942",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_20aabf478873c4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e51cb74a-a09a-4b12-9ae5-b227b96f9659",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_414533ecf1b2fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ae4f836e-0b41-4f34-a3d2-00b89102ef22",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_5c50100d3323ad": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b576105d-9b94-4c96-a736-3c08dba8d1b5",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_b3dc9c3c140472": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "514d3b1e-2e4d-43db-9eee-5653d7e19436",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_ca8bfdc6ee4fda": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a339ef13-4838-4f6f-8e32-8b3b814ec2b7",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_e0f8de34091bd3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f48586b7-dda2-4363-981c-a6012f072dc7",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
