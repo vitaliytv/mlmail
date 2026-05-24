@@ -8,7 +8,7 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "bun --cwd=app run tauri dev",
+    "start": "bun --cwd=app run tauri dev",
     "tauri": "bun --cwd=app run tauri",
     "lint": "bun run lint-js && bun run lint-text && bun run lint-style && bun run lint-ga && bun run lint-image && bun run lint-security && oxfmt .",
     "lint-ga": "n-cursor lint-ga",
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
-    "@nitra/cursor": "^1.13.76",
+    "@nitra/cursor": "^1.13.89",
     "@nitra/eslint-config": "^3.9.4",
     "@nitra/stylelint-config": "^1.4.1"
   },
