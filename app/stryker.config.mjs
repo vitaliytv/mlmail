@@ -2,10 +2,13 @@
 export default {
   testRunner: 'command',
   commandRunner: {
-    command: 'bun test --preload ./test/happy-dom.preload.js src'
+    command: 'bun test --timeout 15000 --preload ./test/happy-dom.preload.js src'
   },
   // inPlace avoids hoisted-node_modules issues in a Bun monorepo sandbox
   inPlace: true,
+  // incremental: зберігає результати між запусками, відновлює після SIGURG/kill
+  incremental: true,
+  incrementalFile: 'reports/stryker/incremental.json',
   mutate: [
     'src/services/auth-store.js',
     'src/i18n/auth-errors.js',
@@ -20,5 +23,5 @@ export default {
   reporters: ['json', 'clear-text'],
   jsonReporter: { fileName: 'reports/stryker/mutation.json' },
   tempDirName: 'reports/stryker/.tmp',
-  coverageAnalysis: 'off'
+  coverageAnalysis: 'off',
 }
