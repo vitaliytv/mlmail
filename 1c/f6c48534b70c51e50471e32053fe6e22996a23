@@ -1,0 +1,100 @@
+app/stryker.config.mjs
+  s_68c6a3760ef095::t_a4c353d6b99788 28
+docs/adr/20260524-080153-ae4f836e.md
+  s_68c6a3760ef095::t_a4c353d6b99788 14,16,25,35,43
+app/CHANGELOG.md
+  s_68c6a3760ef095::t_1f6ae5e42d4d7c 7-16
+docs/superpowers/plans/2026-05-25-coverage-fix-skill.md
+  s_68c6a3760ef095::t_a4c353d6b99788 15-27,36,77,91-102,112-123,128-133,152-169,199,229,259-261,273-275,278-279,326-329,377,422-425,526,545-552,560-565,605-618,622-625,644,650,655-657,671-689,691-692,694,699,727,798,845,868,937,984
+knip.json
+  s_68c6a3760ef095::t_4d95bcb5320f4e 11-18
+  s_68c6a3760ef095::t_caef726ab4d35e 4-10
+eslint.config.js
+  s_68c6a3760ef095::t_a4c353d6b99788 5-12
+docs/superpowers/specs/2026-05-25-n-coverage-fix-design.md
+  s_68c6a3760ef095::t_a4c353d6b99788 38,42-45,54,76,84-87,89
+docs/adr/20260524-071413-видалення-ts-nocheck-із-файлів-проекту.md
+  s_68c6a3760ef095::t_a4c353d6b99788 10,14-16,19,23-25,28,39,43-45,48,52-54,57
+app/src/services/auth-store.js
+  s_68c6a3760ef095::t_f0019c09a85c53 95-97,111,134-137,152,182,194-196,244-246,267-269,329-348,374
+  s_68c6a3760ef095::t_eeb8e2fb99887e 75-78
+  s_bb853a236b6b6d::t_6462424f06479d 304
+docs/superpowers/plans/2026-05-25-n-coverage-fix-skill.md
+  s_68c6a3760ef095::t_a4c353d6b99788 15-18,20-21,30,55,117,133,163,193,202,211,216,220,246-247,254,278,352
+app/src/services/auth-store.test.js
+  s_68c6a3760ef095::t_8ba57e64308686 17-18,20-28,39-41,82,84-95,114-116,122-123,125-143
+  s_68c6a3760ef095::t_a4c353d6b99788 117-121,419,434,602-606,629-633,652-656,664-665
+  s_68c6a3760ef095::t_5809c826c6c5b2 83,124,515,582,678
+  s_68c6a3760ef095::t_590e9a6be996cb 19
+  s_68c6a3760ef095::t_1c326ae212654e 676-677,680-683,689-703
+  s_68c6a3760ef095::t_ded989a54ca030 679,684-688
+docs/adr/20260524-073010-видалення-ts-nocheck-замість-правки-типових-помилок.md
+  s_68c6a3760ef095::t_a4c353d6b99788 10,14-16,19,23-26,29,39,43-45,48,52-54,57
+docs/adr/20260524-073425-видалення-ts-nocheck-замість-правки-типових-помилок.md
+  s_68c6a3760ef095::t_a4c353d6b99788 12,16-18,21,25-28,31
+.jscpd.json
+  s_68c6a3760ef095::t_0b6b1a82523458 6-12
+docs/superpowers/plans/2026-05-25-n-coverage-fix.md
+  s_68c6a3760ef095::t_a4c353d6b99788 100,201-206,218-220,246-248,275,291,305,309-310,331,359,441,557,563,591-595,629,672,678,686,690,694,698,706,710,722-732,749,756,766,775-778,781,787-788,799
+docs/superpowers/specs/2026-05-25-coverage-fix-agent-design.md
+  s_68c6a3760ef095::t_a4c353d6b99788 24,29,44,50-56,65,71-74,77,88,107,123,136
+scripts/CHANGELOG.md
+  s_68c6a3760ef095::t_c08445e69633bc 7-12
+docs/superpowers/specs/2026-05-25-coverage-fix-skill-design.md
+  s_68c6a3760ef095::t_a4c353d6b99788 58,67-70,73,79,82,94,106-108,114,139
+.cspell.json
+  s_68c6a3760ef095::t_a62dd509719ae1 20
+app/package.json
+  s_68c6a3760ef095::t_62c8920243ad4c 3
+app/src/i18n/login.js
+  s_68c6a3760ef095::t_a4c353d6b99788 3
+docs/adr/20260524-084140-видалення-ts-nocheck-замість-правки-типових-помилок.md
+  s_68c6a3760ef095::t_a4c353d6b99788 14,18-20,23,27-29,32,40,44-46,49,53-55,58,66,70-76,79,83-85,88
+app/src/i18n/auth-errors.js
+  s_68c6a3760ef095::t_f0019c09a85c53 72
+docs/superpowers/plans/2026-05-25-n-fix-tests.md
+  s_68c6a3760ef095::t_a4c353d6b99788 16,31,103,132-159,185,205-211,223-225,237-242,255-257,315-317,321-323,454-456,549,569,607,615,621,626,643,659-661,663-666,677,692,708-709
+docs/adr/20260524-070713-видалення-ts-nocheck-із-проєкту.md
+  s_68c6a3760ef095::t_a4c353d6b99788 10,14-17,20,24-27,30
+docs/superpowers/specs/2026-05-25-n-fix-tests-design.md
+  s_68c6a3760ef095::t_a4c353d6b99788 26,31,35,56-60,66-68,86,120,125,131
+scripts/package.json
+  s_68c6a3760ef095::t_e61c80bc8abde2 3
+docs/superpowers/specs/2026-05-26-n-coverage-fix-design.md
+  s_68c6a3760ef095::t_a4c353d6b99788 82,87,93,97,103,124-128,130
+COVERAGE.md
+  s_68c6a3760ef095::t_a4c353d6b99788 3-7
+docs/superpowers/plans/2026-05-25-coverage-fix-agent-plan.md
+  s_68c6a3760ef095::t_a4c353d6b99788 6,18,23,27,34,46,52,57,77,86,90,100,109,143,154,169-182,193,197,225,243,259-269,284,321,339,345
+docs/adr/20260524-072828-видалення-ts-nocheck-замість-правки-типових-помилок.md
+  s_68c6a3760ef095::t_a4c353d6b99788 10,14-16,19,23-25,28,36,40-42,45,49-51,54
+app/src/views/Login.vue
+  s_68c6a3760ef095::t_a4c353d6b99788 72,88,146,149,155,158,163-164
+  s_68c6a3760ef095::t_2601385794259a 57
+docs/adr/20260524-074427-видалення-ts-nocheck-замість-глушіння-помилок-typescript.md
+  s_68c6a3760ef095::t_a4c353d6b99788 10,14-16,19,23-25,28,36,40-42,45,49-51,54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "1cf6c48534b70c51e50471e32053fe6e22996a23",
+  "prompts": {},
+  "sessions": {
+    "s_68c6a3760ef095": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e63a2-f3f1-7ce2-b93b-ec1cbc523c4e",
+        "model": "gpt-5.5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_bb853a236b6b6d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3b6a64b-57ea-4a39-a8ac-60866e7d3d2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
