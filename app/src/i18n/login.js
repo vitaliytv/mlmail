@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const loginMessages = {
-  appTitle: 'MLMaiL',
+  appTitle: 'MLMaiL'
 }

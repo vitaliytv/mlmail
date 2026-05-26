@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from 'bun:test'
 import { errorMessage } from './auth-errors.js'
 

@@ -23,13 +23,16 @@
 ### A. Stryker incremental mode (стабільність)
 
 **Зміни в mlmail:**
+
 - `app/stryker.config.mjs`: додати `incremental: true`
 - `app/.gitignore` або `.gitignore`: додати `reports/stryker/incremental.json`
 
 **Зміни в @nitra/cursor (для нових проектів):**
+
 - Шаблон stryker.config.mjs, що генерується `n-cursor fix` → `npm_module.stryker_config` — включити `incremental: true` у базовий шаблон
 
 **Поведінка після fix:**
+
 - Якщо SIGURG вбиває Stryker після 100/142 мутантів → наступний `bun run coverage` re-тестує лише 42 survivors/untested, ~3-5 хв замість 20.
 - Killed мутанти залишаються killed назавжди (поки вихідний код не змінюється).
 
@@ -50,19 +53,19 @@
 
 **Рядок 19** — `kind == null || kind === undefined`
 
-| Вижив варіант | Тип мутації | Що не покрито |
-|---|---|---|
-| `kind === null && kind === undefined` | LogicalOperator | `kind=undefined` де `kind!=null` |
-| `false` | ConditionalExpression | умова → true не перевірена |
-| `true` | ConditionalExpression | умова → false не перевірена |
+| Вижив варіант                         | Тип мутації           | Що не покрито                    |
+| ------------------------------------- | --------------------- | -------------------------------- |
+| `kind === null && kind === undefined` | LogicalOperator       | `kind=undefined` де `kind!=null` |
+| `false`                               | ConditionalExpression | умова → true не перевірена       |
+| `true`                                | ConditionalExpression | умова → false не перевірена      |
 
 ### `src/services/auth-store.js`
 
 **Рядок 4** — `authenticated: false`
 
-| Вижив варіант | Тип мутації | Що не покрито |
-|---|---|---|
-| `true` | BooleanLiteral | початковий стан `authenticated` не перевірено |
+| Вижив варіант | Тип мутації    | Що не покрито                                 |
+| ------------- | -------------- | --------------------------------------------- |
+| `true`        | BooleanLiteral | початковий стан `authenticated` не перевірено |
 ```
 
 **Реалізація в @nitra/cursor:**
@@ -80,6 +83,7 @@
    - Групувати по `file`, сортувати по `line`
 
 **Тести:**
+
 - `npm/rules/js-lint/coverage/tests/` — snapshot тест: фіксований `mutation.json` → очікуваний `survived[]`
 - `npm/rules/test/coverage/tests/` — snapshot тест: `renderMarkdown` з survived → очікуваний markdown
 
@@ -113,15 +117,18 @@
 ```
 
 **Де живе:**
+
 - `mlmail/.cursor/skills/n-fix-tests/SKILL.md` — основний скіл
 - Реєструється у `mlmail/CLAUDE.md`
 
 **Де знаходити тест-файли:**
+
 - Для `src/services/auth-store.js` → `src/services/auth-store.test.js` або `test/auth-store.test.js`
 - Для Vue SFC `src/views/LoginView.vue` → `src/views/__tests__/LoginView.test.js` або наявний файл із `import LoginView`
 - Якщо файл не знайдено → створити поруч із джерелом як `<name>.test.js`
 
 **Vue SFC контекст:**
+
 - Тест-файли для Vue потребують `--preload ./test/happy-dom.preload.js` — це вже в `bun test` скрипті
 - Агент читає існуючі тест-файли для розуміння конвенцій (imports, setup, mocks)
 

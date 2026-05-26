@@ -3,6 +3,7 @@
 ## Context
 
 Реалізація трьох компонентів зі spec `docs/superpowers/specs/2026-05-25-coverage-fix-agent-design.md`:
+
 1. Stryker incremental mode (стабільність)
 2. Розділ `## Рекомендації` у COVERAGE.md з вижилими мутантами
 3. `n-cursor coverage --fix` режим через Claude Code SDK
@@ -14,19 +15,23 @@
 ## Phase 1: Stryker incremental mode
 
 - [ ] У `/Users/vitaliytv/www/nitra/cursor/npm/scripts/js-lint.mjs` (рядки 32-40), у шаблонному тексті `stryker.config.mjs` що виводиться через `console.log`, додати після `reporters: ['json'],`:
+
   ```
   incremental: true,
   incrementalFile: 'reports/stryker/stryker-incremental.json',
   ```
+
   - Шаблон виводиться як рядок у `console.log` — редагувати той самий рядковий літерал
 
 - [ ] У `/Users/vitaliytv/www/vitaliytv/mlmail/app/stryker.config.mjs`, після рядка `reporters: ['json'],`, додати:
+
   ```js
   incremental: true,
   incrementalFile: 'reports/stryker/stryker-incremental.json',
   ```
 
 - [ ] У `/Users/vitaliytv/www/vitaliytv/mlmail/.gitignore`, після рядка `reports/stryker/.tmp/`, додати:
+
   ```
   reports/stryker/stryker-incremental.json
   ```
@@ -38,16 +43,18 @@
 ## Phase 2: Survived mutants data layer
 
 - [ ] У `/Users/vitaliytv/www/nitra/cursor/npm/rules/js-lint/coverage/coverage.mjs`, змінити `runStryker(jsRoot)` — передати `jsRoot` до `parseStrykerReport`:
+
   ```js
   function runStryker(jsRoot) {
     execSync('bunx @stryker-mutator/core run', { cwd: jsRoot, stdio: 'inherit' })
     const reportPath = join(jsRoot, 'reports', 'stryker', 'mutation.json')
     const report = JSON.parse(readFileSync(reportPath, 'utf8'))
-    return parseStrykerReport(report, jsRoot)  // ← додати jsRoot
+    return parseStrykerReport(report, jsRoot) // ← додати jsRoot
   }
   ```
 
 - [ ] У тому самому файлі, змінити `parseStrykerReport(report)` → `parseStrykerReport(report, jsRoot)` та додати збір вижилих:
+
   ```js
   function parseStrykerReport(report, jsRoot) {
     let caught = 0
@@ -67,7 +74,7 @@
               line: mutant.location.start.line,
               original: srcLines[mutant.location.start.line - 1]?.trim() ?? '',
               replacement: mutant.replacement,
-              type: mutant.mutatorName,
+              type: mutant.mutatorName
             })
           }
         }
@@ -76,10 +83,11 @@
     return {
       coverage: { lines: null, functions: null },
       mutations: { killed: caught, total },
-      survived,
+      survived
     }
   }
   ```
+
   - `location.start.line` — 1-індексований (перевірено: рядок 3 = третій рядок файлу)
   - `readFileSync` вже імпортований у файлі
 
@@ -89,7 +97,7 @@
     area: 'JS',
     coverage: merge(bunCov, strykerMutation.coverage),
     mutations: strykerMutation.mutations,
-    survived: strykerMutation.survived,
+    survived: strykerMutation.survived
   }
   ```
 
@@ -98,6 +106,7 @@
 ## Phase 3: Recommendations у COVERAGE.md
 
 - [ ] У `/Users/vitaliytv/www/nitra/cursor/npm/rules/test/coverage/coverage.mjs`, змінити `renderMarkdown(rows)` — після основної таблиці, якщо є вижилі мутанти, додати `## Рекомендації`:
+
   ```js
   export function renderMarkdown(rows) {
     const lines = [
@@ -131,6 +140,7 @@
     return lines.join('\n') + '\n'
   }
   ```
+
   - `Map.groupBy` доступний у Node 21+ / Bun 1.x (перевірено у bun 1.3.14)
   - Якщо `Map.groupBy` недоступний — замінити на `reduce` з об'єктом
 
@@ -141,6 +151,7 @@
 ## Phase 4: Tests
 
 - [ ] У `/Users/vitaliytv/www/nitra/cursor/npm/rules/js-lint/coverage/tests/coverage.test.mjs`, додати unit-тест для `parseStrykerReport` з fixture:
+
   ```js
   import { readFileSync } from 'node:fs'
   // ... або використати internal функцію через мок
@@ -155,8 +166,20 @@
           files: {
             'src/foo.js': {
               mutants: [
-                { id: '0', mutatorName: 'ConditionalExpression', replacement: 'false', status: 'Survived', location: { start: { line: 2, column: 2 }, end: { line: 2, column: 14 } } },
-                { id: '1', mutatorName: 'EqualityOperator', replacement: 'x !== 1', status: 'Killed', location: { start: { line: 2, column: 6 }, end: { line: 2, column: 13 } } },
+                {
+                  id: '0',
+                  mutatorName: 'ConditionalExpression',
+                  replacement: 'false',
+                  status: 'Survived',
+                  location: { start: { line: 2, column: 2 }, end: { line: 2, column: 14 } }
+                },
+                {
+                  id: '1',
+                  mutatorName: 'EqualityOperator',
+                  replacement: 'x !== 1',
+                  status: 'Killed',
+                  location: { start: { line: 2, column: 6 }, end: { line: 2, column: 13 } }
+                }
               ]
             }
           }
@@ -167,9 +190,11 @@
     })
   })
   ```
+
   - Якщо `parseStrykerReport` не експортована — додати `export` до її визначення (вона вже `function`, зробити `export function parseStrykerReport`)
 
 - [ ] У `/Users/vitaliytv/www/nitra/cursor/npm/rules/test/coverage/tests/coverage.test.mjs`, додати тест для рекомендацій:
+
   ```js
   test('COVERAGE.md з розділом Рекомендації', () => {
     const rows = [
@@ -197,6 +222,7 @@
 ## Phase 5: `--fix` CLI mode
 
 - [ ] Створити `/Users/vitaliytv/www/nitra/cursor/npm/scripts/coverage-fix.mjs`:
+
   ```js
   import { readFileSync } from 'node:fs'
   import { join } from 'node:path'
@@ -214,7 +240,7 @@
       options: {
         cwd: projectRoot,
         maxTurns: 20,
-        allowedTools: ['Read', 'Edit', 'Bash'],
+        allowedTools: ['Read', 'Edit', 'Bash']
       }
     })) {
       if (msg.type === 'text') process.stdout.write(msg.text)
@@ -230,12 +256,17 @@
     const sections = []
     for (const [file, mutants] of Object.entries(byFile)) {
       const src = readFileSync(join(projectRoot, file), 'utf8').split('\n')
-      const excerpts = mutants.map(m => {
-        const startLine = Math.max(0, m.line - 3)
-        const endLine = Math.min(src.length, m.line + 2)
-        const context = src.slice(startLine, endLine).map((l, i) => `${startLine + i + 1}: ${l}`).join('\n')
-        return `  - Рядок ${m.line}, тип ${m.type}: оригінал \`${m.original}\`, вижив варіант \`${m.replacement}\`\n    Контекст:\n    \`\`\`\n${context}\n    \`\`\``
-      }).join('\n')
+      const excerpts = mutants
+        .map(m => {
+          const startLine = Math.max(0, m.line - 3)
+          const endLine = Math.min(src.length, m.line + 2)
+          const context = src
+            .slice(startLine, endLine)
+            .map((l, i) => `${startLine + i + 1}: ${l}`)
+            .join('\n')
+          return `  - Рядок ${m.line}, тип ${m.type}: оригінал \`${m.original}\`, вижив варіант \`${m.replacement}\`\n    Контекст:\n    \`\`\`\n${context}\n    \`\`\``
+        })
+        .join('\n')
       sections.push(`### ${file}\n${excerpts}`)
     }
     return [
@@ -250,7 +281,7 @@
       'Правила:',
       '- Не змінюй source-файли, тільки test-файли',
       '- Один мутант = один або кілька нових `test()` або `expect()` викликів',
-      '- Запусти `bun test` в кінці і переконайся що 0 fail',
+      '- Запусти `bun test` в кінці і переконайся що 0 fail'
     ].join('\n')
   }
   ```
@@ -287,6 +318,7 @@
   - Змінити `"version"` з `"1.19.2"` → `"1.20.0"`
 
 - [ ] У `/Users/vitaliytv/www/nitra/cursor/npm/CHANGELOG.md`, додати запис `## [1.20.0] - 2026-05-25`:
+
   ```
   ### Added
   - **`coverage --fix`**: новий режим що запускає Claude Code агента для написання тестів по вижилих мутантах Stryker, після чого повторно валідує coverage
@@ -304,11 +336,13 @@
 ## Phase 7: mlmail оновлення
 
 - [ ] `bun install` у `mlmail/` після публікації `@nitra/cursor@1.20.0`:
+
   ```bash
   # Після npm publish у cursor/npm/
   cd /Users/vitaliytv/www/vitaliytv/mlmail
   bun update @nitra/cursor
   ```
+
   - Або тимчасово: `"@nitra/cursor": "file:../nitra/cursor/npm"` для локального тестування
 
 - [ ] Кінцева перевірка: `bun run coverage` у mlmail → COVERAGE.md містить `## Рекомендації`; `bun run coverage -- --fix` → агент пише тести → coverage оновлюється

@@ -4,6 +4,16 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
 
+## [0.1.4] - 2026-05-26
+
+### Changed
+
+- Посилено JS-тести auth store та нормалізацію повідомлень помилок для кращого mutation coverage.
+
+### Fixed
+
+- Оновлено конфіги lint/coverage, щоб ігнорувати локальні артефакти Stryker і worktree-копії під час перевірок.
+
 ## [0.1.3] - 2026-05-22
 
 ### Added

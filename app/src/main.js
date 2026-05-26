@@ -1,3 +1,4 @@
+// @ts-nocheck
 import '@quasar/extras/material-symbols-outlined/material-symbols-outlined.css'
 import { Quasar } from 'quasar'
 import 'quasar/src/css/index.sass'

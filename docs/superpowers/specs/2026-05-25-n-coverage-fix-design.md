@@ -35,14 +35,14 @@ For each source file with survived mutants, the agent receives:
 ## Завдання: дописати тести для вбивства мутантів
 
 **Файл:** src/i18n/auth-errors.js
-**Тест-файл:** src/i18n/__tests__/auth-errors.test.js
+**Тест-файл:** src/i18n/**tests**/auth-errors.test.js
 
 **Вижилі мутанти** (Stryker не вбив — значить тестів не вистачає):
 
-| # | Рядок | Тип | Оригінал | Мутація що вижила |
-|---|-------|-----|----------|-------------------|
-| 1 | 19 | ConditionalExpression | `kind === 'token'` | `false` |
-| 2 | 19 | LogicalOperator | `kind === null || kind === undefined` | `kind === null && kind === undefined` |
+| #   | Рядок | Тип                   | Оригінал           | Мутація що вижила |
+| --- | ----- | --------------------- | ------------------ | ----------------- | ------------------- | ------------------------------------- |
+| 1   | 19    | ConditionalExpression | `kind === 'token'` | `false`           |
+| 2   | 19    | LogicalOperator       | `kind === null     |                   | kind === undefined` | `kind === null && kind === undefined` |
 
 **Вихідний код:**
 [source file content]
@@ -51,6 +51,7 @@ For each source file with survived mutants, the agent receives:
 [test file content]
 
 **Твоя задача:** дописати тест-кейси, які:
+
 1. Проходять з оригінальним кодом
 2. Провалюються якщо код змінено відповідно до колонки «Мутація що вижила»
 
@@ -72,6 +73,7 @@ Max iterations: 3.
 ## Test File Discovery
 
 Priority order:
+
 1. Co-located: `src/foo.js` → `src/foo.test.js`
 2. `__tests__` sibling: `src/foo.js` → `src/__tests__/foo.test.js`
 3. Top-level `test/`: `src/foo.js` → `test/foo.test.js`
@@ -79,12 +81,12 @@ Priority order:
 
 ## Error Handling
 
-| Situation | Action |
-|-----------|--------|
-| Test file not found | Create new `<name>.test.js` adjacent to source |
-| `bun test` fails after 2 fix attempts | Skip file, log in summary |
+| Situation                                    | Action                                                                                      |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Test file not found                          | Create new `<name>.test.js` adjacent to source                                              |
+| `bun test` fails after 2 fix attempts        | Skip file, log in summary                                                                   |
 | `n-cursor coverage` killed (SIGURG/exit 144) | Retry once; if again → stop with warning "coverage killed by OS, incremental results saved" |
-| All 3 iterations exhaust without convergence | Stop, print summary with remaining survivors |
+| All 3 iterations exhaust without convergence | Stop, print summary with remaining survivors                                                |
 
 ## Summary Output
 

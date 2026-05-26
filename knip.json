@@ -1,8 +1,21 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "project": ["**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"],
-  "ignore": ["**/__fixtures__/**", "app/src-tauri/target/**"],
-  "ignoreDependencies": ["@nitra/cspell-dict", "/@cspell\\/dict-.+/", "graphql", "@nitra/stylelint-config"],
+  "ignore": [
+    "**/__fixtures__/**",
+    ".pi/extensions/n-cursor-adr/**",
+    "app/src-tauri/target/**",
+    "scripts/docs-regen/manifest.js",
+    "scripts/docs-regen/marks.js"
+  ],
+  "ignoreDependencies": [
+    "@nitra/cspell-dict",
+    "/@cspell\\/dict-.+/",
+    "graphql",
+    "@nitra/stylelint-config",
+    "@stryker-mutator/command-runner"
+  ],
+  "ignoreExportsUsedInFile": true,
   "ignoreBinaries": [
     "actionlint",
     "cspell",

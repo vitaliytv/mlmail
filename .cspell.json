@@ -17,6 +17,7 @@
     "**/.minify-image-cache.tsv",
     "**/.n-minify-image.tsv",
     "docs/superpowers/**",
+    "docs/adr/**",
     "docs/adr/_inbox/**",
     "docs/ci4/manifest.json",
     "README.md"

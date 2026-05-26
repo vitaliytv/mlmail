@@ -97,6 +97,7 @@
 **Крок 2.1 — написати failing тести**
 
 Спочатку оновити рядок import у тест-файлі `/Users/vitaliytv/www/nitra/cursor/npm/rules/js-lint/coverage/tests/coverage.test.mjs`:
+
 - Поточний: `import { collect, detect, parseStrykerReport } from '../coverage.mjs'`
 - Замінити на: `import { collect, detect, findExampleTest, generateRecommendationsMarkdown, parseStrykerReport } from '../coverage.mjs'`
 
@@ -197,7 +198,12 @@ describe('collect() — поле recommendations', () => {
         files: {
           'src/a.js': {
             mutants: [
-              { status: 'Survived', mutatorName: 'ConditionalExpression', replacement: 'false', location: { start: { line: 1 } } }
+              {
+                status: 'Survived',
+                mutatorName: 'ConditionalExpression',
+                replacement: 'false',
+                location: { start: { line: 1 } }
+              }
             ]
           }
         }
@@ -209,7 +215,9 @@ describe('collect() — поле recommendations', () => {
         writeFileSync(join(lcovDir, 'lcov.info'), 'LF:1\nLH:0\nFNF:1\nFNH:0\n')
         return 0
       },
-      runStryker() { return 0 }
+      runStryker() {
+        return 0
+      }
     }
 
     const rows = await collect(dir, { runner })
@@ -235,7 +243,9 @@ describe('collect() — поле recommendations', () => {
         writeFileSync(join(lcovDir, 'lcov.info'), 'LF:10\nLH:10\nFNF:2\nFNH:2\n')
         return 0
       },
-      runStryker() { return 0 }
+      runStryker() {
+        return 0
+      }
     }
 
     const rows = await collect(dir, { runner })
@@ -262,6 +272,7 @@ cd /Users/vitaliytv/www/nitra/cursor/npm && bun test npm/rules/js-lint/coverage/
    - Замінити на: `import { basename, dirname, join } from 'node:path'`
 
 2. Функція `findExampleTest(jsRoot, sourceFilePath)`:
+
    ```js
    /**
     * Шукає тестовий файл для source-файла; повертає перші 10 рядків першого it()/test() блоку або null.
@@ -277,7 +288,7 @@ cd /Users/vitaliytv/www/nitra/cursor/npm && bun test npm/rules/js-lint/coverage/
        join(jsRoot, dir, `${base}.test.js`),
        join(jsRoot, dir, `${base}.spec.js`),
        join(jsRoot, 'test', `${base}.test.js`),
-       join(jsRoot, 'tests', `${base}.test.js`),
+       join(jsRoot, 'tests', `${base}.test.js`)
      ]
      for (const candidate of candidates) {
        if (!existsSync(candidate)) continue
@@ -291,11 +302,12 @@ cd /Users/vitaliytv/www/nitra/cursor/npm && bun test npm/rules/js-lint/coverage/
      return null
    }
    ```
-   
+
    Примітка: `join`, `existsSync`, `readFile` вже імпортовані у файлі. Потрібно лише додати `basename` та `dirname` до рядка імпорту.
 
 3. Функція `generateRecommendationsMarkdown(jsRoot, survived)`:
-   ```js
+
+   ````js
    /**
     * Генерує Markdown-рядок для розділу ## Recommendations.
     * @param {string} jsRoot корінь JS-проєкту
@@ -316,7 +328,7 @@ cd /Users/vitaliytv/www/nitra/cursor/npm && bun test npm/rules/js-lint/coverage/
        '## Recommendations',
        '',
        '> Автоматично генерується `bun coverage`. Використовується `/n-coverage-fix` для автоматичного виправлення.',
-       '',
+       ''
      ]
 
      for (const [file, mutants] of Object.entries(byFile)) {
@@ -344,7 +356,7 @@ cd /Users/vitaliytv/www/nitra/cursor/npm && bun test npm/rules/js-lint/coverage/
 
      return lines.join('\n')
    }
-   ```
+   ````
 
 4. Оновити `collect()` — розширити тип повернення та додати виклик:
    - Після `const { caught, total, survived } = await parseStrykerReport(mutationReport, jsRoot)` додати:
@@ -426,7 +438,7 @@ describe('renderMarkdown — recommendations від провайдера', () =>
     expect(md).not.toContain('## Recommendations')
   })
 
-  test('об\'єднує recommendations від двох провайдерів', () => {
+  test("об'єднує recommendations від двох провайдерів", () => {
     const rows = [
       {
         area: 'JS',
@@ -542,11 +554,13 @@ cd /Users/vitaliytv/www/nitra/cursor && git status && git diff --stat
 ### Кроки
 
 - [ ] Перевірити формат існуючого скілу для зразка:
+
   ```bash
   head -20 /Users/vitaliytv/www/nitra/cursor/npm/skills/fix/SKILL.md
   ```
 
 - [ ] Створити директорію та SKILL.md:
+
   ```bash
   mkdir -p /Users/vitaliytv/www/nitra/cursor/npm/skills/coverage-fix
   ```
@@ -574,11 +588,11 @@ description: >-
    a. Прочитай source-файл (mutated lines ± 5 рядків контексту)
    b. Прочитай тестовий файл, показаний у **Приклад наявного тесту**
    c. Напиши нові тест-кейси що зловлять кожен вижилий мутант:
-      - `ConditionalExpression` (`false`/`true`): протестуй branch явно з тригерним значенням
-      - `BooleanLiteral` (`true`→`false`): перевір початковий стан (initial value = false)
-      - `LogicalOperator` (`&&`↔`||`): передай `null` та `undefined` **окремо**, перевір що результат різний
-      - `StringLiteral`/`EqualityOperator`: перевір точний рядок/значення, а не лише happy path
-   d. Використовуй приклад тесту як style guide (той самий `describe`/`it`/`expect`, мова коментарів)
+   - `ConditionalExpression` (`false`/`true`): протестуй branch явно з тригерним значенням
+   - `BooleanLiteral` (`true`→`false`): перевір початковий стан (initial value = false)
+   - `LogicalOperator` (`&&`↔`||`): передай `null` та `undefined` **окремо**, перевір що результат різний
+   - `StringLiteral`/`EqualityOperator`: перевір точний рядок/значення, а не лише happy path
+     d. Використовуй приклад тесту як style guide (той самий `describe`/`it`/`expect`, мова коментарів)
 6. Запусти `bun test` (повний suite)
    - Якщо FAIL:
      - Не відкочувати зміни
@@ -612,6 +626,7 @@ description: >-
 ## Task 5: Bumped версія до 1.20.0 + CHANGELOG
 
 **Файли:**
+
 - `/Users/vitaliytv/www/nitra/cursor/npm/package.json`
 - `/Users/vitaliytv/www/nitra/cursor/npm/CHANGELOG.md`
 
@@ -654,11 +669,13 @@ description: >-
 ### Кроки
 
 - [ ] Перевірити поточну версію `@nitra/cursor` у mlmail:
+
   ```bash
   cat /Users/vitaliytv/www/vitaliytv/mlmail/package.json | grep nitra
   ```
 
 - [ ] Якщо mlmail використовує локальний шлях або npm-пакет — підв'язати нову версію:
+
   ```bash
   cd /Users/vitaliytv/www/vitaliytv/mlmail && bun add @nitra/cursor@1.20.0
   # або якщо local link:
@@ -666,15 +683,19 @@ description: >-
   ```
 
 - [ ] Запустити coverage у mlmail:
+
   ```bash
   cd /Users/vitaliytv/www/vitaliytv/mlmail && bun coverage
   ```
+
   Очікується: `✓ COVERAGE.md` без помилок
 
 - [ ] Перевірити що COVERAGE.md містить `## Recommendations`:
+
   ```bash
   grep -A 5 "## Recommendations" /Users/vitaliytv/www/vitaliytv/mlmail/COVERAGE.md
   ```
+
   Очікується: таблиця з 46 вижилими мутантами по трьох файлах (`src/i18n/auth-errors.js`, `src/services/auth-store.js`, `src/views/Login.vue`)
 
 - [ ] Запустити `/n-coverage-fix` (через Claude Code):
@@ -682,9 +703,11 @@ description: >-
   - Перевірити що скіл: зчитав `## Recommendations`, написав тести, запустив `bun test`, запустив `bun coverage`
 
 - [ ] Перевірити що mutation score покращився (baseline: ~67.61%):
+
   ```bash
   grep "Разом" /Users/vitaliytv/www/vitaliytv/mlmail/COVERAGE.md
   ```
+
   Очікується: score > 67.61%
 
 - [ ] Перевірити стан mlmail:
@@ -696,17 +719,17 @@ description: >-
 
 ## Структура змінених файлів
 
-| Репо | Файл | Зміна |
-|---|---|---|
-| cursor | `npm/rules/test/js/data/stryker_config/stryker.config.baseline.mjs` | `incremental: true` + `incrementalFile` (з воркдерева) |
-| cursor | `npm/rules/js-lint/coverage/coverage.mjs` | `findExampleTest`, `generateRecommendationsMarkdown`, `collect()` + `recommendations` |
-| cursor | `npm/rules/js-lint/coverage/tests/coverage.test.mjs` | нові тести для двох нових функцій і поля `recommendations` |
-| cursor | `npm/rules/test/coverage/coverage.mjs` | `renderMarkdown` агрегує `recommendations` від провайдерів замість власної логіки `survived` |
-| cursor | `npm/rules/test/coverage/tests/coverage.test.mjs` | нові тести для оновленого `renderMarkdown` і `runCoverageSteps` |
-| cursor | `npm/skills/coverage-fix/SKILL.md` | новий скіл |
-| cursor | `npm/package.json` | версія `1.19.2` → `1.20.0` |
-| cursor | `npm/CHANGELOG.md` | запис для `1.20.0` |
-| mlmail | `app/stryker.config.mjs` | верифікація `incremental: true` (вже є) |
+| Репо   | Файл                                                                | Зміна                                                                                        |
+| ------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| cursor | `npm/rules/test/js/data/stryker_config/stryker.config.baseline.mjs` | `incremental: true` + `incrementalFile` (з воркдерева)                                       |
+| cursor | `npm/rules/js-lint/coverage/coverage.mjs`                           | `findExampleTest`, `generateRecommendationsMarkdown`, `collect()` + `recommendations`        |
+| cursor | `npm/rules/js-lint/coverage/tests/coverage.test.mjs`                | нові тести для двох нових функцій і поля `recommendations`                                   |
+| cursor | `npm/rules/test/coverage/coverage.mjs`                              | `renderMarkdown` агрегує `recommendations` від провайдерів замість власної логіки `survived` |
+| cursor | `npm/rules/test/coverage/tests/coverage.test.mjs`                   | нові тести для оновленого `renderMarkdown` і `runCoverageSteps`                              |
+| cursor | `npm/skills/coverage-fix/SKILL.md`                                  | новий скіл                                                                                   |
+| cursor | `npm/package.json`                                                  | версія `1.19.2` → `1.20.0`                                                                   |
+| cursor | `npm/CHANGELOG.md`                                                  | запис для `1.20.0`                                                                           |
+| mlmail | `app/stryker.config.mjs`                                            | верифікація `incremental: true` (вже є)                                                      |
 
 ---
 
@@ -723,13 +746,14 @@ interface CoverageRow {
   }
   mutation: { caught: number; total: number }
   survived?: Array<{ file: string; line: number; original: string; replacement: string; type: string }>
-  recommendations: string  // '' якщо немає вижилих; markdown якщо є
+  recommendations: string // '' якщо немає вижилих; markdown якщо є
 }
 ```
 
 ### `findExampleTest` — пошук тестових файлів
 
 Порядок перевірки кандидатів:
+
 1. `<jsRoot>/<dirname(sourceFilePath)>/<basename>.test.js`
 2. `<jsRoot>/<dirname(sourceFilePath)>/<basename>.spec.js`
 3. `<jsRoot>/test/<basename>.test.js`
@@ -739,7 +763,7 @@ interface CoverageRow {
 
 ### `generateRecommendationsMarkdown` — формат виводу
 
-```markdown
+````markdown
 ## Recommendations
 
 > Автоматично генерується `bun coverage`. Використовується `/n-coverage-fix` для автоматичного виправлення.
@@ -748,17 +772,20 @@ interface CoverageRow {
 
 **Вижило мутантів: 4**
 
-| Рядок | Тип | Оригінал | Вижив |
-|---|---|---|---|
-| 19 | ConditionalExpression | `if (kind === null \|\| kind === undefined) return messages.Unk` | `false` |
-| 19 | LogicalOperator | `if (kind === null \|\| kind === undefined) return messages.Unk` | `kind === null && kind === undefined` |
+| Рядок | Тип                   | Оригінал                                                         | Вижив                                 |
+| ----- | --------------------- | ---------------------------------------------------------------- | ------------------------------------- |
+| 19    | ConditionalExpression | `if (kind === null \|\| kind === undefined) return messages.Unk` | `false`                               |
+| 19    | LogicalOperator       | `if (kind === null \|\| kind === undefined) return messages.Unk` | `kind === null && kind === undefined` |
 
 **Приклад наявного тесту:**
+
 ```js
 it('falls back to Unknown message for unknown kinds', () => {
   expect(errorMessage('SomethingNotInTable')).toBe('Невідома помилка.')
 })
 ```
+````
+
 ```
 
 ---
@@ -769,3 +796,4 @@ it('falls back to Unknown message for unknown kinds', () => {
 - **`survived` поле у `CoverageRow` застаріло для зовнішніх споживачів.** Оркестратор більше не читає `row.survived` — але він лишається у типі для backward compatibility. Видалити у major-версії (2.x).
 - **`findExampleTest` — `.vue` файли.** `src/views/Login.vue` не має парного `.test.js`/`.spec.js` — функція поверне `null`, і секція "Приклад наявного тесту" не додасться. Прийнятна поведінка.
 - **`generateRecommendationsMarkdown` — `.vue` розширення.** Шлях `src/views/Login.vue` передається у `findExampleTest` з розширенням `.vue` — basename + `.test.js` = `Login.vue.test.js` не існує. Додати до кандидатів `<base>.vue.test.js` або `<base>.test.js` зі strip `.vue` — покриється у наступній версії (не блокер для 1.20.0, `null` graceful).
+```

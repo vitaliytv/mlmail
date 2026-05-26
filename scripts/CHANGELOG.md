@@ -4,6 +4,12 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
 
+## [0.1.2] - 2026-05-26
+
+### Added
+
+- Додано canonical Stryker config для workspace-пакета, який створює правило `test`.
+
 ## [0.1.1] - 2026-05-22
 
 ### Added

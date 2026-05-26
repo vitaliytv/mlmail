@@ -13,6 +13,7 @@
 ## Part A — mlmail: Stryker incremental mode
 
 **Files:**
+
 - Modify: `mlmail/app/stryker.config.mjs`
 - Modify: `mlmail/.gitignore`
 
@@ -27,6 +28,7 @@ All steps run from `mlmail/` root.
 ```bash
 grep "incremental" app/stryker.config.mjs && echo "FOUND" || echo "NOT FOUND"
 ```
+
 Expected output: `NOT FOUND`
 
 - [ ] **Step 2: Add incremental config to stryker.config.mjs**
@@ -98,6 +100,7 @@ Expected output: `incremental: true`
 Both tasks B1 and B2 are in the `cursor/npm/` workspace.
 
 **Files:**
+
 - Modify: `cursor/npm/rules/js-lint/coverage/coverage.mjs`
 - Modify: `cursor/npm/rules/js-lint/coverage/tests/coverage.test.mjs`
 - Modify: `cursor/npm/rules/test/coverage/coverage.mjs`
@@ -126,10 +129,34 @@ describe('js-lint coverage collect()', () => {
         files: {
           'src/a.js': {
             mutants: [
-              { id: '0', status: 'Killed', mutatorName: 'StringLiteral', replacement: '""', location: { start: { line: 1, column: 0 }, end: { line: 1, column: 5 } } },
-              { id: '1', status: 'Killed', mutatorName: 'BooleanLiteral', replacement: 'true', location: { start: { line: 2, column: 0 }, end: { line: 2, column: 5 } } },
-              { id: '2', status: 'Survived', mutatorName: 'ConditionalExpression', replacement: 'false', location: { start: { line: 5, column: 3 }, end: { line: 5, column: 20 } } },
-              { id: '3', status: 'CompileError', mutatorName: 'BlockStatement', replacement: '{}', location: { start: { line: 8, column: 0 }, end: { line: 8, column: 5 } } }
+              {
+                id: '0',
+                status: 'Killed',
+                mutatorName: 'StringLiteral',
+                replacement: '""',
+                location: { start: { line: 1, column: 0 }, end: { line: 1, column: 5 } }
+              },
+              {
+                id: '1',
+                status: 'Killed',
+                mutatorName: 'BooleanLiteral',
+                replacement: 'true',
+                location: { start: { line: 2, column: 0 }, end: { line: 2, column: 5 } }
+              },
+              {
+                id: '2',
+                status: 'Survived',
+                mutatorName: 'ConditionalExpression',
+                replacement: 'false',
+                location: { start: { line: 5, column: 3 }, end: { line: 5, column: 20 } }
+              },
+              {
+                id: '3',
+                status: 'CompileError',
+                mutatorName: 'BlockStatement',
+                replacement: '{}',
+                location: { start: { line: 8, column: 0 }, end: { line: 8, column: 5 } }
+              }
             ]
           }
         }
@@ -155,9 +182,7 @@ describe('js-lint coverage collect()', () => {
         area: 'JS',
         coverage: { lines: { covered: 50, total: 100 }, functions: { covered: 10, total: 20 } },
         mutation: { caught: 2, total: 3 },
-        survived: [
-          { file: 'src/a.js', line: 5, type: 'ConditionalExpression', replacement: 'false' }
-        ]
+        survived: [{ file: 'src/a.js', line: 5, type: 'ConditionalExpression', replacement: 'false' }]
       }
     ])
     expect(calls[0].kind).toBe('js')
@@ -177,7 +202,13 @@ describe('js-lint coverage collect()', () => {
         files: {
           'src/a.js': {
             mutants: [
-              { id: '0', status: 'Killed', mutatorName: 'StringLiteral', replacement: '""', location: { start: { line: 1, column: 0 }, end: { line: 1, column: 5 } } }
+              {
+                id: '0',
+                status: 'Killed',
+                mutatorName: 'StringLiteral',
+                replacement: '""',
+                location: { start: { line: 1, column: 0 }, end: { line: 1, column: 5 } }
+              }
             ]
           }
         }
@@ -189,7 +220,9 @@ describe('js-lint coverage collect()', () => {
         writeFileSync(join(lcovDir, 'lcov.info'), 'LF:10\nLH:10\nFNF:5\nFNH:5\n')
         return 0
       },
-      runStryker() { return 0 }
+      runStryker() {
+        return 0
+      }
     }
 
     const rows = await collect(dir, { runner })
@@ -201,8 +234,12 @@ describe('js-lint coverage collect()', () => {
   test('падає з explainer-ом якщо JS-coverage exit ≠ 0', async () => {
     const dir = makeFixture({ scripts: { 'test:coverage': 'bun test --coverage' } })
     const runner = {
-      runJsCoverage() { return 1 },
-      runStryker() { return 0 }
+      runJsCoverage() {
+        return 1
+      },
+      runStryker() {
+        return 0
+      }
     }
     await expect(collect(dir, { runner })).rejects.toThrow(JS_COVERAGE_EXIT_RE)
     rmSync(dir, { recursive: true, force: true })
@@ -215,7 +252,9 @@ describe('js-lint coverage collect()', () => {
         writeFileSync(join(lcovDir, 'lcov.info'), 'LF:0\nLH:0\nFNF:0\nFNH:0\n')
         return 0
       },
-      runStryker() { return 0 }
+      runStryker() {
+        return 0
+      }
     }
     await expect(collect(dir, { runner })).rejects.toThrow(MUTATION_JSON_RE)
     rmSync(dir, { recursive: true, force: true })
@@ -273,15 +312,15 @@ function parseStrykerReport(report) {
 In `rules/js-lint/coverage/coverage.mjs`, replace the last two lines of `collect()`:
 
 ```js
-  // Before (last 2 lines of collect):
-  const mutation = parseStrykerReport(mutationReport)
-  return [{ area: 'JS', coverage, mutation }]
+// Before (last 2 lines of collect):
+const mutation = parseStrykerReport(mutationReport)
+return [{ area: 'JS', coverage, mutation }]
 ```
 
 ```js
-  // After:
-  const { caught, total, survived } = parseStrykerReport(mutationReport)
-  return [{ area: 'JS', coverage, mutation: { caught, total }, survived }]
+// After:
+const { caught, total, survived } = parseStrykerReport(mutationReport)
+return [{ area: 'JS', coverage, mutation: { caught, total }, survived }]
 ```
 
 - [ ] **Step 5: Run tests to verify they pass**
@@ -412,7 +451,9 @@ export function renderMarkdown(rows) {
         byLine[m.line].push({ type: m.type, replacement: m.replacement })
       }
 
-      for (const line of Object.keys(byLine).map(Number).sort((a, b) => a - b)) {
+      for (const line of Object.keys(byLine)
+        .map(Number)
+        .sort((a, b) => a - b)) {
         lines.push('')
         lines.push(`**Рядок ${line}**`)
         lines.push('')
@@ -505,6 +546,7 @@ node npm/bin/n-cursor.js coverage 2>&1 | tail -5
 ```
 
 Wait for completion (~20 min with 142 mutants). Expected final lines:
+
 ```
 ✓ COVERAGE.md
 ```
@@ -524,6 +566,7 @@ Expected: `FOUND`
 Working directory: `mlmail/`
 
 **Files:**
+
 - Create: `.cursor/skills/n-fix-tests/SKILL.md`
 - Modify: `CLAUDE.md` (register skill)
 
@@ -561,6 +604,7 @@ trigger: /n-fix-tests [target_score]
 ### 0. Підготовка
 
 Знайди `mutation.json`:
+
 ```bash
 ls mlmail/app/reports/stryker/mutation.json 2>/dev/null || echo "NOT FOUND"
 ```
@@ -568,15 +612,18 @@ ls mlmail/app/reports/stryker/mutation.json 2>/dev/null || echo "NOT FOUND"
 Якщо не знайдено — запропонуй спочатку виконати `bun run coverage` з кореня mlmail.
 
 Зчитай поточний score з COVERAGE.md:
+
 ```bash
 grep "JS" mlmail/COVERAGE.md
 ```
 
 Визнач `target_score`:
+
 - Якщо аргумент переданий — використай його.
 - Інакше: `target = max(current_js_score + 10, 80)`.
 
 Зчитай вижилі мутанти:
+
 ```js
 const r = JSON.parse(fs.readFileSync('mlmail/app/reports/stryker/mutation.json', 'utf8'))
 const survived = []
@@ -593,6 +640,7 @@ for (const [file, data] of Object.entries(r.files))
 Для кожного файлу з вижилими мутантами:
 
 1. **Прочитай вихідний файл** на рядках де є мутанти:
+
    ```bash
    sed -n '1,30p' mlmail/app/src/<file>
    ```
@@ -608,14 +656,14 @@ for (const [file, data] of Object.entries(r.files))
 
 4. **Напиши нові тест-кейси** для кожного вижилого мутанту:
 
-   | Тип мутації | Що дописати |
-   |---|---|
-   | `ConditionalExpression` (`false` або `true`) | Тест що перевіряє обидва результати умови (truthy і falsy шляхи) |
+   | Тип мутації                                   | Що дописати                                                            |
+   | --------------------------------------------- | ---------------------------------------------------------------------- |
+   | `ConditionalExpression` (`false` або `true`)  | Тест що перевіряє обидва результати умови (truthy і falsy шляхи)       |
    | `LogicalOperator` (`&&` → `\|\|` або навпаки) | Тести з крайніми випадками: `null && undefined`, `null \|\| undefined` |
-   | `BooleanLiteral` (`true` → `false`) | Тест початкового стану або флагу |
-   | `StringLiteral` (`""` замість рядка) | Тест що перевіряє конкретне значення рядка |
-   | `BlockStatement` (`{}`) | Тест що перевіряє що код у блоці виконується |
-   | `ArrowFunction` (`() => undefined`) | Тест що перевіряє повернуте значення функції |
+   | `BooleanLiteral` (`true` → `false`)           | Тест початкового стану або флагу                                       |
+   | `StringLiteral` (`""` замість рядка)          | Тест що перевіряє конкретне значення рядка                             |
+   | `BlockStatement` (`{}`)                       | Тест що перевіряє що код у блоці виконується                           |
+   | `ArrowFunction` (`() => undefined`)           | Тест що перевіряє повернуте значення функції                           |
 
    **Для Vue SFC** — використовуй `mountWithQuasar` і `flushPromises` з `./test-utils/quasar.js`, як у `src/views/Login.test.js`.
 
@@ -626,6 +674,7 @@ cd mlmail && bun test app/src/<changed-test-file> 2>&1 | tail -5
 ```
 
 Якщо тести падають:
+
 - Виправ конкретну помилку (не більше 2 спроб на файл).
 - Якщо після 2 спроб ще падають — залиш мутант із коментарем `# SKIP: не вдалося вбити` і переходь до наступного.
 
@@ -640,6 +689,7 @@ cd mlmail && bun run coverage 2>&1 | tail -10
 Зачекай завершення (~20-25 хвилин з incremental).
 
 Зчитай новий score:
+
 ```bash
 grep "JS" mlmail/COVERAGE.md
 ```
@@ -655,8 +705,8 @@ grep "JS" mlmail/COVERAGE.md
 ```
 ## Результат n-fix-tests
 
-**Score до:** X.XX%  
-**Score після:** Y.YY% (N→M вбитих мутантів)  
+**Score до:** X.XX%
+**Score після:** Y.YY% (N→M вбитих мутантів)
 **Ітерацій:** K
 
 ### Залишкові вижилі мутанти

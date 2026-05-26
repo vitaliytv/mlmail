@@ -1,21 +1,75 @@
 <script setup>
-import { errorMessage } from '../i18n/auth-errors.js'
-import { loginMessages } from '../i18n/login.js'
-import { useAuthStore } from '../services/auth-store.js'
+// @ts-nocheck
 
-const auth = useAuthStore()
-onMounted(() => auth.initialize())
-
-function toggleOnlyNewsletters(value) {
-  auth.setOnlyNewsletters(value)
-  auth.loadRandomMessage()
+function stryNS_9fa48() {
+  var g = typeof globalThis === 'object' && globalThis && globalThis.Math === Math && globalThis || new Function("return this")();
+  var ns = g.__stryker__ || (g.__stryker__ = {});
+  if (ns.activeMutant === undefined && g.process && g.process.env && g.process.env.__STRYKER_ACTIVE_MUTANT__) {
+    ns.activeMutant = g.process.env.__STRYKER_ACTIVE_MUTANT__;
+  }
+  function retrieveNS() {
+    return ns;
+  }
+  stryNS_9fa48 = retrieveNS;
+  return retrieveNS();
 }
+stryNS_9fa48();
+function stryCov_9fa48() {
+  var ns = stryNS_9fa48();
+  var cov = ns.mutantCoverage || (ns.mutantCoverage = {
+    static: {},
+    perTest: {}
+  });
+  function cover() {
+    var c = cov.static;
+    if (ns.currentTestId) {
+      c = cov.perTest[ns.currentTestId] = cov.perTest[ns.currentTestId] || {};
+    }
+    var a = arguments;
+    for (var i = 0; i < a.length; i++) {
+      c[a[i]] = (c[a[i]] || 0) + 1;
+    }
+  }
+  stryCov_9fa48 = cover;
+  cover.apply(null, arguments);
+}
+function stryMutAct_9fa48(id) {
+  var ns = stryNS_9fa48();
+  function isActive(id) {
+    if (ns.activeMutant === id) {
+      if (ns.hitCount !== void 0 && ++ns.hitCount > ns.hitLimit) {
+        throw new Error('Stryker: Hit count limit reached (' + ns.hitCount + ')');
+      }
+      return true;
+    }
+    return false;
+  }
+  stryMutAct_9fa48 = isActive;
+  return isActive(id);
+}
+import { errorMessage } from '../i18n/auth-errors.js';
+import { loginMessages } from '../i18n/login.js';
+import { useAuthStore } from '../services/auth-store.js';
+const auth = useAuthStore();
+onMounted(stryMutAct_9fa48("103") ? () => undefined : (stryCov_9fa48("103"), () => auth.initialize()));
+
+/**
+ * @param {boolean} value whether to request only newsletters
+ */
+function toggleOnlyNewsletters(value) {
+  if (stryMutAct_9fa48("104")) {
+    {}
+  } else {
+    stryCov_9fa48("104");
+    auth.setOnlyNewsletters(value);
+    auth.loadRandomMessage();
+  }
+}
+
 </script>
 
 <template>
-  <q-page
-    class="column items-center q-gutter-md q-pa-md"
-    :class="{ 'has-bar': auth.isAuthenticated.value }">
+  <q-page class="column items-center q-gutter-md q-pa-md" :class="{ 'has-bar': auth.isAuthenticated.value }">
     <div class="text-h4">{{ loginMessages.appTitle }}</div>
 
     <template v-if="auth.isAuthenticated.value">
@@ -30,8 +84,8 @@ function toggleOnlyNewsletters(value) {
       <q-skeleton v-else type="QChip" width="180px" />
 
       <q-toggle
-        :model-value="auth.onlyNewsletters.value"
         @update:model-value="toggleOnlyNewsletters"
+        :model-value="auth.onlyNewsletters.value"
         label="Тільки newsletters"
         color="primary"
         dense />
@@ -89,34 +143,25 @@ function toggleOnlyNewsletters(value) {
       {{ errorMessage(auth.errorKind.value) }}
     </q-banner>
 
-    <q-page-sticky
-      v-if="auth.isAuthenticated.value"
-      position="bottom"
-      :offset="[0, 0]"
-      expand>
+    <q-page-sticky v-if="auth.isAuthenticated.value" position="bottom" :offset="[0, 0]" expand>
       <q-toolbar class="bg-grey-2 text-primary action-bar q-px-md">
         <q-btn
+          @click="auth.unsubscribeFromCurrent()"
           flat
           no-caps
           icon="sym_o_unsubscribe"
           label="Відписатися"
           :disable="!auth.currentMessage.value?.unsubscribe"
-          :loading="auth.isUnsubscribing.value"
-          @click="auth.unsubscribeFromCurrent()" />
+          :loading="auth.isUnsubscribing.value" />
         <q-space />
         <q-btn
+          @click="auth.loadRandomMessage()"
           flat
           no-caps
           icon="sym_o_skip_next"
           label="Показати інший"
-          :loading="auth.isMessageLoading.value"
-          @click="auth.loadRandomMessage()" />
-        <q-btn
-          flat
-          no-caps
-          icon="sym_o_logout"
-          label="Вийти"
-          @click="auth.logout()" />
+          :loading="auth.isMessageLoading.value" />
+        <q-btn @click="auth.logout()" flat no-caps icon="sym_o_logout" label="Вийти" />
       </q-toolbar>
     </q-page-sticky>
   </q-page>

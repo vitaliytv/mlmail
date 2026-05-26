@@ -1,6 +1,7 @@
 /* global Bun */
 // @ts-nocheck
 
+// 
 
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { mock } from 'bun:test'

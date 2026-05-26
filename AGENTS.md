@@ -20,6 +20,7 @@ The primary development rules are stored in the Cursor rules directory:
 - .cursor/rules/n-rust.mdc
 - .cursor/rules/n-security.mdc
 - .cursor/rules/n-style-lint.mdc
+- .cursor/rules/n-tauri.mdc
 - .cursor/rules/n-test.mdc
 - .cursor/rules/n-text.mdc
 - .cursor/rules/n-vue.mdc

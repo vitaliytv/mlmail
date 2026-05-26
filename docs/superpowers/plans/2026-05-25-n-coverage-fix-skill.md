@@ -12,13 +12,13 @@
 
 ## File Map
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `npm/skills/n-coverage-fix/SKILL.md` | Create | Skill instructions for Claude |
-| `npm/skills/n-coverage-fix/auto.md` | Create | Auto-deploy condition: `[js-lint]` |
+| File                                     | Action | Purpose                                                           |
+| ---------------------------------------- | ------ | ----------------------------------------------------------------- |
+| `npm/skills/n-coverage-fix/SKILL.md`     | Create | Skill instructions for Claude                                     |
+| `npm/skills/n-coverage-fix/auto.md`      | Create | Auto-deploy condition: `[js-lint]`                                |
 | `npm/scripts/tests/auto-skills.test.mjs` | Modify | Add `n-coverage-fix` to `ALL_SKILLS` + test for js-lint detection |
-| `npm/CHANGELOG.md` | Modify | Add `[1.19.4]` entry |
-| `npm/package.json` | Modify | Bump `1.19.3 → 1.19.4` |
+| `npm/CHANGELOG.md`                       | Modify | Add `[1.19.4]` entry                                              |
+| `npm/package.json`                       | Modify | Bump `1.19.3 → 1.19.4`                                            |
 
 > Note: Work happens in repo `/Users/vitaliytv/www/nitra/cursor`. Create a new git worktree `feat/n-coverage-fix` off `main` before starting.
 
@@ -27,6 +27,7 @@
 ### Task 1: Create worktree and verify baseline tests pass
 
 **Files:**
+
 - Worktree: `/Users/vitaliytv/www/nitra/cursor/.claude/worktrees/feat/n-coverage-fix`
 
 - [ ] **Step 1: Create the worktree**
@@ -51,6 +52,7 @@ Expected output: all tests pass (5 tests, 0 fail).
 ### Task 2: Write failing test for n-coverage-fix skill detection
 
 **Files:**
+
 - Modify: `npm/scripts/tests/auto-skills.test.mjs`
 
 - [ ] **Step 1: Read the current test file**
@@ -112,6 +114,7 @@ Expected: FAIL — `n-coverage-fix` not found in skills directory yet.
 ### Task 3: Create the skill files
 
 **Files:**
+
 - Create: `npm/skills/n-coverage-fix/SKILL.md`
 - Create: `npm/skills/n-coverage-fix/auto.md`
 
@@ -127,7 +130,7 @@ File: `npm/skills/n-coverage-fix/auto.md`
 
 File: `npm/skills/n-coverage-fix/SKILL.md`
 
-```markdown
+````markdown
 ---
 name: n-coverage-fix
 description: >-
@@ -157,6 +160,7 @@ Scope v1: JS мутанти (Stryker). Rust — v2.
 ```bash
 bun run coverage 2>&1
 ```
+````
 
 Зчитай JS mutation score з `COVERAGE.md` (колонка "Score"), запам'ятай як `baseline_score`.
 
@@ -186,6 +190,7 @@ console.log(JSON.stringify(g,null,2));
 Для кожного файлу з вижилими мутантами:
 
 **3a. Знайди тест-файл** (пріоритет):
+
 1. Co-located: `src/foo.js` → `src/foo.test.js`
 2. `__tests__` сусід: `src/foo.js` → `src/__tests__/foo.test.js`
 3. Top-level `test/`: → `test/foo.test.js`
@@ -194,6 +199,7 @@ console.log(JSON.stringify(g,null,2));
 **3b. Прочитай** вихідний файл і тест-файл.
 
 **3c. Напиши тести** — правила для кожного типу мутації:
+
 - `ConditionalExpression`: тестуй обидва шляхи (умова true і false)
 - `LogicalOperator`: тестуй граничні значення кожного операнда окремо (null, undefined, false, '')
 - `BooleanLiteral`: тестуй і true, і false як вхід/вихід
@@ -202,13 +208,16 @@ console.log(JSON.stringify(g,null,2));
 - `EqualityOperator`: тестуй значення на межі рівності
 
 Тест ПОВИНЕН:
+
 1. Проходити з оригінальним кодом
 2. Провалюватися якщо код замінений мутацією зі стовпця "rep"
 
 **3d. Верифікуй**:
+
 ```bash
 bun test <testfile> 2>&1
 ```
+
 Якщо падає — виправ (максимум 2 спроби). Якщо після 2 спроб — пропусти файл, запиши у список "skipped".
 
 ### Крок 4: перевірка покращення
@@ -234,14 +243,15 @@ Mutation score: X% → Y% (JS)
 Залишилось вижилих мутантів: M
   <файл>:<рядок> — <тип> — [причина: потребує E2E/mock/side-effect]
 ```
-```
+
+````
 
 - [ ] **Step 3: Run test to confirm it passes**
 
 ```bash
 cd /Users/vitaliytv/www/nitra/cursor/.claude/worktrees/feat/n-coverage-fix && \
 bun test npm/scripts/tests/auto-skills.test.mjs
-```
+````
 
 Expected: all tests pass including 2 new `n-coverage-fix` tests.
 
@@ -265,6 +275,7 @@ Expected: all tests pass, 0 fail.
 ### Task 5: Bump version and update CHANGELOG
 
 **Files:**
+
 - Modify: `npm/package.json` (version `1.19.3 → 1.19.4`)
 - Modify: `npm/CHANGELOG.md` (prepend new section)
 
@@ -338,6 +349,7 @@ bun install @nitra/cursor
 ## Self-Review Checklist
 
 After completing all tasks:
+
 - [ ] `npm/skills/n-coverage-fix/SKILL.md` has valid frontmatter (name + description)
 - [ ] `auto.md` contains exactly `[js-lint]`
 - [ ] `auto-skills.test.mjs` has 2 new tests for n-coverage-fix

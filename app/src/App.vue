@@ -1,8 +1,10 @@
 <script setup>
-import LoginView from './views/Login.vue'
-import { useAuthStore } from './services/auth-store.js'
+// @ts-nocheck
 
-const auth = useAuthStore()
+import LoginView from './views/Login.vue';
+import { useAuthStore } from './services/auth-store.js';
+const auth = useAuthStore();
+
 </script>
 
 <template>

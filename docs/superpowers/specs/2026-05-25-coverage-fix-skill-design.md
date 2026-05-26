@@ -55,7 +55,7 @@ Stryker writes each mutant result to the incremental file as it completes. On th
 
 **For each survived mutant group, the section includes:**
 
-```markdown
+````markdown
 ## Recommendations
 
 > Автоматично генерується після `bun coverage`. Використовується `/n-coverage-fix`.
@@ -64,19 +64,22 @@ Stryker writes each mutant result to the incremental file as it completes. On th
 
 **Вижило мутантів: 8**
 
-| Рядок | Тип | Оригінал | Вижив |
-|---|---|---|---|
-| 19 | ConditionalExpression | `kind !== null && kind !== undefined` | `false` |
-| 19 | LogicalOperator | `kind !== null && kind !== undefined` | `kind === null \|\| kind === undefined` |
+| Рядок | Тип                   | Оригінал                              | Вижив                                   |
+| ----- | --------------------- | ------------------------------------- | --------------------------------------- |
+| 19    | ConditionalExpression | `kind !== null && kind !== undefined` | `false`                                 |
+| 19    | LogicalOperator       | `kind !== null && kind !== undefined` | `kind === null \|\| kind === undefined` |
 
 **Приклад наявного тесту** (з `src/i18n/auth-errors.test.js`):
+
 ```js
 it('повертає код для INVALID_EMAIL', () => {
   expect(authError({ kind: 'INVALID_EMAIL' })).toBe('auth.errors.invalidEmail')
 })
 ```
+````
 
 **Що треба протестувати:** умову на рядку 19 — передай `null` і `undefined` окремо як `kind`, перевір що результат відрізняється від valid-kind, щоб `&&` не замінився на `||` непоміченим.
+
 ```
 
 **How the example test is found:** the provider resolves the test file path from the mutated source file path (e.g., `src/foo.js` → `src/foo.test.js` or `src/tests/foo.test.js`), reads the first `it(` or `test(` block as the style example.
@@ -88,6 +91,7 @@ it('повертає код для INVALID_EMAIL', () => {
 ### 3. `/n-coverage-fix` skill algorithm
 
 ```
+
 1. Запусти `bun coverage` — чекай завершення
 2. Прочитай COVERAGE.md секцію ## Recommendations
 3. Якщо секції немає або порожня → DONE (нема вижилих мутантів)
@@ -99,14 +103,15 @@ it('повертає код для INVALID_EMAIL', () => {
    г. Напиши нові тести що покривають кожен вижилий мутант
 6. Запусти `bun test`
    → ЯКЩО FAIL:
-     - Не відкочувати зміни
-     - Показати user: яка помилка, які файли змінені, що вже покращено
-     - Очікувати рішення: [виправити вручну → продовжити] / [пропустити файл] / [зупинити]
+   - Не відкочувати зміни
+   - Показати user: яка помилка, які файли змінені, що вже покращено
+   - Очікувати рішення: [виправити вручну → продовжити] / [пропустити файл] / [зупинити]
 7. Запусти `bun coverage` знову
    → ЯКЩО CRASH: нагадати user що Stryker incremental зберіг прогрес → перезапустити `bun coverage`
 8. Порівняй новий mutation score з baseline_score
 9. Якщо НЕ покращився → DONE (конвергенція)
 10. Інакше: baseline_score = новий score → крок 5 (наступна ітерація)
+
 ```
 
 **Error handling принцип:** checkpoint-based. Кожна успішна ітерація фіксована в тестовому файлі та COVERAGE.md. Помилка = пауза для людини з повним контекстом, не скасування прогресу.
@@ -131,3 +136,4 @@ it('повертає код для INVALID_EMAIL', () => {
 ## Version
 
 `@nitra/cursor` → **1.20.0** (minor — new skill + COVERAGE.md format change).
+```

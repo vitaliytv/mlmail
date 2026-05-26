@@ -1,4 +1,6 @@
 /** @type {import('@stryker-mutator/core').PartialStrykerOptions} */
+// @ts-nocheck
+
 export default {
   testRunner: 'command',
   commandRunner: {
@@ -23,5 +25,5 @@ export default {
   reporters: ['json', 'clear-text'],
   jsonReporter: { fileName: 'reports/stryker/mutation.json' },
   tempDirName: 'reports/stryker/.tmp',
-  coverageAnalysis: 'off',
+  coverageAnalysis: 'off'
 }

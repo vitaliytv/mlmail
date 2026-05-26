@@ -1,0 +1,16 @@
+---
+description: Tauri
+globs: "**/src-tauri/**,**/tauri.conf.json"
+alwaysApply: false
+version: '1.2'
+---
+
+У `.vscode/extensions.json` `recommendations` має містити `tauri-apps.tauri-vscode`:
+
+```json title=".vscode/extensions.json"
+{
+  "recommendations": ["tauri-apps.tauri-vscode"]
+}
+```
+
+Розширені Rust-вимоги (`rust-lang.rust-analyzer`, `tamasfe.even-better-toml`, скрипт `lint-rust`, CI `lint-rust.yml`) — у правилі **`rust`** (`n-rust.mdc`). Tauri-проєкт завжди має `src-tauri/Cargo.toml`, тому `rust` активується автоматично разом з `tauri`.

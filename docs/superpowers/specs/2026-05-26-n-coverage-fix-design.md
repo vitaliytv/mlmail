@@ -79,24 +79,28 @@ For each source file, the agent receives:
 Пиши всі тести для цього файлу за один раз.
 ```
 
-**Принцип якості:** skill явно інструктує — спочатку зрозуміти *що* мутант перевіряє (яка гілка не тестується), потім написати тест що її покриває. Це уникає тестів які проходять але не вбивають мутант.
+**Принцип якості:** skill явно інструктує — спочатку зрозуміти _що_ мутант перевіряє (яка гілка не тестується), потім написати тест що її покриває. Це уникає тестів які проходять але не вбивають мутант.
 
 ## Test File Discovery
 
 Порядок пошуку для `src/foo/bar.js`:
+
 1. Co-located: `src/foo/bar.test.js`
 2. `__tests__` sibling: `src/foo/__tests__/bar.test.js`
 3. Top-level `test/`: `test/foo/bar.test.js`
 
 Якщо testFile відсутній — detect convention з існуючих файлів:
+
 ```
 find src -name "*.test.*" | head -5
 ```
+
 → визначити pattern (co-located чи директорія) → створити новий файл за тим самим pattern.
 
 ## Parallel Runs Prevention
 
 `n-cursor coverage` всередині захищений `withLock('coverage')` — паралельні CLI-виклики серіалізуються або дедуплікуються. Але skill цілком **не можна запускати паралельно** в різних агентах, тому що:
+
 - Stryker пише `mutation.json` і `incremental.json` в одну директорію
 - тест-файли редагуються одночасно — можливий data race
 
@@ -117,13 +121,13 @@ Mutation score залишився: 67.61%
 
 ## Error Handling
 
-| Ситуація | Поведінка |
-|---|---|
-| `mutation.json` не знайдено | Повідомити: "спочатку запусти `bun run coverage`"; abort |
-| testFile не знайдено | Detect convention → створити новий файл |
-| `bun test` fail після retry | Stop — не запускати coverage; повідомити який test-файл зламано |
+| Ситуація                            | Поведінка                                                         |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `mutation.json` не знайдено         | Повідомити: "спочатку запусти `bun run coverage`"; abort          |
+| testFile не знайдено                | Detect convention → створити новий файл                           |
+| `bun test` fail після retry         | Stop — не запускати coverage; повідомити який test-файл зламано   |
 | `n-cursor coverage` killed (SIGURG) | `incremental.json` зберігає прогрес → retry автоматично підхопить |
-| Mutant у `node_modules`, `dist` | Skip |
+| Mutant у `node_modules`, `dist`     | Skip                                                              |
 
 ## Summary on Success
 

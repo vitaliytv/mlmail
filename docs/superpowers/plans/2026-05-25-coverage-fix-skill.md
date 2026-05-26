@@ -12,19 +12,19 @@
 
 ## File Map
 
-| File | Action | Responsibility |
-|---|---|---|
-| `npm/rules/test/js/data/stryker_config/stryker.config.baseline.mjs` | Modify | Add `incremental: true` + `incrementalFile` |
-| `npm/rules/js-lint/coverage/coverage.mjs` | Modify | Add `parseSurvivedMutants`, `findExampleTest`, `extractFirstTestBlock`; update `collect()` |
-| `npm/rules/js-lint/coverage/lib/generate-recommendation.mjs` | Create | LLM call via Anthropic SDK |
-| `npm/rules/js-lint/coverage/tests/coverage.test.mjs` | Modify | Tests for new helpers and updated `collect()` |
-| `npm/rules/js-lint/coverage/tests/generate-recommendation.test.mjs` | Create | Tests for LLM function with mock client |
-| `npm/rules/test/coverage/coverage.mjs` | Modify | Update `renderMarkdown` to render `## Recommendations` |
-| `npm/rules/test/coverage/tests/coverage.test.mjs` | Modify | Tests for Recommendations rendering |
-| `npm/skills/n-coverage-fix/SKILL.md` | Create | New skill |
-| `npm/skills/n-coverage-fix/auto.md` | Create | Auto-activate condition |
-| `npm/package.json` | Modify | Add `@anthropic-ai/sdk`, bump version to `1.20.0` |
-| `npm/CHANGELOG.md` | Modify | Entry for `1.20.0` |
+| File                                                                | Action | Responsibility                                                                             |
+| ------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
+| `npm/rules/test/js/data/stryker_config/stryker.config.baseline.mjs` | Modify | Add `incremental: true` + `incrementalFile`                                                |
+| `npm/rules/js-lint/coverage/coverage.mjs`                           | Modify | Add `parseSurvivedMutants`, `findExampleTest`, `extractFirstTestBlock`; update `collect()` |
+| `npm/rules/js-lint/coverage/lib/generate-recommendation.mjs`        | Create | LLM call via Anthropic SDK                                                                 |
+| `npm/rules/js-lint/coverage/tests/coverage.test.mjs`                | Modify | Tests for new helpers and updated `collect()`                                              |
+| `npm/rules/js-lint/coverage/tests/generate-recommendation.test.mjs` | Create | Tests for LLM function with mock client                                                    |
+| `npm/rules/test/coverage/coverage.mjs`                              | Modify | Update `renderMarkdown` to render `## Recommendations`                                     |
+| `npm/rules/test/coverage/tests/coverage.test.mjs`                   | Modify | Tests for Recommendations rendering                                                        |
+| `npm/skills/n-coverage-fix/SKILL.md`                                | Create | New skill                                                                                  |
+| `npm/skills/n-coverage-fix/auto.md`                                 | Create | Auto-activate condition                                                                    |
+| `npm/package.json`                                                  | Modify | Add `@anthropic-ai/sdk`, bump version to `1.20.0`                                          |
+| `npm/CHANGELOG.md`                                                  | Modify | Entry for `1.20.0`                                                                         |
 
 The `mlmail/app/stryker.config.mjs` already has `incremental: true` — no change needed.
 
@@ -33,6 +33,7 @@ The `mlmail/app/stryker.config.mjs` already has `incremental: true` — no chang
 ## Task 1: Stryker incremental mode in baseline
 
 **Files:**
+
 - Modify: `npm/rules/test/js/data/stryker_config/stryker.config.baseline.mjs`
 
 This file is the canonical template copied to new projects via `n-cursor fix test`. Adding `incremental` here means all new JS projects get checkpoint-based Stryker runs. Note: existing projects won't auto-update (the copy only runs if the file doesn't exist yet).
@@ -73,6 +74,7 @@ Expected: all pass. If a snapshot test fails, update it.
 ## Task 2: `parseSurvivedMutants` function (TDD)
 
 **Files:**
+
 - Modify: `npm/rules/js-lint/coverage/coverage.mjs`
 - Modify: `npm/rules/js-lint/coverage/tests/coverage.test.mjs`
 
@@ -86,7 +88,18 @@ In `npm/rules/js-lint/coverage/tests/coverage.test.mjs`, add after the existing 
 describe('parseSurvivedMutants()', () => {
   test('returns empty array when all mutants killed', () => {
     const report = {
-      files: { 'src/a.js': { mutants: [{ status: 'Killed', mutatorName: 'X', replacement: 'y', location: { start: { line: 1, column: 0 }, end: { line: 1, column: 5 } } }] } }
+      files: {
+        'src/a.js': {
+          mutants: [
+            {
+              status: 'Killed',
+              mutatorName: 'X',
+              replacement: 'y',
+              location: { start: { line: 1, column: 0 }, end: { line: 1, column: 5 } }
+            }
+          ]
+        }
+      }
     }
     expect(parseSurvivedMutants(report)).toEqual([])
   })
@@ -96,13 +109,28 @@ describe('parseSurvivedMutants()', () => {
       files: {
         'src/a.js': {
           mutants: [
-            { status: 'Survived', mutatorName: 'BooleanLiteral', replacement: 'true', location: { start: { line: 4, column: 10 }, end: { line: 4, column: 15 } } },
-            { status: 'Killed', mutatorName: 'X', replacement: 'y', location: { start: { line: 5, column: 0 }, end: { line: 5, column: 1 } } }
+            {
+              status: 'Survived',
+              mutatorName: 'BooleanLiteral',
+              replacement: 'true',
+              location: { start: { line: 4, column: 10 }, end: { line: 4, column: 15 } }
+            },
+            {
+              status: 'Killed',
+              mutatorName: 'X',
+              replacement: 'y',
+              location: { start: { line: 5, column: 0 }, end: { line: 5, column: 1 } }
+            }
           ]
         },
         'src/b.js': {
           mutants: [
-            { status: 'NoCoverage', mutatorName: 'ConditionalExpression', replacement: 'false', location: { start: { line: 10, column: 5 }, end: { line: 10, column: 20 } } }
+            {
+              status: 'NoCoverage',
+              mutatorName: 'ConditionalExpression',
+              replacement: 'false',
+              location: { start: { line: 10, column: 5 }, end: { line: 10, column: 20 } }
+            }
           ]
         }
       }
@@ -121,10 +149,24 @@ describe('parseSurvivedMutants()', () => {
 
   test('excludes CompileError and RuntimeError from survived list', () => {
     const report = {
-      files: { 'src/a.js': { mutants: [
-        { status: 'CompileError', mutatorName: 'X', replacement: 'y', location: { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } } },
-        { status: 'RuntimeError', mutatorName: 'X', replacement: 'y', location: { start: { line: 2, column: 0 }, end: { line: 2, column: 1 } } }
-      ] } }
+      files: {
+        'src/a.js': {
+          mutants: [
+            {
+              status: 'CompileError',
+              mutatorName: 'X',
+              replacement: 'y',
+              location: { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } }
+            },
+            {
+              status: 'RuntimeError',
+              mutatorName: 'X',
+              replacement: 'y',
+              location: { start: { line: 2, column: 0 }, end: { line: 2, column: 1 } }
+            }
+          ]
+        }
+      }
     }
     expect(parseSurvivedMutants(report)).toEqual([])
   })
@@ -154,9 +196,7 @@ Add this function after `parseStrykerReport` in `npm/rules/js-lint/coverage/cove
 export function parseSurvivedMutants(report) {
   const result = []
   for (const [filename, data] of Object.entries(report.files)) {
-    const survived = data.mutants.filter(
-      m => m.status === 'Survived' || m.status === 'NoCoverage'
-    )
+    const survived = data.mutants.filter(m => m.status === 'Survived' || m.status === 'NoCoverage')
     if (survived.length === 0) continue
     result.push({
       filename,
@@ -186,6 +226,7 @@ Expected: all existing tests pass + 3 new `parseSurvivedMutants` tests pass.
 ## Task 3: `findExampleTest` + `extractFirstTestBlock` (TDD)
 
 **Files:**
+
 - Modify: `npm/rules/js-lint/coverage/coverage.mjs`
 - Modify: `npm/rules/js-lint/coverage/tests/coverage.test.mjs`
 
@@ -215,7 +256,9 @@ test('second', () => {
   const obj = { a: { b: 1 } }
   expect(obj.a.b).toBe(1)
 })`
-    expect(extractFirstTestBlock(content)).toBe("it('works', async () => {\n  const obj = { a: { b: 1 } }\n  expect(obj.a.b).toBe(1)\n})")
+    expect(extractFirstTestBlock(content)).toBe(
+      "it('works', async () => {\n  const obj = { a: { b: 1 } }\n  expect(obj.a.b).toBe(1)\n})"
+    )
   })
 
   test('returns null when no test block found', () => {
@@ -227,10 +270,13 @@ describe('findExampleTest()', () => {
   test('finds .test.js file next to source and extracts first block', () => {
     const dir = mkdtempSync(join(tmpdir(), 'find-example-test-'))
     writeFileSync(join(dir, 'foo.js'), 'export const x = 1')
-    writeFileSync(join(dir, 'foo.test.js'), `import { it, expect } from 'bun:test'
+    writeFileSync(
+      join(dir, 'foo.test.js'),
+      `import { it, expect } from 'bun:test'
 it('x is 1', () => {
   expect(1).toBe(1)
-})`)
+})`
+    )
     const result = findExampleTest(dir, 'foo.js')
     expect(result).toEqual({
       testFile: 'foo.test.js',
@@ -277,8 +323,10 @@ export function extractFirstTestBlock(content) {
     if (startLine === -1) continue
     result.push(lines[i])
     for (const ch of lines[i]) {
-      if (ch === '{') { depth++; inBlock = true }
-      else if (ch === '}') depth--
+      if (ch === '{') {
+        depth++
+        inBlock = true
+      } else if (ch === '}') depth--
     }
     if (inBlock && depth === 0) break
   }
@@ -326,6 +374,7 @@ Expected: all tests pass including 5 new ones.
 ## Task 4: `generate-recommendation.mjs` LLM function (TDD)
 
 **Files:**
+
 - Create: `npm/rules/js-lint/coverage/lib/generate-recommendation.mjs`
 - Create: `npm/rules/js-lint/coverage/tests/generate-recommendation.test.mjs`
 
@@ -370,7 +419,10 @@ describe('generateMutantRecommendation()', () => {
     const calls = []
     const spyClient = {
       messages: {
-        create: async (params) => { calls.push(params); return { content: [{ type: 'text', text: 'ok' }] } }
+        create: async params => {
+          calls.push(params)
+          return { content: [{ type: 'text', text: 'ok' }] }
+        }
       }
     }
     await generateMutantRecommendation(spyClient, 'const x = 1', { type: 'StringLiteral', replacement: '""', line: 1 })
@@ -471,6 +523,7 @@ Expected: 3 tests pass.
 ## Task 5: Wire recommendations into `collect()` (TDD)
 
 **Files:**
+
 - Modify: `npm/rules/js-lint/coverage/coverage.mjs`
 - Modify: `npm/rules/js-lint/coverage/tests/coverage.test.mjs`
 
@@ -489,8 +542,14 @@ test('collect() returns recommendations for survived mutants', async () => {
   // Source file with a survived mutant
   const srcDir = join(dir, 'src')
   mkdirSync(srcDir, { recursive: true })
-  writeFileSync(join(srcDir, 'utils.js'), 'export function check(x) {\n  if (x !== null) return x\n  return "default"\n}')
-  writeFileSync(join(srcDir, 'utils.test.js'), "import { it, expect } from 'bun:test'\nit('returns value', () => {\n  expect(check('a')).toBe('a')\n})")
+  writeFileSync(
+    join(srcDir, 'utils.js'),
+    'export function check(x) {\n  if (x !== null) return x\n  return "default"\n}'
+  )
+  writeFileSync(
+    join(srcDir, 'utils.test.js'),
+    "import { it, expect } from 'bun:test'\nit('returns value', () => {\n  expect(check('a')).toBe('a')\n})"
+  )
 
   writeFileSync(
     join(reportDir, 'mutation.json'),
@@ -498,7 +557,12 @@ test('collect() returns recommendations for survived mutants', async () => {
       files: {
         'src/utils.js': {
           mutants: [
-            { status: 'Survived', mutatorName: 'ConditionalExpression', replacement: 'false', location: { start: { line: 2, column: 2 }, end: { line: 2, column: 15 } } }
+            {
+              status: 'Survived',
+              mutatorName: 'ConditionalExpression',
+              replacement: 'false',
+              location: { start: { line: 2, column: 2 }, end: { line: 2, column: 15 } }
+            }
           ]
         }
       }
@@ -538,11 +602,27 @@ test('collect() returns empty recommendations when all mutants killed', async ()
   mkdirSync(reportDir, { recursive: true })
   writeFileSync(
     join(reportDir, 'mutation.json'),
-    JSON.stringify({ files: { 'src/a.js': { mutants: [{ status: 'Killed', mutatorName: 'X', replacement: 'y', location: { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } } }] } } })
+    JSON.stringify({
+      files: {
+        'src/a.js': {
+          mutants: [
+            {
+              status: 'Killed',
+              mutatorName: 'X',
+              replacement: 'y',
+              location: { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } }
+            }
+          ]
+        }
+      }
+    })
   )
   const mockLcov = 'TN:\nSF:src/a.js\nLF:1\nLH:1\nFNF:1\nFNH:1\nend_of_record\n'
   const mockRunner = {
-    runJsCoverage: async ({ lcovDir }) => { writeFileSync(join(lcovDir, 'lcov.info'), mockLcov); return 0 },
+    runJsCoverage: async ({ lcovDir }) => {
+      writeFileSync(join(lcovDir, 'lcov.info'), mockLcov)
+      return 0
+    },
     runStryker: async () => 0
   }
   const rows = await collect(dir, { runner: mockRunner })
@@ -561,16 +641,20 @@ bun test npm/rules/js-lint/coverage/tests/coverage.test.mjs 2>&1 | grep -E "fail
 - [ ] **Step 3: Update `collect()` in `coverage.mjs`**
 
 Add import at top of file:
+
 ```js
 import { createAnthropicClient, generateMutantRecommendation } from './lib/generate-recommendation.mjs'
 ```
 
 Update `defaultRunner` to have async-compatible interface (add `async` keyword to both methods):
+
 ```js
 const defaultRunner = {
   async runJsCoverage({ cwd, lcovDir }) {
     const r = spawnSync('bun', ['run', 'test:coverage', '--coverage-reporter=lcov', `--coverage-dir=${lcovDir}`], {
-      cwd, stdio: 'inherit', env: process.env
+      cwd,
+      stdio: 'inherit',
+      env: process.env
     })
     return r.status ?? 1
   },
@@ -584,37 +668,35 @@ const defaultRunner = {
 Replace the `collect()` function body — after `const mutation = parseStrykerReport(mutationReport)` and before `return`:
 
 ```js
-  // 3. Recommendations для вижилих мутантів
-  const survivedGroups = parseSurvivedMutants(mutationReport)
-  const anthropicClient = opts.anthropicClient ?? createAnthropicClient()
-  const recommendations = []
-  for (const group of survivedGroups) {
-    const sourceFile = join(jsRoot, group.filename)
-    const sourceContent = existsSync(sourceFile)
-      ? await readFile(sourceFile, 'utf8')
-      : ''
-    const exampleTest = findExampleTest(jsRoot, group.filename)
-    let recommendationText = null
-    if (anthropicClient && sourceContent) {
-      // Один LLM-call на файл (всі мутанти одного файлу описуються разом)
-      const mutantSummary = group.mutants
-        .map(m => `рядок ${m.line}: тип "${m.type}", замінено на \`${m.replacement}\``)
-        .join('; ')
-      recommendationText = await generateMutantRecommendation(
-        anthropicClient,
-        sourceContent,
-        { type: group.mutants.map(m => m.type).join(', '), replacement: mutantSummary, line: group.mutants[0].line }
-      )
-    }
-    recommendations.push({ filename: group.filename, mutants: group.mutants, exampleTest, recommendationText })
+// 3. Recommendations для вижилих мутантів
+const survivedGroups = parseSurvivedMutants(mutationReport)
+const anthropicClient = opts.anthropicClient ?? createAnthropicClient()
+const recommendations = []
+for (const group of survivedGroups) {
+  const sourceFile = join(jsRoot, group.filename)
+  const sourceContent = existsSync(sourceFile) ? await readFile(sourceFile, 'utf8') : ''
+  const exampleTest = findExampleTest(jsRoot, group.filename)
+  let recommendationText = null
+  if (anthropicClient && sourceContent) {
+    // Один LLM-call на файл (всі мутанти одного файлу описуються разом)
+    const mutantSummary = group.mutants
+      .map(m => `рядок ${m.line}: тип "${m.type}", замінено на \`${m.replacement}\``)
+      .join('; ')
+    recommendationText = await generateMutantRecommendation(anthropicClient, sourceContent, {
+      type: group.mutants.map(m => m.type).join(', '),
+      replacement: mutantSummary,
+      line: group.mutants[0].line
+    })
   }
+  recommendations.push({ filename: group.filename, mutants: group.mutants, exampleTest, recommendationText })
+}
 
-  return [{ area: 'JS', coverage, mutation, recommendations }]
+return [{ area: 'JS', coverage, mutation, recommendations }]
 ```
 
 Also update the function JSDoc to document the new `opts.anthropicClient` parameter and the `recommendations` field in the return type.
 
-- [ ] **Step 4: Update existing collect() tests** 
+- [ ] **Step 4: Update existing collect() tests**
 
 The existing test for `collect()` that checks `{ area: 'JS', coverage, mutation }` needs to be updated to also check `recommendations`:
 
@@ -642,6 +724,7 @@ Expected: all tests pass.
 ## Task 6: Update orchestrator `renderMarkdown` (TDD)
 
 **Files:**
+
 - Modify: `npm/rules/test/coverage/coverage.mjs`
 - Modify: `npm/rules/test/coverage/tests/coverage.test.mjs`
 
@@ -712,7 +795,7 @@ bun test npm/rules/test/coverage/tests/coverage.test.mjs 2>&1 | grep -E "fail|er
 
 In `npm/rules/test/coverage/coverage.mjs`, replace `renderMarkdown`:
 
-```js
+````js
 export function renderMarkdown(rows) {
   const lines = [
     '# Coverage',
@@ -759,7 +842,7 @@ export function renderMarkdown(rows) {
 
   return `${lines.join('\n')}\n`
 }
-```
+````
 
 - [ ] **Step 4: Run all orchestrator tests**
 
@@ -782,6 +865,7 @@ Expected: 0 fail.
 ## Task 7: New `/n-coverage-fix` skill
 
 **Files:**
+
 - Create: `npm/skills/n-coverage-fix/SKILL.md`
 - Create: `npm/skills/n-coverage-fix/auto.md`
 
@@ -850,6 +934,7 @@ bun test <test-file-path>
 ```
 
 **If tests FAIL:**
+
 - Do NOT revert your changes
 - Report: which test failed, what the error is, which files were modified
 - Show the current state of the test file
@@ -896,6 +981,7 @@ cd npm && node bin/n-cursor.js skills list 2>&1 | grep coverage-fix || echo "ski
 ## Task 8: Version bump, CHANGELOG, and final check
 
 **Files:**
+
 - Modify: `npm/package.json`
 - Modify: `npm/CHANGELOG.md`
 

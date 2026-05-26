@@ -21,11 +21,12 @@
 **Де:** `@nitra/cursor` — шаблон `stryker.config.mjs` (генерується командою `n-cursor fix`).
 
 **Зміни:**
+
 ```js
 export default {
   // ...existing config...
   incremental: true,
-  incrementalFile: 'reports/stryker/stryker-incremental.json',
+  incrementalFile: 'reports/stryker/stryker-incremental.json'
 }
 ```
 
@@ -40,12 +41,19 @@ export default {
 **Де:** `@nitra/cursor` — `rules/js-lint/coverage/coverage.mjs` + `rules/test/coverage/coverage.mjs`.
 
 **`parseStrykerReport` (js-lint provider) — доповнений результат:**
+
 ```js
 return {
   coverage: { lines, functions },
   mutations: { killed, total },
   survived: [
-    { file: 'src/i18n/auth-errors.js', line: 19, original: 'kind === "not-found" || kind == null', replacement: 'false', type: 'ConditionalExpression' },
+    {
+      file: 'src/i18n/auth-errors.js',
+      line: 19,
+      original: 'kind === "not-found" || kind == null',
+      replacement: 'false',
+      type: 'ConditionalExpression'
+    }
     // ...
   ]
 }
@@ -54,17 +62,19 @@ return {
 Для отримання `original` — читаємо рядок з source file через `fs.readFileSync` за шляхом з `mutation.json` (`file.source` або `jsRoot + mutant.fileName`).
 
 **`renderMarkdown` (orchestrator) — новий розділ:**
+
 ```markdown
 ## Рекомендації (46 вижилих мутантів)
 
 ### `src/i18n/auth-errors.js`
 
-| Рядок | Оригінал | Мутант | Тип |
-|-------|----------|--------|-----|
-| 19 | `kind === 'not-found' \|\| kind == null` | `false` | ConditionalExpression |
-| 19 | `kind === 'not-found' \|\| kind == null` | `kind === null && kind === undefined` | LogicalOperator |
+| Рядок | Оригінал                                 | Мутант                                | Тип                   |
+| ----- | ---------------------------------------- | ------------------------------------- | --------------------- |
+| 19    | `kind === 'not-found' \|\| kind == null` | `false`                               | ConditionalExpression |
+| 19    | `kind === 'not-found' \|\| kind == null` | `kind === null && kind === undefined` | LogicalOperator       |
 
 ### `src/services/auth-store.js`
+
 ...
 ```
 
@@ -75,6 +85,7 @@ return {
 ### Компонент 3: `--fix` режим
 
 **CLI UX:**
+
 ```bash
 n-cursor coverage        # метрики → COVERAGE.md (як зараз + розділ Рекомендації)
 n-cursor coverage --fix  # те саме + агент → coverage знову
@@ -93,7 +104,7 @@ export async function fixSurvivedMutants(survivedMutants, projectRoot) {
     options: {
       cwd: projectRoot,
       maxTurns: 20,
-      allowedTools: ['Read', 'Edit', 'Bash'],
+      allowedTools: ['Read', 'Edit', 'Bash']
     }
   })) {
     if (msg.type === 'text') process.stdout.write(msg.text)
@@ -109,6 +120,7 @@ function buildFixPrompt(survived, projectRoot) {
 ```
 
 **Потік `--fix`:**
+
 1. Запускає `n-cursor coverage` (збирає метрики, пише COVERAGE.md з рекомендаціями)
 2. Зчитує `survived` з результату `collect()`
 3. Якщо `survived.length === 0` — виводить "Всі мутанти вбиті" і завершує
@@ -121,6 +133,7 @@ function buildFixPrompt(survived, projectRoot) {
 ## Залежності
 
 **`@nitra/cursor` `npm/package.json`:**
+
 ```json
 "dependencies": {
   "@anthropic-ai/claude-code": "latest"

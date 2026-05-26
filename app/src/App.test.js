@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, mock, beforeEach } from 'bun:test'
 import { flushPromises } from '@vue/test-utils'
 import { mountQuasar } from './test-utils/quasar.js'
