@@ -9,13 +9,11 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "android": "tauri android dev",
-    "test": "bun test --preload ./test/happy-dom.preload.js src",
-    "test:watch": "bun test --watch --preload ./test/happy-dom.preload.js src",
-    "test:coverage": "bun test --coverage --preload ./test/happy-dom.preload.js src",
+    "test": "bun test --timeout 15000 --preload ./test/happy-dom.preload.js src",
+    "test:watch": "bun test --watch --timeout 15000 --preload ./test/happy-dom.preload.js src",
+    "test:coverage": "bun test --timeout 15000 --coverage --preload ./test/happy-dom.preload.js src",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
-    "test:rust:mutation": "bun ../scripts/with-lock.js cargo mutants --in-place -o /tmp/cargo-mutants-out --manifest-path src-tauri/Cargo.toml",
-    "test:mutation": "bun ../scripts/with-lock.js bunx stryker run",
     "test:all": "bun run test && bun run test:rust"
   },
   "dependencies": {

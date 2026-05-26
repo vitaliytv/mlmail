@@ -183,4 +183,22 @@ describe('Login.vue random message', () => {
     expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')
     expect(w.text()).toContain('Next one')
   })
+
+  it('toggleOnlyNewsletters calls setOnlyNewsletters and reloads message', async () => {
+    const sampleNewsletter = { id: 'n1', from: 'nl@e', subject: 'NL', date: 'd', body: 'nl body' }
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message') return Promise.resolve({ ...sampleMessage, id: 'r1' })
+      if (cmd === 'gmail_random_newsletter') return Promise.resolve(sampleNewsletter)
+      return Promise.resolve(null)
+    })
+    const w = mountWithQuasar(Login)
+    await flushPromises()
+    const toggle = w.find('.q-toggle')
+    await toggle.trigger('click')
+    await flushPromises()
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_newsletter')
+  })
 })

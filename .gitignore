@@ -50,3 +50,7 @@ dist/
 
 # coverage.js single-run lock
 .coverage.lock
+
+# Stryker mutation testing (test.mdc)
+reports/stryker/incremental.json
+**/reports/stryker/

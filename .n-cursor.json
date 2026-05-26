@@ -13,6 +13,7 @@
     "rust",
     "security",
     "style-lint",
+    "test",
     "text",
     "vue"
   ],

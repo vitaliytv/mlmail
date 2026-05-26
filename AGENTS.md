@@ -46,6 +46,7 @@ Generated from the root `package.json` on each `npx @nitra/cursor` sync. Prefer 
 - **lint-ga**: `bun run lint-ga`
 - **start**: `bun run start`
 - **lint-image**: `bun run lint-image`
+- **lint-rust**: `bun run lint-rust`
 - **lint-security**: `bun run lint-security`
 - **lint-style**: `bun run lint-style`
 - **Оновити правила та AGENTS.md** (після змін у правилах/шаблоні CLI): `npx @nitra/cursor`

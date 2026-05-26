@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { fileURLToPath } from 'node:url'
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
 import Vue from '@vitejs/plugin-vue'
