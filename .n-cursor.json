@@ -19,6 +19,7 @@
   ],
   "skills": [
     "adr-normalize",
+    "coverage-fix",
     "fix",
     "fix-tests",
     "lint",
