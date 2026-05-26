@@ -1,0 +1,152 @@
+docs/superpowers/specs/2026-05-26-n-coverage-fix-design.md
+  s_d49a0f67f43481::t_f45743ead4ce3d 1-143
+docs/superpowers/plans/2026-05-25-coverage-fix-agent-plan.md
+  s_2a60aea2b7e73b::t_e2b8147049af8c 1-327
+.gitignore
+  s_17dce3cec43c9d::t_dfcf8566973c98 53-54,56
+  s_4fda323eeb817d::t_001a025641b23e 55
+app/vite.config.js
+  s_3afcaad052869a::t_b5688a7119668c 1
+docs/superpowers/plans/2026-05-25-n-fix-tests.md
+  s_1d84ee133cace2::t_4aff072e6c60c2 1-708
+docs/superpowers/plans/2026-05-25-coverage-fix-skill.md
+  s_abf48c092059a3::t_cf964d580c0cac 1-947
+app/package.json
+  s_16d0fba9dca81b::t_891de6448b2a9f 12-14
+docs/superpowers/specs/2026-05-25-coverage-fix-agent-design.md
+  s_2a60aea2b7e73b::t_ca4b8d8478ed75 1-146
+.n-cursor.json
+  s_17dce3cec43c9d::t_cd671c39f9f49e 16
+app/src-tauri/.cargo/mutants.toml
+  s_17dce3cec43c9d::t_596c538beb2308 1-4
+  s_939efc737ed935::t_bcbb56685a4283 6-8
+  s_16d0fba9dca81b::t_dc95ae9bb40e1f 5
+docs/superpowers/specs/2026-05-25-n-coverage-fix-design.md
+  s_768e3c10ee0cd9::t_8320452de4a336 1-111
+docs/superpowers/specs/2026-05-25-coverage-fix-skill-design.md
+  s_abf48c092059a3::t_65f2d853c35bbd 84
+  s_abf48c092059a3::t_409da77604b59b 121-122
+  s_abf48c092059a3::t_9e51ca18f310d7 1-83,85-120,123-133
+app/src/views/Login.test.js
+  s_3afcaad052869a::t_147f4edf253a34 186-203
+package.json
+  s_17dce3cec43c9d::t_7d9f510235d96b 22
+  s_bb853a236b6b6d::t_86221f0ddd6b8c 26
+docs/superpowers/specs/2026-05-25-n-fix-tests-design.md
+  s_1d84ee133cace2::t_861230616448f0 1-144
+docs/superpowers/plans/2026-05-25-n-coverage-fix.md
+  s_51a12dadf3aaff::t_80f9d904648cd0 260-262,295
+  s_51a12dadf3aaff::t_e58100c4c45889 99-103
+  s_51a12dadf3aaff::t_46992278fed2c4 56,60,62
+  s_51a12dadf3aaff::t_be5db969069c35 1-55,57-59,61,63-98,104-259,263-294,296-771
+app/src/services/auth-store.test.js
+  s_3afcaad052869a::t_f97e6afdb35e3b 399-600
+app/test/happy-dom.preload.js
+  s_3afcaad052869a::t_b5688a7119668c 2-3
+docs/superpowers/plans/2026-05-25-n-coverage-fix-skill.md
+  s_768e3c10ee0cd9::t_be02be509e740f 1-346
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "28448549bc3488f8ee6ea5271f8c53ceab6f30ca",
+  "prompts": {},
+  "sessions": {
+    "s_16d0fba9dca81b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "51f93571-76cb-45a9-b80e-402459c6c47f",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_17dce3cec43c9d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f5ba429-36ec-467b-9e23-77334562da7a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_1d84ee133cace2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "06c87d74-7f8e-43ef-bb50-b2ce9a7aa2c3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_2a60aea2b7e73b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b31ad6d3-8583-4022-8f31-4f8e081eb0d0",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_3afcaad052869a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db3f2dad-f4c2-4b14-a953-e00408432bad",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_4fda323eeb817d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a88c8780-2658-454d-a71f-f73716c3433f",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_51a12dadf3aaff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1330ff7d-699f-4226-8510-816ac4db2127",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_768e3c10ee0cd9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "deb2223e-5821-4d63-81e3-7e2518666e10",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_939efc737ed935": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "63eecd4a-d391-4c48-905f-14283f485568",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_abf48c092059a3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "224939ef-2dd0-448c-8c7b-918a0ead556d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_bb853a236b6b6d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d3b6a64b-57ea-4a39-a8ac-60866e7d3d2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    },
+    "s_d49a0f67f43481": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3984b51f-4014-4d60-8cf8-c1cb3fd3f812",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
