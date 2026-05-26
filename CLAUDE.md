@@ -12,6 +12,7 @@
 @.cursor/rules/n-rust.mdc
 @.cursor/rules/n-security.mdc
 @.cursor/rules/n-style-lint.mdc
+@.cursor/rules/n-test.mdc
 @.cursor/rules/n-text.mdc
 @.cursor/rules/n-vue.mdc
 @.cursor/rules/vue.mdc
@@ -28,6 +29,8 @@
   Команда: `/n-adr-normalize`
 - `.cursor/skills/n-fix/SKILL.md` — Виправити проєкт відповідно до всіх правил в .cursor/rules/
   Команда: `/n-fix`
+- `.cursor/skills/n-fix-tests/SKILL.md` — Ітеративно дописати тести щоб підвищити mutation score — читає вижилі мутанти з COVERAGE.md і запускає агент до конвергенції
+  Команда: `/n-fix-tests`
 - `.cursor/skills/n-lint/SKILL.md` — Запустити кореневий bun run lint, виправити порушення й підтвердити чистий вихід
   Команда: `/n-lint`
 - `.cursor/skills/n-llm-patch/SKILL.md` — Підготовка самодостатнього текстового промпта для іншого Claude/Cursor-агента — read-only аналіз CWD без жодних змін у поточному репо

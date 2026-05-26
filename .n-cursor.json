@@ -20,6 +20,7 @@
   "skills": [
     "adr-normalize",
     "fix",
+    "fix-tests",
     "lint",
     "llm-patch",
     "publish-telegram",
