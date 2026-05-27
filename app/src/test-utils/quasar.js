@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { mount } from '@vue/test-utils'
 import * as Quasar from 'quasar'
 

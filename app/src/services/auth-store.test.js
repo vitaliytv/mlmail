@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, it, expect, mock, beforeEach } from 'bun:test'
 
 const invokeMock = mock()

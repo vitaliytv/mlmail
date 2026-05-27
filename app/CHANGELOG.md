@@ -4,6 +4,12 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
 
+## [0.1.5] - 2026-05-26
+
+### Changed
+
+- Оновлено форматування JS/Vue джерел, тестового preload та Vite-конфігу для узгодження з поточними tooling-перевірками.
+
 ## [0.1.4] - 2026-05-26
 
 ### Changed

@@ -1,6 +1,4 @@
 /** @type {import('@stryker-mutator/core').PartialStrykerOptions} */
-// @ts-nocheck
-
 export default {
   testRunner: 'command',
   commandRunner: {
