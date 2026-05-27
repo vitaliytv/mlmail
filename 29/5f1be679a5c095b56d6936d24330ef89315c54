@@ -1,0 +1,31 @@
+app/src/services/auth-store.js
+  s_dd323214625f60::t_519ef29735d55a 1-3,6-10,13,42,44-45,48,115,144,146-150,153,197
+app/CHANGELOG.md
+  s_dd323214625f60::t_0737303d1c48c6 7-12
+.jscpd.json
+  s_dd323214625f60::t_6ea0f8e88dbaa0 9
+app/src/i18n/auth-errors.js
+  s_dd323214625f60::t_519ef29735d55a 20
+app/src/views/Login.vue
+  s_dd323214625f60::t_519ef29735d55a 2-4,6,13
+app/src/App.vue
+  s_dd323214625f60::t_519ef29735d55a 2-3,5
+app/package.json
+  s_dd323214625f60::t_9c5ea3981003b2 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "295f1be679a5c095b56d6936d24330ef89315c54",
+  "prompts": {},
+  "sessions": {
+    "s_dd323214625f60": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019e6493-1ebb-7816-b3a0-caa7a089f245",
+        "model": "gpt-5.5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
