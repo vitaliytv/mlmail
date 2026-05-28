@@ -236,7 +236,7 @@ pub async fn gmail_random_message(
     if ids.is_empty() {
         return Err(GmailError::Empty);
     }
-    let i = rand::random::<u64>() as usize + /* ~ changed by cargo-mutants ~ */ ids.len();
+    let i = rand::random::<u64>() as usize % ids.len();
     get_message_at(&endpoints.gmail_messages_list, &token, &ids[i]).await
 }
 

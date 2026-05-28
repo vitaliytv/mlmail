@@ -7,12 +7,26 @@
 # з нуля навіть з кешем, що збільшує час кожного мутанту з секунд до хвилин.
 additional_cargo_test_args = ["--lib", "--tests"]
 
+# Паралельні воркери НЕ налаштовуються через mutants.toml — це лише CLI-флаг
+# `--jobs N` або env `CARGO_MUTANTS_JOBS=N`. На 8-ядерній M-серії оптимально
+# `CARGO_MUTANTS_JOBS=4` (компроміс між CPU і linker/disk contention).
+# Постав env-var у shell rc або в `package.json#scripts.coverage`.
+
+# Множник на baseline test time для timeout. Дефолт 5× на цьому проєкті дає 1390s
+# (≈23 хв) на мутант, бо baseline test 278s (linker overhead + process spawn).
+# 2× дає 556s (≈9 хв) — для unit-тестів, що реально завершуються за <1 сек,
+# цього більш ніж достатньо, і реальні infinite-loop-мутанти відсікаються швидше.
+timeout_multiplier = 2.0
+
 # Tauri canonical cargo-mutants additions (tauri.mdc)
 # Platform bridge / app shell — boundary-файли (тестуються smoke/e2e, не mutation unit).
 # Якщо у bridge-файлі з'являється pure/business logic — винеси її у platform-neutral
 # модуль (src/auth/oauth.rs, src/gmail/message.rs, ...) і тестуй mutation-testing там.
+# src/lib.rs — runtime entrypoint (`pub fn run`); мутант `replace run with ()` дає
+# 38s build + 440s test ≈ 8 хв на один мутант, бо запускає весь Tauri app shell.
 exclude_globs = [
   "src/main.rs",
+  "src/lib.rs",
   "src/**/android.rs",
   "src/**/ios.rs",
   "src/**/mobile.rs",
