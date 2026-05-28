@@ -1,0 +1,22 @@
+app/src-tauri/src/gmail/mod.rs
+  s_22f9cebe9692ca::t_8770359eeef41f 239
+app/src-tauri/.cargo/mutants.toml
+  s_22f9cebe9692ca::t_42f8352b0d1e97 10-13
+  s_22f9cebe9692ca::t_c63df191f4c22c 14-20,25-26,29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "323b41413acbfa8266accbc10e4be7b6ec89b62c",
+  "prompts": {},
+  "sessions": {
+    "s_22f9cebe9692ca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "166ef75e-b936-4ab8-8b5a-0c62107f5a6a",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
