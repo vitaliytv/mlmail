@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils'
 import * as Quasar from 'quasar'
 
-// `bun test` has no @quasar/vite-plugin to auto-import components per file,
-// so register every Quasar component (QBtn, QPage, …) globally.
+// Register every Quasar component (QBtn, QPage, …) globally so both template
+// usage and programmatic h(Quasar.QLayout) resolve in mounted test trees.
 const QUASAR_COMPONENT_RE = /^Q[A-Z]/
 const quasarComponents = Object.fromEntries(Object.entries(Quasar).filter(([name]) => QUASAR_COMPONENT_RE.test(name)))
 

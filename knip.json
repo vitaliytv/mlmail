@@ -6,7 +6,8 @@
     ".pi/extensions/n-cursor-adr/**",
     "app/src-tauri/target/**",
     "scripts/docs-regen/manifest.js",
-    "scripts/docs-regen/marks.js"
+    "scripts/docs-regen/marks.js",
+    "scripts/stryker.config.mjs"
   ],
   "ignoreDependencies": [
     "@nitra/cspell-dict",
@@ -45,7 +46,10 @@
       ]
     },
     "app": {
-      "entry": ["src/**/*.test.js", "test/happy-dom.preload.js"]
+      "entry": ["src/**/*.test.js"]
+    },
+    "scripts": {
+      "entry": ["docs-regen.js"]
     }
   }
 }

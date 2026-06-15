@@ -9,6 +9,8 @@
     "**/CHANGELOG.md",
     "**/src-tauri/target/**",
     "**/src-tauri/gen/**",
-    "scripts/docs-regen/default-templates/**"
+    "scripts/docs-regen/default-templates/**",
+    "docs/superpowers/**",
+    ".cursor/**"
   ]
 }

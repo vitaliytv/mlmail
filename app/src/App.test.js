@@ -1,9 +1,9 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { mountQuasar } from './test-utils/quasar.js'
 
-const invokeMock = mock()
-mock.module('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
 
 const { _resetForTest } = await import('./services/auth-store.js')
 const AppModule = await import('./App.vue')

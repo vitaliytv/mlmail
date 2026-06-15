@@ -4,6 +4,21 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
 
+## [0.1.6] - 2026-06-15
+
+### Added
+
+- Tool Surface (`n-tool-surface`) у `app/src/tool/`: спільний каталог інструментів (`catalog.js`) зі схемами, `dispatch.js` з уніфікованим конвертом `{ ok, output } / { ok:false, error:{ code, message, kind } }`, `manifest.js` (OpenAI function-calling для майбутнього LLM-агента), `transports.js` (Tauri-invoke) та `index.js`. Тести `tool.test.js`.
+
+### Changed
+
+- `auth-store.js` переведено з прямих `invoke` на `dispatch` для read/action-команд (`is_authenticated`, `current_email`, `inbox_count`, `random_message`, `random_newsletter`, `unsubscribe`); lifecycle/secret (`login`, `logout`, `getAccessToken`) лишаються прямими invoke. Конверт зберігає backend-`kind`, тож ReauthRequired-логіка не змінилась.
+- Тестовий стек переведено з `bun test` + happy-dom preload на **Vitest** + happy-dom (канон `n-test`/`n-vue`). `vitest.config.mjs` через `mergeConfig` повторно використовує `vite.config.js` (Vue/VueMacros/AutoImport/Quasar), тож SFC-компіляція й авто-імпорти працюють нативно — preload-хаки прибрано. Тест-файли переписано з `bun:test` (`mock`/`mock.module`) на `vitest` (`vi`/`vi.hoisted`/`vi.mock`). `stryker.config.mjs` — на `vitest-runner` з `perTest`-аналізом покриття.
+
+### Removed
+
+- Тестовий preload `test/happy-dom.preload.js` і залежності `@happy-dom/global-registrator`, `@types/bun`, `@vue/compiler-sfc` (більше не потрібні з Vitest).
+
 ## [0.1.5] - 2026-05-26
 
 ### Changed

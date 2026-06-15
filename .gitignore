@@ -43,6 +43,7 @@ docs/ci4/.regen.log
 docs/ci4/.regen-debug/
 .claude/hooks/.docs-regen.lock
 # @nitra/cursor (adr) — локальні артефакти Stop-hook, не коміти
+.n-cursor/
 node_modules/
 dist/
 .claude/hooks/*.log
@@ -54,3 +55,6 @@ dist/
 # Stryker mutation testing (test.mdc)
 reports/stryker/incremental.json
 **/reports/stryker/
+
+# Test artifacts: Stryker + coverage (test.mdc)
+**/coverage/

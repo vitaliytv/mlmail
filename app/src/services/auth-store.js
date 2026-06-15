@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { dispatch } from '../tool/index.js'
 
 const _email = ref(null)
 const _isAuthenticated = ref(false)
@@ -37,17 +38,18 @@ export function useAuthStore() {
    */
   async function refreshInboxCount() {
     if (!_isAuthenticated.value) return
-    try {
-      _inboxCount.value = await invoke('gmail_inbox_count')
+    const result = await dispatch('inbox_count')
+    if (result.ok) {
+      _inboxCount.value = result.output
       _inboxErrorKind.value = null
-    } catch (error) {
-      const kind = getErrorKind(error)
-      _inboxCount.value = null
-      _inboxErrorKind.value = kind
-      if (kind === 'ReauthRequired') {
-        _email.value = null
-        _isAuthenticated.value = false
-      }
+      return
+    }
+    const kind = result.error.kind
+    _inboxCount.value = null
+    _inboxErrorKind.value = kind
+    if (kind === 'ReauthRequired') {
+      _email.value = null
+      _isAuthenticated.value = false
     }
   }
 
@@ -58,20 +60,20 @@ export function useAuthStore() {
     if (!_isAuthenticated.value) return
     _isMessageLoading.value = true
     _messageErrorKind.value = null
-    const command = _onlyNewsletters.value ? 'gmail_random_newsletter' : 'gmail_random_message'
-    try {
-      _currentMessage.value = await invoke(command)
-    } catch (error) {
-      const kind = getErrorKind(error)
+    const tool = _onlyNewsletters.value ? 'random_newsletter' : 'random_message'
+    const result = await dispatch(tool)
+    if (result.ok) {
+      _currentMessage.value = result.output
+    } else {
+      const kind = result.error.kind
       _currentMessage.value = null
       _messageErrorKind.value = kind
       if (kind === 'ReauthRequired') {
         _email.value = null
         _isAuthenticated.value = false
       }
-    } finally {
-      _isMessageLoading.value = false
     }
+    _isMessageLoading.value = false
   }
 
   /**
@@ -89,29 +91,30 @@ export function useAuthStore() {
     if (!action) return
     _isUnsubscribing.value = true
     _unsubscribeErrorKind.value = null
-    try {
-      await invoke('gmail_unsubscribe', { action })
+    const result = await dispatch('unsubscribe', { action })
+    if (result.ok) {
       await loadRandomMessage()
-    } catch (error) {
-      const kind = getErrorKind(error)
+    } else {
+      const kind = result.error.kind
       _unsubscribeErrorKind.value = kind
       if (kind === 'ReauthRequired') {
         _email.value = null
         _isAuthenticated.value = false
       }
-    } finally {
-      _isUnsubscribing.value = false
     }
+    _isUnsubscribing.value = false
   }
 
   /**
    *
    */
   async function initialize() {
-    const ok = await invoke('auth_is_authenticated')
+    const authed = await dispatch('is_authenticated')
+    const ok = authed.ok ? authed.output : false
     _isAuthenticated.value = ok
     if (ok) {
-      _email.value = await invoke('auth_current_email')
+      const email = await dispatch('current_email')
+      _email.value = email.ok ? email.output : null
       await refreshInboxCount()
       await loadRandomMessage()
     }

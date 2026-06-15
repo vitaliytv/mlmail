@@ -1,7 +1,7 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const invokeMock = mock()
-mock.module('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
 
 const { useAuthStore, _resetForTest } = await import('./auth-store.js')
 
@@ -15,7 +15,8 @@ beforeEach(() => {
 
 describe('useAuthStore initial state', () => {
   it('starts with the public loading and auth flags disabled', async () => {
-    const { useAuthStore: useFreshAuthStore } = await import('./auth-store.js?initial-state')
+    vi.resetModules()
+    const { useAuthStore: useFreshAuthStore } = await import('./auth-store.js')
     const store = useFreshAuthStore()
     expect(store.isAuthenticated.value).toBe(false)
     expect(store.isLoading.value).toBe(false)
