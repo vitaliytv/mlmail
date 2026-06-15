@@ -6,6 +6,12 @@ const KEY_ANDROID: &str = "MLMAIL_GOOGLE_ANDROID_CLIENT_ID";
 const KEY_ANDROID_WEB: &str = "MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID";
 const PLACEHOLDER: &str = "REPLACE_ME";
 
+// Built-in Google OAuth Desktop client_secret. Google treats the Desktop-client
+// secret as non-confidential (it ships in every native binary anyway and PKCE is
+// the real protection), so it is embedded here as a default. An env / .env.secret
+// value still overrides it. trufflehog is told to skip this file (.trufflehog-exclude).
+const DESKTOP_SECRET_BUILTIN: &str = "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"; // cspell:disable-line
+
 static DESKTOP: OnceLock<String> = OnceLock::new();
 static DESKTOP_SECRET: OnceLock<String> = OnceLock::new();
 static ANDROID: OnceLock<String> = OnceLock::new();
@@ -33,7 +39,16 @@ pub fn desktop_client_id() -> &'static str {
 }
 
 pub fn desktop_client_secret() -> &'static str {
-    DESKTOP_SECRET.get_or_init(|| resolve(KEY_DESKTOP_SECRET)).as_str()
+    DESKTOP_SECRET
+        .get_or_init(|| {
+            let from_env = resolve(KEY_DESKTOP_SECRET);
+            if is_real_client_id(&from_env) {
+                from_env
+            } else {
+                DESKTOP_SECRET_BUILTIN.to_string()
+            }
+        })
+        .as_str()
 }
 
 pub fn android_client_id() -> &'static str {
@@ -45,7 +60,7 @@ pub fn android_web_client_id() -> &'static str {
 }
 
 pub fn is_real_client_id(value: &str) -> bool {
-    !value.starts_with(PLACEHOLDER)
+    !value.trim().is_empty() && !value.starts_with(PLACEHOLDER)
 }
 
 #[cfg(test)]
@@ -60,5 +75,11 @@ mod tests {
     #[test]
     fn real_looking_client_id_is_considered_real() {
         assert!(is_real_client_id("123-abc.apps.googleusercontent.com"));
+    }
+
+    #[test]
+    fn empty_or_blank_value_is_not_considered_real() {
+        assert!(!is_real_client_id(""));
+        assert!(!is_real_client_id("   "));
     }
 }

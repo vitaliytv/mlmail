@@ -10,6 +10,8 @@ pub enum AuthError {
     Network(String),
     #[error("oauth error: {0}")]
     OAuth(String),
+    #[error("oauth client not configured: {0}")]
+    ConfigMissing(String),
     #[error("storage error: {0}")]
     Storage(String),
     #[error("re-authentication required")]

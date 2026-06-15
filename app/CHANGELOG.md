@@ -19,6 +19,10 @@
 
 - Тестовий preload `test/happy-dom.preload.js` і залежності `@happy-dom/global-registrator`, `@types/bun`, `@vue/compiler-sfc` (більше не потрібні з Vitest).
 
+### Fixed
+
+- Логін з ненастроєними Google OAuth credentials більше не падає з плутаним `OAuth`-помилкою: `run_login` (macOS/Android) перевіряє client_id/secret через `require_configured` ще до старту флоу й повертає новий `ConfigMissing(<env-var>)` → UI показує «Google OAuth не налаштовано: заповніть credentials у .env / .env.secret.». `is_real_client_id` тепер відхиляє і порожній/пробільний рядок (раніше порожній id вважався «справжнім»).
+
 ## [0.1.5] - 2026-05-26
 
 ### Changed

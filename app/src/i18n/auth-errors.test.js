@@ -14,6 +14,10 @@ describe('errorMessage', () => {
     expect(errorMessage('OAuth')).toBe('Помилка авторизації Google.')
   })
 
+  it('returns Ukrainian message for ConfigMissing', () => {
+    expect(errorMessage('ConfigMissing')).toBe('Google OAuth не налаштовано: заповніть credentials у .env / .env.secret.')
+  })
+
   it('returns Ukrainian message for Storage', () => {
     expect(errorMessage('Storage')).toBe('Не вдалося зберегти токен у захищене сховище пристрою.')
   })

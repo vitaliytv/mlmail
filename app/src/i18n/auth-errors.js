@@ -2,6 +2,7 @@ const messages = {
   Cancelled: 'Логін скасовано.',
   Network: "Не вдалося з'єднатися з Google. Перевірте мережу.",
   OAuth: 'Помилка авторизації Google.',
+  ConfigMissing: 'Google OAuth не налаштовано: заповніть credentials у .env / .env.secret.',
   Storage: 'Не вдалося зберегти токен у захищене сховище пристрою.',
   ReauthRequired: 'Сеанс прострочений — увійдіть знову.',
   Platform: 'Помилка платформи.',

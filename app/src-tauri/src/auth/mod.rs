@@ -66,12 +66,29 @@ fn apply_token_response(state: &mut AuthState, resp: &TokenResponse, email: Opti
 
 #[cfg(target_os = "macos")]
 async fn run_login(app: &AppHandle) -> Result<TokenResponse, AuthError> {
+    require_configured(config::desktop_client_id(), "MLMAIL_GOOGLE_DESKTOP_CLIENT_ID")?;
+    require_configured(config::desktop_client_secret(), "MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET")?;
     flow::macos::run_login_flow(app, config::desktop_client_id()).await
 }
 
 #[cfg(target_os = "android")]
 async fn run_login(app: &AppHandle) -> Result<TokenResponse, AuthError> {
+    require_configured(config::android_web_client_id(), "MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID")?;
+    require_configured(config::android_client_id(), "MLMAIL_GOOGLE_ANDROID_CLIENT_ID")?;
     flow::android::run_login_flow(app, config::android_web_client_id(), config::android_client_id()).await
+}
+
+/// Guard against starting an OAuth flow with an empty / placeholder credential:
+/// without this the flow proceeds with an empty `client_id` and Google rejects it
+/// with an opaque `OAuth` error. Returns `ConfigMissing(<env var>)` so the UI can
+/// tell the user exactly which credential to set in `.env` / `.env.secret`.
+#[cfg(any(target_os = "macos", target_os = "android"))]
+fn require_configured(value: &str, env_var: &str) -> Result<(), AuthError> {
+    if config::is_real_client_id(value) {
+        Ok(())
+    } else {
+        Err(AuthError::ConfigMissing(env_var.into()))
+    }
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "android")))]

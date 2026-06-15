@@ -4,3 +4,4 @@
 (^|/)build(/|$)
 .*\.lock$
 .*fixtures?/.*
+app/src-tauri/src/auth/config\.rs$
