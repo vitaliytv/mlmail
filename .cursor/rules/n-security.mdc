@@ -43,16 +43,7 @@ version: '2.1'
 
 ## `.trufflehog-exclude` (рекомендована основа)
 
-Канон (допускає розширення): `.trufflehog-exclude`:
-
-```
-(^|/)node_modules(/|$)
-(^|/)\.git(/|$)
-(^|/)dist(/|$)
-(^|/)build(/|$)
-.*\.lock$
-.*fixtures?/.*
-```
+Канон (допускає розширення): [.trufflehog-exclude.snippet.txt](./js/templates/trufflehog/.trufflehog-exclude.snippet.txt)
 
 **Важливо:** один regex-pattern на рядок, без TOML-обгортки; коментарі починаються з `#`.
 
