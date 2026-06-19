@@ -130,17 +130,17 @@ fn classify_http_error(status: reqwest::StatusCode, body: &str) -> AuthError {
     // 4xx — Google returns a JSON object like {"error":"invalid_grant","error_description":"..."}
     let oauth_error = serde_json::from_str::<serde_json::Value>(body)
         .ok()
-        .and_then(|v| {
+        .map(|v| {
             let kind = v.get("error").and_then(|e| e.as_str()).unwrap_or("oauth_error");
             let desc = v
                 .get("error_description")
                 .and_then(|e| e.as_str())
                 .unwrap_or("");
-            Some(if desc.is_empty() {
+            if desc.is_empty() {
                 kind.to_string()
             } else {
                 format!("{kind}: {desc}")
-            })
+            }
         })
         .unwrap_or_else(|| format!("HTTP {status}: {body}"));
     AuthError::OAuth(oauth_error)

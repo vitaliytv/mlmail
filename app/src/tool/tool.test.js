@@ -1,13 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { validateInput } from '@7n/tauri-components'
+import { getTool, TOOLS } from './catalog.js'
 
-const { TOOLS, getTool } = await import('./catalog.js')
-const { createDispatch, validateInput } = await import('./dispatch.js')
-const { toolManifest, listTools } = await import('./manifest.js')
+// Domain tests for the local Gmail tool catalog. The generic agent machinery
+// (dispatch, manifest, scope, the loop) is tested in @7n/tauri-components; here
+// we only cover what's mlmail-specific: the catalog shape, tiers and validators.
 
 describe('catalog', () => {
-  it('every tool has scope, name, summary, input and a tauri command', () => {
+  it('every tool has a tier, name, summary, input and tauri command', () => {
     for (const tool of TOOLS) {
-      expect(tool.scope).toBeTruthy()
+      expect(['read', 'write', 'destructive']).toContain(tool.tier)
       expect(tool.name).toBeTruthy()
       expect(tool.summary).toBeTruthy()
       expect(tool.input).toBeTypeOf('object')
@@ -20,92 +22,32 @@ describe('catalog', () => {
     expect(getTool('nope')).toBeNull()
   })
 
-  it('marks read tools safe and unsubscribe mutate', () => {
-    expect(getTool('random_message').scope).toBe('safe')
-    expect(getTool('unsubscribe').scope).toBe('mutate')
+  it('tiers the new tools correctly: search/read read, trash destructive, unsubscribe write', () => {
+    expect(getTool('search').tier).toBe('read')
+    expect(getTool('read').tier).toBe('read')
+    expect(getTool('trash').tier).toBe('destructive')
+    expect(getTool('unsubscribe').tier).toBe('write')
   })
 })
 
-describe('validateInput', () => {
+describe('validateInput against catalog tools', () => {
   it('passes when a no-input tool gets nothing', () => {
     expect(validateInput(getTool('inbox_count'))).toBeNull()
   })
 
-  it('flags a missing required field', () => {
-    expect(validateInput(getTool('unsubscribe'), {})).toBe('Missing required field: action')
+  it('search requires a string query', () => {
+    expect(validateInput(getTool('search'), {})).toBe('Missing required field: query')
+    expect(validateInput(getTool('search'), { query: 5 })).toBe('Field "query" must be a string')
+    expect(validateInput(getTool('search'), { query: 'from:bob' })).toBeNull()
   })
 
-  it('flags a wrong type', () => {
+  it('read/trash require a string id', () => {
+    expect(validateInput(getTool('read'), {})).toBe('Missing required field: id')
+    expect(validateInput(getTool('trash'), { id: 'abc' })).toBeNull()
+  })
+
+  it('unsubscribe requires an object action', () => {
     expect(validateInput(getTool('unsubscribe'), { action: 'x' })).toBe('Field "action" must be an object')
-    expect(validateInput(getTool('unsubscribe'), { action: [] })).toBe('Field "action" must be an object')
-  })
-
-  it('passes a valid action object', () => {
     expect(validateInput(getTool('unsubscribe'), { action: { OneClick: { url: 'https://x' } } })).toBeNull()
-  })
-})
-
-describe('dispatch', () => {
-  it('returns an ok envelope from the transport output', async () => {
-    const transport = vi.fn(() => 42)
-    const result = await createDispatch(transport)('inbox_count', {})
-    expect(result).toEqual({ ok: true, output: 42 })
-    expect(transport).toHaveBeenCalledWith(getTool('inbox_count'), {})
-  })
-
-  it('rejects an unknown tool without calling the transport', async () => {
-    const transport = vi.fn(() => null)
-    const result = await createDispatch(transport)('nope', {})
-    expect(result).toEqual({ ok: false, error: { code: 'not_found', message: 'Unknown tool: nope' } })
-    expect(transport).not.toHaveBeenCalled()
-  })
-
-  it('rejects invalid input before the transport', async () => {
-    const transport = vi.fn(() => null)
-    const result = await createDispatch(transport)('unsubscribe', {})
-    expect(result.ok).toBe(false)
-    expect(result.error.code).toBe('validation')
-    expect(transport).not.toHaveBeenCalled()
-  })
-
-  it('wraps a transport failure as an io error and preserves the backend kind', async () => {
-    const transport = vi.fn(() => {
-      const error = new Error('re-auth')
-      error.kind = 'ReauthRequired'
-      throw error
-    })
-    const result = await createDispatch(transport)('inbox_count', {})
-    expect(result.ok).toBe(false)
-    expect(result.error.code).toBe('io')
-    expect(result.error.kind).toBe('ReauthRequired')
-  })
-
-  it('defaults kind to Unknown for plain errors', async () => {
-    const transport = vi.fn(() => {
-      throw new Error('boom')
-    })
-    const result = await createDispatch(transport)('inbox_count', {})
-    expect(result.error.kind).toBe('Unknown')
-    expect(result.error.message).toBe('boom')
-  })
-})
-
-describe('manifest', () => {
-  it('emits OpenAI function-calling tools from the catalog', () => {
-    const manifest = toolManifest()
-    expect(manifest).toHaveLength(TOOLS.length)
-    const unsub = manifest.find(entry => entry.function.name === 'unsubscribe')
-    expect(unsub).toMatchObject({
-      type: 'function',
-      function: { name: 'unsubscribe', parameters: { type: 'object', required: ['action'] } },
-    })
-    const count = manifest.find(entry => entry.function.name === 'inbox_count')
-    expect(count.function.parameters).toEqual({ type: 'object', properties: {} })
-  })
-
-  it('lists tools as name + summary + scope', () => {
-    const list = listTools()
-    expect(list).toHaveLength(TOOLS.length)
-    expect(list.every(item => item.name && item.summary && item.scope)).toBe(true)
   })
 })

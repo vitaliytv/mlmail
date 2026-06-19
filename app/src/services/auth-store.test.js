@@ -715,7 +715,7 @@ describe('useAuthStore.onlyNewsletters', () => {
     await store.initialize()
     store.setOnlyNewsletters(true)
     await store.loadRandomMessage()
-    expect(invokeMock).toHaveBeenCalledWith('gmail_random_newsletter')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_newsletter', {})
     expect(store.currentMessage.value.id).toBe('n1')
   })
 
@@ -732,6 +732,6 @@ describe('useAuthStore.onlyNewsletters', () => {
     await store.initialize()
     await store.loadRandomMessage()
     expect(store.onlyNewsletters.value).toBe(false)
-    expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_message', {})
   })
 })

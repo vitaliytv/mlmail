@@ -180,7 +180,7 @@ describe('Login.vue random message', () => {
     const btn = w.findAll('button').find(b => b.text().includes('Показати інший'))
     await btn.trigger('click')
     await flushPromises()
-    expect(invokeMock).toHaveBeenCalledWith('gmail_random_message')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_message', {})
     expect(w.text()).toContain('Next one')
   })
 
@@ -199,6 +199,6 @@ describe('Login.vue random message', () => {
     const toggle = w.find('.q-toggle')
     await toggle.trigger('click')
     await flushPromises()
-    expect(invokeMock).toHaveBeenCalledWith('gmail_random_newsletter')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_random_newsletter', {})
   })
 })

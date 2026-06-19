@@ -44,7 +44,7 @@ export function useAuthStore() {
       _inboxErrorKind.value = null
       return
     }
-    const kind = result.error.kind
+    const kind = result.error.kind ?? 'Unknown'
     _inboxCount.value = null
     _inboxErrorKind.value = kind
     if (kind === 'ReauthRequired') {
@@ -65,7 +65,7 @@ export function useAuthStore() {
     if (result.ok) {
       _currentMessage.value = result.output
     } else {
-      const kind = result.error.kind
+      const kind = result.error.kind ?? 'Unknown'
       _currentMessage.value = null
       _messageErrorKind.value = kind
       if (kind === 'ReauthRequired') {
@@ -95,7 +95,7 @@ export function useAuthStore() {
     if (result.ok) {
       await loadRandomMessage()
     } else {
-      const kind = result.error.kind
+      const kind = result.error.kind ?? 'Unknown'
       _unsubscribeErrorKind.value = kind
       if (kind === 'ReauthRequired') {
         _email.value = null

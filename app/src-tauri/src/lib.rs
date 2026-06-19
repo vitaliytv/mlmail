@@ -7,7 +7,10 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
+    let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_agent::init());
 
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
@@ -32,6 +35,9 @@ pub fn run() {
             gmail::gmail_random_message,
             gmail::gmail_random_newsletter,
             gmail::gmail_unsubscribe,
+            gmail::gmail_search,
+            gmail::gmail_read,
+            gmail::gmail_trash,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

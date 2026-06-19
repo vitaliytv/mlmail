@@ -265,6 +265,137 @@ pub async fn gmail_random_newsletter(
     get_message_at(&endpoints.gmail_messages_list, &token, &ids[i]).await
 }
 
+/// Lightweight inbox-message summary (no body) for search results.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GmailSummary {
+    pub id: String,
+    pub from: String,
+    pub subject: String,
+    pub date: String,
+}
+
+/// Fetch only From/Subject/Date headers (format=metadata) for one message.
+pub(crate) async fn get_message_meta_at(
+    base_endpoint: &str,
+    access_token: &str,
+    id: &str,
+) -> Result<GmailSummary, GmailError> {
+    let resp = reqwest::Client::new()
+        .get(format!("{base_endpoint}/{id}"))
+        .bearer_auth(access_token)
+        .query(&[
+            ("format", "metadata"),
+            ("metadataHeaders", "From"),
+            ("metadataHeaders", "Subject"),
+            ("metadataHeaders", "Date"),
+        ])
+        .send()
+        .await?;
+
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let empty_headers: Vec<serde_json::Value> = Vec::new();
+    let headers = v
+        .get("payload")
+        .and_then(|p| p.get("headers"))
+        .and_then(|h| h.as_array())
+        .unwrap_or(&empty_headers);
+    Ok(GmailSummary {
+        id: id.to_string(),
+        from: extract_header(headers, "From"),
+        subject: extract_header(headers, "Subject"),
+        date: extract_header(headers, "Date"),
+    })
+}
+
+/// Search the inbox with a Gmail query (`q`); returns up to 15 message
+/// summaries (id/from/subject/date), newest first.
+#[tauri::command]
+pub async fn gmail_search(
+    q: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<Vec<GmailSummary>, GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let ids = list_inbox_ids_at_q(&endpoints.gmail_messages_list, &token, &q).await?;
+    let mut out = Vec::new();
+    for id in ids.into_iter().take(15) {
+        out.push(get_message_meta_at(&endpoints.gmail_messages_list, &token, &id).await?);
+    }
+    Ok(out)
+}
+
+/// Read one inbox message in full (headers + plain-text body) by id.
+#[tauri::command]
+pub async fn gmail_read(
+    id: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<GmailMessage, GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    get_message_at(&endpoints.gmail_messages_list, &token, &id).await
+}
+
+/// Move one message to Trash by id (reversible; Gmail purges Trash after 30d).
+#[tauri::command]
+pub async fn gmail_trash(
+    id: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<(), GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let url = format!("{}/{}/trash", endpoints.gmail_messages_list, id);
+    let resp = reqwest::Client::new()
+        .post(&url)
+        .bearer_auth(&token)
+        .header("content-length", "0")
+        .send()
+        .await?;
+    let status = resp.status();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        let body = resp.text().await.unwrap_or_default();
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

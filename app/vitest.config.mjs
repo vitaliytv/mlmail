@@ -12,6 +12,9 @@ export default defineConfig(configEnv =>
       include: ['**/*.test.{js,mjs}', 'tests/**/*.test.{js,mjs}'],
       exclude: ['**/node_modules/**', '**/dist/**', '**/reports/stryker/**'],
       environment: 'happy-dom',
+      // @7n/tauri-components ships .vue source; inline it so the vue plugin
+      // compiles it instead of Node trying to import the raw .vue file.
+      server: { deps: { inline: [/@7n\/tauri-components/] } },
       // pool: 'forks' — defense-in-depth process isolation between test files (test.mdc).
       pool: 'forks',
       coverage: { provider: 'v8', reporter: ['lcov', 'text-summary'] }
