@@ -141,7 +141,8 @@ jobs:
       - name: Upload APK to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          gh release upload "$GITHUB_REF_NAME"
-          app/src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
-          --clobber
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          SRC=$(ls app/src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk | head -1)
+          cp "$SRC" "$RUNNER_TEMP/mlmail_${VER}_universal.apk"
+          gh release upload "$GITHUB_REF_NAME" "$RUNNER_TEMP/mlmail_${VER}_universal.apk" --clobber
