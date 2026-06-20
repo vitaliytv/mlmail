@@ -129,7 +129,8 @@ jobs:
             echo "storeFile=$RUNNER_TEMP/keystore.jks"
             echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
             echo "keyAlias=$ANDROID_KEY_ALIAS"
-            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+            # PKCS12 keystore: пароль ключа = пароль сховища (окремий -keypass keytool ігнорує)
+            echo "keyPassword=$ANDROID_KEYSTORE_PASSWORD"
           } > app/src-tauri/gen/android/keystore.properties
 
       - name: Build signed APK
