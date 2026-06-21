@@ -56,3 +56,7 @@ Chosen option: "`std::env::var()` + `dotenvy` runtime", because зміни у `.
 - [03-components](../ci4/03-components.md)
 - [04-code](../ci4/04-code.md)
 - [decisions](../ci4/decisions.md)
+
+## Update 2026-06-15
+
+Google Desktop OAuth `client_secret` вбудовано напряму у `app/src-tauri/src/auth/config.rs` як константу `DESKTOP_SECRET_BUILTIN` (на відміну від client_id, який завантажується через dotenvy). Підстава: Google класифікує Desktop-type client_secret як «не секрет за визначенням» — він однаково потрапляє в дистрибутований бінарник; PKCE захищає флоу від зловживання голим секретом. `config.rs` виключено з trufflehog-сканування (`.trufflehog-exclude` += `app/src-tauri/src/auth/config\.rs$`).
