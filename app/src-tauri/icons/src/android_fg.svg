@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Content within adaptive icon safe zone (center ~66%, ~230..794) -->
+
+  <!-- Envelope body -->
+  <rect x="216" y="336" width="592" height="368" rx="40" fill="#FFFFFF" opacity="0.95"/>
+
+  <!-- Envelope top fold (teal) -->
+  <path d="M216 378 L512 532 L808 378 L808 336 Q808 296 768 296 L256 296 Q216 296 216 336 Z" fill="#00C8D4"/>
+
+  <!-- Bottom fold lines -->
+  <path d="M216 704 L418 540" stroke="#00C8D4" stroke-width="30" stroke-linecap="round" opacity="0.45" fill="none"/>
+  <path d="M808 704 L606 540" stroke="#00C8D4" stroke-width="30" stroke-linecap="round" opacity="0.45" fill="none"/>
+
+  <!-- AI spark — 4-point gold star -->
+  <g transform="translate(774 274)">
+    <path d="M0,-48 C3.5,-18 18,-3.5 48,0 C18,3.5 3.5,18 0,48 C-3.5,18 -18,3.5 -48,0 C-18,-3.5 -3.5,-18 0,-48 Z" fill="#FFC107"/>
+    <circle r="7" fill="#FFFFFF"/>
+  </g>
+</svg>

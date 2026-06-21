@@ -1,0 +1,30 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="200" fill="#0F1B2D"/>
+
+  <!-- Envelope body -->
+  <rect x="152" y="308" width="720" height="448" rx="48" fill="#FFFFFF" opacity="0.95"/>
+
+  <!-- Envelope top fold (V-shape) — teal -->
+  <path d="M152 356 L512 544 L872 356 L872 308 Q872 260 824 260 L200 260 Q152 260 152 308 Z" fill="#00C8D4"/>
+
+  <!-- Bottom-left fold line -->
+  <path d="M152 756 L386 556" stroke="#00C8D4" stroke-width="36" stroke-linecap="round" opacity="0.5"/>
+  <!-- Bottom-right fold line -->
+  <path d="M872 756 L638 556" stroke="#00C8D4" stroke-width="36" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- AI spark — 4-point gold star, top-right corner of envelope -->
+  <g transform="translate(784 220)">
+    <!-- Outer glow ring -->
+    <circle r="64" fill="#FFC107" opacity="0.15"/>
+    <!-- Spark body -->
+    <path d="
+      M0,-52 C4,-20 20,-4 52,0
+      C20,4 4,20 0,52
+      C-4,20 -20,4 -52,0
+      C-20,-4 -4,-20 0,-52 Z
+    " fill="#FFC107"/>
+    <!-- Center dot -->
+    <circle r="8" fill="#FFFFFF"/>
+  </g>
+</svg>
