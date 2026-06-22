@@ -12,6 +12,8 @@ const _messageErrorKind = ref(null)
 const _isMessageLoading = ref(false)
 const _isUnsubscribing = ref(false)
 const _unsubscribeErrorKind = ref(null)
+const _isTrashing = ref(false)
+const _trashErrorKind = ref(null)
 const _onlyNewsletters = ref(false)
 
 /**
@@ -108,6 +110,28 @@ export function useAuthStore() {
   /**
    *
    */
+  async function trashCurrent() {
+    const id = _currentMessage.value?.id
+    if (!id) return
+    _isTrashing.value = true
+    _trashErrorKind.value = null
+    const result = await dispatch('trash', { id })
+    if (result.ok) {
+      await Promise.all([loadRandomMessage(), refreshInboxCount()])
+    } else {
+      const kind = result.error.kind ?? 'Unknown'
+      _trashErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    }
+    _isTrashing.value = false
+  }
+
+  /**
+   *
+   */
   async function initialize() {
     const authed = await dispatch('is_authenticated')
     const ok = authed.ok ? authed.output : false
@@ -154,6 +178,8 @@ export function useAuthStore() {
     _isMessageLoading.value = false
     _isUnsubscribing.value = false
     _unsubscribeErrorKind.value = null
+    _isTrashing.value = false
+    _trashErrorKind.value = null
     _onlyNewsletters.value = false
   }
 
@@ -169,6 +195,8 @@ export function useAuthStore() {
     isMessageLoading: readonly(_isMessageLoading),
     isUnsubscribing: readonly(_isUnsubscribing),
     unsubscribeErrorKind: readonly(_unsubscribeErrorKind),
+    isTrashing: readonly(_isTrashing),
+    trashErrorKind: readonly(_trashErrorKind),
     onlyNewsletters: readonly(_onlyNewsletters),
     initialize,
     login,
@@ -177,6 +205,7 @@ export function useAuthStore() {
     refreshInboxCount,
     loadRandomMessage,
     unsubscribeFromCurrent,
+    trashCurrent,
     setOnlyNewsletters
   }
 }
@@ -196,5 +225,7 @@ export function _resetForTest() {
   _isMessageLoading.value = false
   _isUnsubscribing.value = false
   _unsubscribeErrorKind.value = null
+  _isTrashing.value = false
+  _trashErrorKind.value = null
   _onlyNewsletters.value = false
 }

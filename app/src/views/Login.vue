@@ -73,6 +73,9 @@ function toggleOnlyNewsletters(value) {
       <q-banner v-if="auth.unsubscribeErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.unsubscribeErrorKind.value) }}
       </q-banner>
+      <q-banner v-if="auth.trashErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
+        {{ errorMessage(auth.trashErrorKind.value) }}
+      </q-banner>
     </template>
 
     <q-btn
@@ -101,6 +104,14 @@ function toggleOnlyNewsletters(value) {
           :disable="!auth.currentMessage.value?.unsubscribe"
           :loading="auth.isUnsubscribing.value" />
         <q-space />
+        <q-btn
+          @click="auth.trashCurrent()"
+          flat
+          no-caps
+          icon="sym_o_delete"
+          label="Видалити"
+          :disable="!auth.currentMessage.value"
+          :loading="auth.isTrashing.value" />
         <q-btn
           @click="auth.loadRandomMessage()"
           flat
