@@ -1,5 +1,14 @@
 use std::sync::OnceLock;
 
+fn compile_time_id(key: &str) -> Option<&'static str> {
+    match key {
+        "MLMAIL_GOOGLE_DESKTOP_CLIENT_ID" => option_env!("MLMAIL_GOOGLE_DESKTOP_CLIENT_ID"),
+        "MLMAIL_GOOGLE_ANDROID_CLIENT_ID" => option_env!("MLMAIL_GOOGLE_ANDROID_CLIENT_ID"),
+        "MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID" => option_env!("MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID"),
+        _ => None,
+    }
+}
+
 const KEY_DESKTOP: &str = "MLMAIL_GOOGLE_DESKTOP_CLIENT_ID";
 const KEY_DESKTOP_SECRET: &str = "MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET";
 const KEY_ANDROID: &str = "MLMAIL_GOOGLE_ANDROID_CLIENT_ID";
@@ -31,7 +40,13 @@ fn resolve(key: &str) -> String {
         // sets vars that aren't already in the environment.
         let _ = dotenvy::from_filename(".env.secret");
     });
-    std::env::var(key).unwrap_or_else(|_| format!("{PLACEHOLDER}_{key}"))
+    // Runtime env (or .env file loaded above) takes priority; fall back to the
+    // value baked in at compile time by build.rs, then to the REPLACE_ME sentinel.
+    std::env::var(key).unwrap_or_else(|_| {
+        compile_time_id(key)
+            .map(str::to_string)
+            .unwrap_or_else(|| format!("{PLACEHOLDER}_{key}"))
+    })
 }
 
 pub fn desktop_client_id() -> &'static str {
