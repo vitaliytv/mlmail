@@ -1,11 +1,13 @@
 ---
 description: Перевірка JavaScript коду
-globs: "**/{.oxlintrc.json,eslint.config.js,.jscpd.json,knip.json,package.json},**/*.{js,mjs,cjs,jsx,ts,tsx}"
+globs: "**/{.oxlintrc.json,eslint.config.js,eslint.config.mjs,.jscpd.json,knip.json,package.json},**/*.{js,mjs,cjs,jsx,ts,tsx}"
 alwaysApply: false
-version: '1.30'
+version: '1.31'
 ---
 
-**oxlint**, **ESLint**, **jscpd**, **knip**. У скрипті **`lint-js`** і в CI — **`bunx oxlint`**, **`bunx eslint`**, **`bunx jscpd`**, **`bunx knip`** (у CI без **`--fix`** для oxlint/eslint — див. приклад workflow нижче). Без **prettier** і **@nitra/prettier-config**. У **`devDependencies`** має бути **`@nitra/eslint-config`** — версія не нижче канонічного мінімуму зі snippet нижче (semver-поріг, єдине джерело істини) (з **3.8.0** правило `no-restricted-syntax` забороняє `for...in`; з **3.9.2** у `getConfig` вбудовано ignore для **`**/adr/**`** — ADR-документи не валідуються ESLint, локально цей glob додавати не потрібно; також транзитивно йде **`@e18e/eslint-plugin`** для oxlint). Dependency-політику CI-етапу (`@e18e/eslint-plugin` і oxlint/eslint/jscpd/knip окремо не додавати) винесено в `js-lint-ci`.
+**oxlint**, **ESLint**, **jscpd**, **knip**. У скрипті **`lint-js`** і в CI — **`bunx oxlint`**, **`bunx eslint`**, **`bunx jscpd`**, **`bunx knip`** (у CI без **`--fix`** для oxlint/eslint — див. приклад workflow нижче). Без **prettier** і **@nitra/prettier-config**. У **`devDependencies`** має бути **`@nitra/eslint-config`** — версія не нижче канонічного мінімуму зі snippet нижче (semver-поріг, єдине джерело істини) (з **3.8.0** правило `no-restricted-syntax` забороняє `for...in`; з **3.9.2** у `getConfig` вбудовано ignore для **`**/adr/**`** — ADR-документи не валідуються ESLint, локально цей glob додавати не потрібно; також транзитивно йде **`@e18e/eslint-plugin`** для oxlint). `@e18e/eslint-plugin` окремо не додавай — він уже в залежностях `@nitra/eslint-config` (з **3.8.0**); пакети oxlint/eslint/jscpd/knip теж не додавай у `devDependencies` — `bunx` тягне їх ad-hoc.
+
+Два режими роботи: **per-file** (`n-cursor lint`, швидко) — oxlint + ESLint по змінених файлах; **full** (`n-cursor lint --full`, CI) — додатково jscpd + knip по всьому графу.
 
 У кожному **`package.json`** проєкту (корінь і всі workspace-пакети) має бути **`"type": "module"`** — весь код у ESM.
 
@@ -101,9 +103,31 @@ version: '1.30'
 .claude/worktrees/
 ```
 
-## knip
+## jscpd і knip — лише у `--full`
 
-Залежнісний аналіз (knip — невикористані залежності/експорти, `knip.json` канон) крос-файловий, тож винесений у правило `js-lint-ci` (`lint: full`). Див. `js-lint-ci`.
+`jscpd` і `knip` аналізують увесь граф проєкту, тому мають сенс лише у повному прогоні `npx @nitra/cursor lint --full` (CI: `lint --read-only --full`) — не у швидкому `lint` по змінених файлах. Per-file режиму немає.
+
+### knip
+
+Перевірку невикористаних залежностей і експортів виконує **knip** (заміна `depcheck`). Викликається у скрипті `lint-js` і в CI разом з oxlint/eslint/jscpd — окремий крок у CI не потрібен.
+
+У корені проєкту має бути **`knip.json`**, який стартує з канонічного baseline з пакета `@nitra/cursor` — файл [`npm/rules/js-lint/js/tooling/knip-canonical.json`](../js-lint/js/tooling/knip-canonical.json). Він покриває типові false-positives для наших правил: `entry` зі CLI-конфігами (eslint, stylelint, oxlint, jscpd, markdownlint-cli2, `commitlint`), `project` для `**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`, `ignore` для `**/__fixtures__/**`, `ignoreDependencies` для пакетів, посилання на які є лише в не-JS-конфігах (`@nitra/cspell-dict`, `/@cspell\/dict-.+/`, `graphql`), і `ignoreBinaries` для CLI, які канон вимагає викликати через `npx`/`bunx` і яких заборонено додавати в `devDependencies` (`actionlint`, `cspell`, `eslint`, `git-ai`, `jscpd`, `markdownlint-cli2`, `oxfmt`, `oxlint`, `shellcheck`, `uvx`, `v8r`, `zizmor`).
+
+Якщо `knip.json` відсутній — `npx @nitra/cursor fix js` копіює канон у корінь проєкту (side effect). Після створення модифікуй файл під свій проєкт як завгодно: перевіряємо лише наявність, зміст подальших змін не валідується.
+
+Пакет `knip` окремо в `devDependencies` не додавай — `bunx knip` тягне його ad-hoc.
+
+### Заборона `@nitra/as-integrations-fastify`
+
+Пакет **`@nitra/as-integrations-fastify`** заборонений у **`dependencies`**, **`peerDependencies`** та в import-specifier-ах. Це чистий републіш upstream, застряглий на peer `@apollo/server: "^4.0.0"`, тож на Apollo 5 `bun install` дає `warn: incorrect peer dependency`. Заміна — upstream **`@as-integrations/fastify`** (**`^3.1.0`**): peer `@apollo/server: "^4.0.0 || ^5.0.0"` + `fastify: "^5.3.0"`.
+
+```javascript title="❌ до"
+import fastifyApollo, { fastifyApolloDrainPlugin } from '@nitra/as-integrations-fastify'
+```
+
+```javascript title="✅ після"
+import fastifyApollo, { fastifyApolloDrainPlugin } from '@as-integrations/fastify'
+```
 
 ## jscpd: рефакторинг і структура
 
@@ -126,7 +150,7 @@ version: '1.30'
 
 Швидкий тест: якщо файл завтра можна опублікувати окремим npm-пакетом без переписування — це `utils/`; якщо він тримає domain-state, читає конфіг проєкту або викликає зовнішні сервіси/файли — це `lib/`. Не плутай із чужими каталогами на кшталт `shared/` чи `common/`: канонічні назви — лише `utils/` і `lib/`.
 
-Автоматично гарантується: `npx @nitra/cursor fix js-lint` (концерн `utils_imports`) обходить кожен `utils/`-каталог у воркспейсах і падає, якщо знаходить relative-імпорт з `..` (вихід за межі каталогу) у будь-якому не-тестовому файлі. Це механічне втілення правила «utils не знає про домен»: тільки same-dir (`./X`), bare-пакети та `node:*` дозволені; cross-rule, конфіги проєкту чи sibling-utils — fail. Якщо потрібна domain-залежність — перенеси файл у `lib/`.
+Автоматично гарантується: `npx @nitra/cursor fix js` (концерн `utils_imports`) обходить кожен `utils/`-каталог у воркспейсах і падає, якщо знаходить relative-імпорт з `..` (вихід за межі каталогу) у будь-якому не-тестовому файлі. Це механічне втілення правила «utils не знає про домен»: тільки same-dir (`./X`), bare-пакети та `node:*` дозволені; cross-rule, конфіги проєкту чи sibling-utils — fail. Якщо потрібна domain-залежність — перенеси файл у `lib/`.
 
 Додай workflow:
 
