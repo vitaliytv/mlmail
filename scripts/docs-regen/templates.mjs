@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { join } from 'node:path'
-import { sha256 } from './hash.js'
+import { sha256 } from './hash.mjs'
 
 const TEMPLATE_NAMES = [
   '_global.prompt.md',

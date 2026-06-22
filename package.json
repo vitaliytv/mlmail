@@ -13,7 +13,7 @@
     "lint-security": "trufflehog filesystem . --no-update --exclude-paths .trufflehog-exclude --results=verified,unknown --fail",
     "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
     "lint-text": "n-cursor lint-text",
-    "docs:regen": "bun run scripts/docs-regen.js",
+    "docs:regen": "bun run scripts/docs-regen.mjs",
     "coverage": "n-cursor coverage"
   },
   "devDependencies": {

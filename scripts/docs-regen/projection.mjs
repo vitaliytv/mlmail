@@ -1,6 +1,6 @@
 import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { callLlm, parseLlmResponse } from './llm.js'
+import { callLlm, parseLlmResponse } from './llm.mjs'
 
 /**
  * Regenerate a single CI4 projection file via the LLM, with one retry on parse failure.

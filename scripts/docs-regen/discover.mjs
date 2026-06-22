@@ -2,7 +2,7 @@ import matter from 'gray-matter'
 import { readFile } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 import { glob } from 'tinyglobby'
-import { hasMark } from './marks.js'
+import { hasMark } from './marks.mjs'
 
 /**
  * Discover all clean (non-session) ADR files under `docs/adr`.

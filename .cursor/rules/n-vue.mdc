@@ -116,11 +116,11 @@ const additionalInstructions = `
 
 ### Тестування
 
-- **Unit + Component / DOM:** **Vitest** (`vitest`) + **Vue Test Utils** з **happy-dom** як DOM-середовищем. Це канон, узгоджений з `test.mdc` (Stryker з vitest-runner + `perTest`-аналіз покриття). `vitest.config.mjs` повторно використовує `vite.config.js` через `mergeConfig` і перемикає `environment` на `'happy-dom'`:
+- **Unit + Component / DOM:** **Vitest** (`vitest`) + **Vue Test Utils** з **happy-dom** як DOM-середовищем. Це канон, узгоджений з `test.mdc` (Stryker з vitest-runner + `perTest`-аналіз покриття). `vitest.config.mjs` повторно використовує `vite.config.mjs` через `mergeConfig` і перемикає `environment` на `'happy-dom'`:
 
 ```js title="vitest.config.mjs"
 import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config.js'
+import viteConfig from './vite.config.mjs'
 
 export default mergeConfig(viteConfig, defineConfig({
   test: {
@@ -197,7 +197,7 @@ export default {
 }
 ```
 
-```javascript title="vite.config.js"
+```javascript title="vite.config.mjs"
 import Vue from '@vitejs/plugin-vue'
 import VueMacros from 'vue-macros/vite'
 import { defineConfig } from 'vite'
@@ -296,7 +296,7 @@ export default defineConfig({
 
 ## npm_lifecycle_event
 
-у більшості проектів в файлі vite.config.js
+у більшості проектів в файлі vite.config.mjs
 є  конструкція виду
 
 switch (process.env.npm_lifecycle_event) {
@@ -306,7 +306,7 @@ switch (process.env.npm_lifecycle_event) {
 
 і тепер її нада обрамити в функцію, наприклад
 
-```javascript title="vite.config.js"
+```javascript title="vite.config.mjs"
 function getProxy(mode) {
   const proxy = {}
 
@@ -327,7 +327,7 @@ function getProxy(mode) {
 
 і викликати всередині
 
-```javascript title="vite.config.js"
+```javascript title="vite.config.mjs"
 export default defineConfig(({ mode, command }) => {
 ...
    server: {

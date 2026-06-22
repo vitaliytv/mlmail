@@ -186,11 +186,11 @@ JS-root без `.vue` отримує дефолтний baseline без `plugins
 
 ### Frontend-варіант (Vue/Vite + happy-dom)
 
-Для проєктів зі своїм `vite.config.js` `vitest.config.mjs` має повторно використовувати vite-плагіни та aliases і перемкнути `environment` на `'happy-dom'` (або `'jsdom'`):
+Для проєктів зі своїм `vite.config.mjs` `vitest.config.mjs` має повторно використовувати vite-плагіни та aliases і перемкнути `environment` на `'happy-dom'` (або `'jsdom'`):
 
 ```js
 import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config.js'
+import viteConfig from './vite.config.mjs'
 
 export default mergeConfig(viteConfig, defineConfig({
   test: {

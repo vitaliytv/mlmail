@@ -5,8 +5,8 @@
     "**/__fixtures__/**",
     ".pi/extensions/n-cursor-adr/**",
     "app/src-tauri/target/**",
-    "scripts/docs-regen/manifest.js",
-    "scripts/docs-regen/marks.js",
+    "scripts/docs-regen/manifest.mjs",
+    "scripts/docs-regen/marks.mjs",
     "scripts/stryker.config.mjs"
   ],
   "ignoreDependencies": [
@@ -49,7 +49,7 @@
       "entry": ["src/**/*.test.js"]
     },
     "scripts": {
-      "entry": ["docs-regen.js"]
+      "entry": ["docs-regen.mjs"]
     }
   }
 }

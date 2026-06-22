@@ -1,11 +1,11 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config.js'
+import viteConfig from './vite.config.mjs'
 
 // Frontend variant (n-test / n-vue canon): reuse the Vite plugins (Vue, VueMacros,
 // AutoImport, Quasar) so .vue SFC compilation, auto-imports and Quasar transforms
 // work natively under vitest — no bun-test preload hacks needed. happy-dom supplies
 // the DOM for @vue/test-utils component mounting.
-// vite.config.js exports a callback (env-based), so resolve it per configEnv before merge.
+// vite.config.mjs exports a callback (env-based), so resolve it per configEnv before merge.
 export default defineConfig(configEnv =>
   mergeConfig(typeof viteConfig === 'function' ? viteConfig(configEnv) : viteConfig, {
     test: {

@@ -31,6 +31,6 @@ description: Регенерувати C4-документацію MLMaiL у docs
 ## Деталі
 
 - Spec: `docs/superpowers/specs/2026-05-18-docs-regen-design.md`.
-- Implementation: `scripts/docs-regen.js`.
+- Implementation: `scripts/docs-regen.mjs`.
 - Шаблони промптів: `docs/ci4/_templates/*.prompt.md`.
 - Tracking: `docs/ci4/manifest.json`.
