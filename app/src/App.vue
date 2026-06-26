@@ -3,9 +3,11 @@ import { AgentDialog, AuditDialog } from '@7n/tauri-components/components'
 import LoginView from './views/Login.vue'
 import { useAuthStore } from './services/auth-store.js'
 import { useAgent } from './composables/use-agent.js'
+import { useUpdater } from './composables/use-updater.js'
 
 const auth = useAuthStore()
 const agent = useAgent()
+useUpdater()
 const agentOpen = ref(false)
 const auditOpen = ref(false)
 </script>

@@ -15,6 +15,9 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
 
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+
     builder
         .manage(Mutex::new(auth::state::AuthState::default()))
         .manage(endpoints::Endpoints::default())
