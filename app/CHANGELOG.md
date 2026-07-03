@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0] - 2026-07-03
+
+### Added
+
+- Правило для схожих листів: на картці листа кнопка «Правило» відкриває панель із полями Від (email)/Тема (стабільний префікс підказує локальний LLM, редаговано) і двома діями — «Видалити всі такі» (gmail_trash_query: пагінований збір усіх збігів + batchModify TRASH батчами ≤1000) та «Створити фільтр» (gmail_create_filter: Gmail-фільтр з action addLabelIds TRASH/removeLabelIds INBOX). Новий OAuth-скоуп gmail.settings.basic (потрібен повторний логін). Tool-каталог: trash_query (destructive), create_filter (write).
+- Двоколонковий рідер листа: ліворуч оригінал (Від/Тема/Дата + тіло), праворуч резюме українською від локального LLM (omlx) — composables/use-summary.js + pure services/summary.js (buildSummaryPrompt). Резюме автоматично оновлюється при зміні листа (watch на currentMessage) із захистом від застарілих відповідей; на недоступній моделі показує банер-підказку. Колонки адаптивні (col-12 col-md-6).
+- Панель задач (tasks panel): use-task-scan.js сканує вхідні на предмет задач, use-ask.js для швидких запитів до LLM, нові компоненти в src/components/
+- Версія застосунку відображається в заголовку вікна (mlmail vX.Y.Z)
+- Шаблони для новинних розсилок (newsletter): JSON-шаблони пакуються в бінарник як bundle-ресурс, use-newsletter-render.js рендерить лист за шаблоном, TemplatesManager.vue керує списком
+
+### Fixed
+
+- Авто-оновлення: увімкнено bundle.createUpdaterArtifacts — релізи тепер публікуватимуть latest.json і .sig
+- Резюме/переклад листа: fetch з abort-таймаутом 60с (omlx міг зависати без відповіді) і зменшений розмір батчу перекладу (80→15) для стабільної якості й швидкості
+
 Усі помітні зміни цього пакета документуються тут.
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
