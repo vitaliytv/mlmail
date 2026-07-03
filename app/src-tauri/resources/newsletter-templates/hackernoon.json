@@ -1,0 +1,7 @@
+{
+  "id": "hackernoon",
+  "name": "HackerNoon Newsletter",
+  "from_pattern": "hackernoon.com",
+  "subject_pattern": "",
+  "prompt": "Extract all articles from this HackerNoon newsletter. Look for story titles with their 'Read more' links, and any items listed under 'Additional Stories' or similar sections. For each article return its title, url, and a 1-2 sentence description of what it's about."
+}

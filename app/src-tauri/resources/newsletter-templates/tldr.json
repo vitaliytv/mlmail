@@ -1,0 +1,7 @@
+{
+  "id": "tldr",
+  "name": "TLDR Newsletter",
+  "from_pattern": "dan@tldrnewsletter.com",
+  "subject_pattern": "",
+  "prompt": "Extract all articles and stories from this TLDR newsletter. Each item has a title, a short summary, and a link. Return every item you find across all sections (Big Tech & Startups, Science & Futuristic Technology, Programming, Miscellaneous, etc.)."
+}

@@ -17,6 +17,8 @@ pub enum GmailError {
     Platform(String),
     #[error("inbox is empty")]
     Empty,
+    #[error("query is empty")]
+    EmptyQuery,
 }
 
 impl From<reqwest::Error> for GmailError {

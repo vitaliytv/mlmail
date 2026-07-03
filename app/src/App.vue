@@ -1,15 +1,24 @@
 <script setup>
-import { AgentDialog, AuditDialog } from '@7n/tauri-components/components'
 import LoginView from './views/Login.vue'
+import TasksPanel from './components/TasksPanel.vue'
 import { useAuthStore } from './services/auth-store.js'
-import { useAgent } from './composables/use-agent.js'
 import { useUpdater } from './composables/use-updater.js'
+import { useTaskScan } from './composables/use-task-scan.js'
+import { listTemplates } from './services/newsletter-template.js'
 
 const auth = useAuthStore()
-const agent = useAgent()
+const taskScan = useTaskScan()
 useUpdater()
-const agentOpen = ref(false)
-const auditOpen = ref(false)
+
+// Trigger task scan whenever user becomes authenticated.
+watch(
+  () => auth.isAuthenticated.value,
+  async (authed) => {
+    if (!authed) return
+    const templates = await listTemplates()
+    taskScan.scan(templates)
+  },
+)
 </script>
 
 <template>
@@ -18,22 +27,12 @@ const auditOpen = ref(false)
       <LoginView />
     </q-page-container>
 
-    <q-footer v-if="auth.isAuthenticated.value" elevated class="bg-white text-dark">
-      <q-toolbar class="justify-center q-gutter-sm">
-        <q-btn
-          @click="auth.loadRandomMessage()"
-          color="primary"
-          icon="sym_o_refresh"
-          :loading="auth.isMessageLoading.value">
-          Показати інший
-        </q-btn>
-        <q-btn @click="agentOpen = true" flat color="primary" icon="sym_o_smart_toy">Агент</q-btn>
-        <q-btn @click="auditOpen = true" flat color="grey-8" icon="sym_o_history" title="Журнал запитів" />
-        <q-btn @click="auth.logout()" flat color="grey-8" icon="sym_o_logout">Вийти</q-btn>
-      </q-toolbar>
-    </q-footer>
-
-    <AgentDialog v-model="agentOpen" :agent="agent" />
-    <AuditDialog v-model="auditOpen" :agent="agent" />
+    <TasksPanel
+      v-if="auth.isAuthenticated.value"
+      :tasks="taskScan.tasks.value"
+      :is-scanning="taskScan.isScanning.value"
+      :scanned-count="taskScan.scannedCount.value"
+      :total-count="taskScan.totalCount.value"
+      @remove-message="taskScan.removeMessage" />
   </q-layout>
 </template>

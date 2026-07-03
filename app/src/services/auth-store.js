@@ -12,9 +12,17 @@ const _messageErrorKind = ref(null)
 const _isMessageLoading = ref(false)
 const _isUnsubscribing = ref(false)
 const _unsubscribeErrorKind = ref(null)
+const _isSaving = ref(false)
+const _saveErrorKind = ref(null)
 const _isTrashing = ref(false)
 const _trashErrorKind = ref(null)
-const _onlyNewsletters = ref(false)
+const _isTrashingQuery = ref(false)
+const _trashQueryErrorKind = ref(null)
+const _lastTrashedCount = ref(null)
+const _isCreatingFilter = ref(false)
+const _filterErrorKind = ref(null)
+const _filterCreated = ref(false)
+const _actionLog = ref(/** @type {{ ts: number, text: string }[]} */ ([]))
 
 /**
  * @returns {Promise<string>} access token
@@ -62,8 +70,7 @@ export function useAuthStore() {
     if (!_isAuthenticated.value) return
     _isMessageLoading.value = true
     _messageErrorKind.value = null
-    const tool = _onlyNewsletters.value ? 'random_newsletter' : 'random_message'
-    const result = await dispatch(tool)
+    const result = await dispatch('random_message')
     if (result.ok) {
       _currentMessage.value = result.output
     } else {
@@ -76,13 +83,6 @@ export function useAuthStore() {
       }
     }
     _isMessageLoading.value = false
-  }
-
-  /**
-   * @param {boolean} value whether to request only newsletters
-   */
-  function setOnlyNewsletters(value) {
-    _onlyNewsletters.value = Boolean(value)
   }
 
   /**
@@ -127,6 +127,83 @@ export function useAuthStore() {
       }
     }
     _isTrashing.value = false
+  }
+
+  async function saveCurrent() {
+    const id = _currentMessage.value?.id
+    if (!id) return
+    _isSaving.value = true
+    _saveErrorKind.value = null
+    const result = await dispatch('save', { id })
+    if (result.ok) {
+      await Promise.all([loadRandomMessage(), refreshInboxCount()])
+    } else {
+      const kind = result.error.kind ?? 'Unknown'
+      _saveErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    }
+    _isSaving.value = false
+  }
+
+  /**
+   * Move every inbox message matching a Gmail query to Trash, then refresh.
+   * @param {string} q non-empty Gmail search query
+   */
+  async function trashByQuery(q) {
+    if (!q || !q.trim()) return
+    _isTrashingQuery.value = true
+    _trashQueryErrorKind.value = null
+    _lastTrashedCount.value = null
+    const result = await dispatch('trash_query', { q })
+    if (result.ok) {
+      const trashed = result.output?.trashed ?? 0
+      _lastTrashedCount.value = trashed
+      _actionLog.value.unshift({ ts: Date.now(), text: `Видалено ${trashed} лист(ів) за запитом: ${q}` })
+      await Promise.all([loadRandomMessage(), refreshInboxCount()])
+    } else {
+      const kind = result.error.kind ?? 'Unknown'
+      _trashQueryErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    }
+    _isTrashingQuery.value = false
+  }
+
+  /**
+   * Create a Gmail filter that auto-trashes future mail matching the pattern.
+   * @param {{ from?: string, subject?: string }} pattern sender/subject criteria
+   */
+  async function createFilter({ from, subject } = {}) {
+    _isCreatingFilter.value = true
+    _filterErrorKind.value = null
+    _filterCreated.value = false
+    const result = await dispatch('create_filter', { from, subject })
+    if (result.ok) {
+      _filterCreated.value = true
+    } else {
+      const kind = result.error.kind ?? 'Unknown'
+      _filterErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    }
+    _isCreatingFilter.value = false
+  }
+
+  /**
+   * Clear transient feedback from the pattern panel (errors, counts, success).
+   */
+  function clearPatternFeedback() {
+    _trashQueryErrorKind.value = null
+    _lastTrashedCount.value = null
+    _filterErrorKind.value = null
+    _filterCreated.value = false
   }
 
   /**
@@ -178,9 +255,16 @@ export function useAuthStore() {
     _isMessageLoading.value = false
     _isUnsubscribing.value = false
     _unsubscribeErrorKind.value = null
+    _isSaving.value = false
+    _saveErrorKind.value = null
     _isTrashing.value = false
     _trashErrorKind.value = null
-    _onlyNewsletters.value = false
+    _isTrashingQuery.value = false
+    _trashQueryErrorKind.value = null
+    _lastTrashedCount.value = null
+    _isCreatingFilter.value = false
+    _filterErrorKind.value = null
+    _filterCreated.value = false
   }
 
   return {
@@ -195,9 +279,17 @@ export function useAuthStore() {
     isMessageLoading: readonly(_isMessageLoading),
     isUnsubscribing: readonly(_isUnsubscribing),
     unsubscribeErrorKind: readonly(_unsubscribeErrorKind),
+    isSaving: readonly(_isSaving),
+    saveErrorKind: readonly(_saveErrorKind),
     isTrashing: readonly(_isTrashing),
     trashErrorKind: readonly(_trashErrorKind),
-    onlyNewsletters: readonly(_onlyNewsletters),
+    isTrashingQuery: readonly(_isTrashingQuery),
+    trashQueryErrorKind: readonly(_trashQueryErrorKind),
+    lastTrashedCount: readonly(_lastTrashedCount),
+    isCreatingFilter: readonly(_isCreatingFilter),
+    filterErrorKind: readonly(_filterErrorKind),
+    filterCreated: readonly(_filterCreated),
+    actionLog: readonly(_actionLog),
     initialize,
     login,
     getAccessToken,
@@ -205,8 +297,11 @@ export function useAuthStore() {
     refreshInboxCount,
     loadRandomMessage,
     unsubscribeFromCurrent,
+    saveCurrent,
     trashCurrent,
-    setOnlyNewsletters
+    trashByQuery,
+    createFilter,
+    clearPatternFeedback,
   }
 }
 
@@ -227,5 +322,10 @@ export function _resetForTest() {
   _unsubscribeErrorKind.value = null
   _isTrashing.value = false
   _trashErrorKind.value = null
-  _onlyNewsletters.value = false
+  _isTrashingQuery.value = false
+  _trashQueryErrorKind.value = null
+  _lastTrashedCount.value = null
+  _isCreatingFilter.value = false
+  _filterErrorKind.value = null
+  _filterCreated.value = false
 }

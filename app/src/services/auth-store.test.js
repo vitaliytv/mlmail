@@ -735,3 +735,116 @@ describe('useAuthStore.onlyNewsletters', () => {
     expect(invokeMock).toHaveBeenCalledWith('gmail_random_message', {})
   })
 })
+
+describe('useAuthStore.trashByQuery', () => {
+  it('invokes gmail_trash_query and records the trashed count', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
+      if (cmd === 'gmail_trash_query') return Promise.resolve({ trashed: 7 })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.trashByQuery('from:npm subject:"Successfully published"')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_trash_query', { q: 'from:npm subject:"Successfully published"' })
+    expect(store.lastTrashedCount.value).toBe(7)
+    expect(store.trashQueryErrorKind.value).toBe(null)
+  })
+
+  it('is a no-op for an empty query', async () => {
+    const store = useAuthStore()
+    await store.trashByQuery('   ')
+    expect(invokeMock).not.toHaveBeenCalledWith('gmail_trash_query', expect.anything())
+  })
+
+  it('captures error.kind on failure', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_trash_query')
+        return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.trashByQuery('from:npm')
+    expect(store.trashQueryErrorKind.value).toBe('Http')
+    expect(store.lastTrashedCount.value).toBe(null)
+  })
+
+  it('forces logout state on ReauthRequired', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_trash_query')
+        return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.trashByQuery('from:npm')
+    expect(store.isAuthenticated.value).toBe(false)
+    expect(store.email.value).toBe(null)
+  })
+})
+
+describe('useAuthStore.createFilter', () => {
+  it('invokes gmail_create_filter and flags success', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_create_filter') return Promise.resolve({ id: 'FILTER_1' })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.createFilter({ from: 'support@npmjs.com', subject: 'Successfully published' })
+    expect(invokeMock).toHaveBeenCalledWith('gmail_create_filter', {
+      from: 'support@npmjs.com',
+      subject: 'Successfully published'
+    })
+    expect(store.filterCreated.value).toBe(true)
+    expect(store.filterErrorKind.value).toBe(null)
+  })
+
+  it('maps a scope 403 (ReauthRequired) to logout state', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_create_filter')
+        return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.createFilter({ from: 'a@b.com', subject: 'Hi' })
+    expect(store.filterErrorKind.value).toBe('ReauthRequired')
+    expect(store.isAuthenticated.value).toBe(false)
+    expect(store.filterCreated.value).toBe(false)
+  })
+
+  it('clearPatternFeedback resets transient pattern state', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_create_filter') return Promise.resolve({ id: 'F1' })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.createFilter({ subject: 'Hi' })
+    expect(store.filterCreated.value).toBe(true)
+    store.clearPatternFeedback()
+    expect(store.filterCreated.value).toBe(false)
+    expect(store.filterErrorKind.value).toBe(null)
+    expect(store.lastTrashedCount.value).toBe(null)
+    expect(store.trashQueryErrorKind.value).toBe(null)
+  })
+})

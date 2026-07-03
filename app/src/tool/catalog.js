@@ -34,7 +34,7 @@ export const TOOLS = [
     name: 'search',
     summary: 'Search the inbox with a Gmail query (e.g. "from:bob unread", "subject:invoice", "newer_than:7d"). Returns up to 15 message summaries (id, from, subject, date).',
     input: {
-      query: { type: 'string', required: true, description: 'Gmail search query. Empty string lists recent inbox messages.' },
+      q: { type: 'string', required: true, description: 'Gmail search query. Empty string lists recent inbox messages.' },
     },
     tauri: 'gmail_search',
   },
@@ -71,6 +71,15 @@ export const TOOLS = [
     tauri: 'gmail_unsubscribe',
   },
   {
+    tier: 'write',
+    name: 'save',
+    summary: 'Apply the "Збережено" label to one message and archive it (removes from INBOX). The message stays permanently in Gmail under the Збережено label.',
+    input: {
+      id: { type: 'string', required: true, description: 'Gmail message id to save.' },
+    },
+    tauri: 'gmail_save',
+  },
+  {
     tier: 'destructive',
     name: 'trash',
     summary: 'Move one message to Trash by its id. Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',
@@ -78,6 +87,26 @@ export const TOOLS = [
       id: { type: 'string', required: true, description: 'Gmail message id to trash (from a search result).' },
     },
     tauri: 'gmail_trash',
+  },
+  {
+    tier: 'destructive',
+    name: 'trash_query',
+    summary: 'Move EVERY inbox message matching a Gmail query to Trash (paginated, batched). Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',
+    input: {
+      q: { type: 'string', required: true, description: 'Gmail search query selecting the messages to trash, e.g. `from:npm subject:"Successfully published"`. Must be non-empty (an empty query would match the whole inbox).' },
+    },
+    tauri: 'gmail_trash_query',
+  },
+  {
+    tier: 'write',
+    name: 'create_filter',
+    summary: 'Create a Gmail filter that automatically moves future matching mail to Trash. Matches by sender and/or subject phrase.',
+    input: {
+      from: { type: 'string', required: false, description: 'Sender to match (email address or domain).' },
+      subject: { type: 'string', required: false, description: 'Subject phrase to match.' },
+    },
+    validate: data => (!data.from?.trim() && !data.subject?.trim()) ? 'Provide at least one of from/subject' : null,
+    tauri: 'gmail_create_filter',
   },
 ]
 

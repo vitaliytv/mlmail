@@ -28,6 +28,19 @@ describe('catalog', () => {
     expect(getTool('trash').tier).toBe('destructive')
     expect(getTool('unsubscribe').tier).toBe('write')
   })
+
+  it('search input key is `q`, matching the gmail_search Tauri param', () => {
+    // tauriTransport forwards input keys 1:1 into invoke('gmail_search', {...}),
+    // and the Rust command takes `q: String` — so the key MUST be `q`, not `query`.
+    expect(Object.keys(getTool('search').input)).toEqual(['q'])
+  })
+
+  it('tiers trash_query destructive and create_filter write', () => {
+    expect(getTool('trash_query').tier).toBe('destructive')
+    expect(getTool('trash_query').tauri).toBe('gmail_trash_query')
+    expect(getTool('create_filter').tier).toBe('write')
+    expect(getTool('create_filter').tauri).toBe('gmail_create_filter')
+  })
 })
 
 describe('validateInput against catalog tools', () => {
@@ -35,10 +48,10 @@ describe('validateInput against catalog tools', () => {
     expect(validateInput(getTool('inbox_count'))).toBeNull()
   })
 
-  it('search requires a string query', () => {
-    expect(validateInput(getTool('search'), {})).toBe('Missing required field: query')
-    expect(validateInput(getTool('search'), { query: 5 })).toBe('Field "query" must be a string')
-    expect(validateInput(getTool('search'), { query: 'from:bob' })).toBeNull()
+  it('search requires a string q', () => {
+    expect(validateInput(getTool('search'), {})).toBe('Missing required field: q')
+    expect(validateInput(getTool('search'), { q: 5 })).toBe('Field "q" must be a string')
+    expect(validateInput(getTool('search'), { q: 'from:bob' })).toBeNull()
   })
 
   it('read/trash require a string id', () => {
@@ -49,5 +62,17 @@ describe('validateInput against catalog tools', () => {
   it('unsubscribe requires an object action', () => {
     expect(validateInput(getTool('unsubscribe'), { action: 'x' })).toBe('Field "action" must be an object')
     expect(validateInput(getTool('unsubscribe'), { action: { OneClick: { url: 'https://x' } } })).toBeNull()
+  })
+
+  it('trash_query requires a string q', () => {
+    expect(validateInput(getTool('trash_query'), {})).toBe('Missing required field: q')
+    expect(validateInput(getTool('trash_query'), { q: 'from:npm' })).toBeNull()
+  })
+
+  it('create_filter requires at least one of from/subject', () => {
+    expect(validateInput(getTool('create_filter'), {})).toBe('Provide at least one of from/subject')
+    expect(validateInput(getTool('create_filter'), { from: '  ' })).toBe('Provide at least one of from/subject')
+    expect(validateInput(getTool('create_filter'), { from: 'a@b.com' })).toBeNull()
+    expect(validateInput(getTool('create_filter'), { subject: 'Hi' })).toBeNull()
   })
 })

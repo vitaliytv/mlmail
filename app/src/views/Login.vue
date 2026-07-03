@@ -1,54 +1,169 @@
 <script setup>
+import { invoke } from '@tauri-apps/api/core'
+import { getVersion } from '@tauri-apps/api/app'
+import { useQuasar } from 'quasar'
+import { AgentDialog, AuditDialog } from '@7n/tauri-components/components'
 import { errorMessage } from '../i18n/auth-errors.js'
-import { loginMessages } from '../i18n/login.js'
 import { useAuthStore } from '../services/auth-store.js'
+import { useAgent } from '../composables/use-agent.js'
+import { usePattern } from '../composables/use-pattern.js'
+import { buildPatternQuery, parseFromEmail } from '../services/pattern.js'
+import NewsletterView from '../components/NewsletterView.vue'
+import TemplatesManager from '../components/TemplatesManager.vue'
 
 const auth = useAuthStore()
-onMounted(() => auth.initialize())
+const agent = useAgent()
+
+const appVersion = ref('')
+onMounted(async () => {
+  appVersion.value = await getVersion()
+})
+
+watchEffect(() => {
+  const email = auth.email.value
+  const count = auth.inboxCount.value
+  const version = appVersion.value
+  const appName = version ? `mlmail v${version}` : 'mlmail'
+  let title
+  if (email && count !== null) {
+    title = `${appName} - ${email} - ${count}`
+  } else if (email) {
+    title = `${appName} - ${email}`
+  } else {
+    title = appName
+  }
+  document.title = title
+  invoke('app_set_title', { title })
+})
+const pattern = usePattern()
+const agentOpen = ref(false)
+const auditOpen = ref(false)
+const $q = useQuasar()
+onMounted(() => {
+  auth.initialize()
+  window.addEventListener('message', (e) => {
+    if (e.data?.type === 'open-url' && e.data.url) {
+      invoke('app_open_url', { url: e.data.url })
+    }
+  })
+})
+
+const LINK_INTERCEPT_SCRIPT = `
+<script>
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a');
+  if (a && a.href && !a.href.startsWith('javascript')) {
+    e.preventDefault();
+    window.parent.postMessage({ type: 'open-url', url: a.href }, '*');
+  }
+});
+<\/script>`
+
+const LIGHT_BG_STYLE = `<style>
+:root { color-scheme: light !important; }
+html, body { background: #ffffff !important; color: #000000 !important; }
+</style>`
+
+const htmlBodyWithInterceptor = computed(() => {
+  const html = auth.currentMessage.value?.html_body
+  if (!html) return null
+  const inject = LIGHT_BG_STYLE + LINK_INTERCEPT_SCRIPT
+  return html.includes('</head>')
+    ? html.replace('</head>', inject + '</head>')
+    : inject + html
+})
+
+
+const showPatternDialog = ref(false)
+const patternFrom = ref('')
+const patternSubject = ref('')
+const initialSubject = ref('')
+const isSuggesting = ref(false)
+
+const patternQuery = computed(() =>
+  buildPatternQuery({ from: patternFrom.value, subject: patternSubject.value })
+)
 
 /**
- * @param {boolean} value whether to request only newsletters
+ * Open the "rule from this email" panel, seed sender/subject from the current
+ * message, then refine the subject with a local-LLM suggestion (best-effort).
  */
-function toggleOnlyNewsletters(value) {
-  auth.setOnlyNewsletters(value)
-  auth.loadRandomMessage()
+async function openPatternDialog() {
+  const msg = auth.currentMessage.value
+  if (!msg) return
+  auth.clearPatternFeedback()
+  patternFrom.value = parseFromEmail(msg.from)
+  patternSubject.value = (msg.subject ?? '').trim()
+  initialSubject.value = patternSubject.value
+  showPatternDialog.value = true
+  isSuggesting.value = true
+  const suggestion = await pattern.suggestSubjectPattern(msg.subject)
+  // Only apply the suggestion if the panel is still open and the user hasn't
+  // edited the field while we were waiting.
+  if (showPatternDialog.value && patternSubject.value === initialSubject.value) {
+    patternSubject.value = suggestion
+  }
+  isSuggesting.value = false
+}
+
+const showActionLog = ref(false)
+const showTemplates = ref(false)
+
+async function trashByQueryAndClose() {
+  const q = patternQuery.value
+  await auth.trashByQuery(q)
+  if (!auth.trashQueryErrorKind.value) {
+    showPatternDialog.value = false
+    const count = auth.lastTrashedCount.value ?? 0
+    $q.notify({
+      message: `Переміщено в кошик: ${count}`,
+      caption: q,
+      color: 'positive',
+      icon: 'sym_o_delete_sweep',
+      timeout: 5000,
+      position: 'top',
+    })
+  }
 }
 </script>
 
 <template>
-  <q-page class="column items-center q-gutter-md q-pa-md" :class="{ 'has-bar': auth.isAuthenticated.value }">
-    <div class="text-h4">{{ loginMessages.appTitle }}</div>
-
+  <q-page class="column items-center q-pa-md" :class="{ 'has-bar': auth.isAuthenticated.value }">
     <template v-if="auth.isAuthenticated.value">
-      <div class="text-body1">Ви увійшли як {{ auth.email.value }}</div>
-
-      <q-chip v-if="auth.inboxCount.value !== null" icon="sym_o_mail" color="primary" text-color="white">
-        Листів у скриньці: {{ auth.inboxCount.value }}
-      </q-chip>
-      <q-banner v-else-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
+      <q-banner v-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </q-banner>
-      <q-skeleton v-else type="QChip" width="180px" />
 
-      <q-toggle
-        @update:model-value="toggleOnlyNewsletters"
-        :model-value="auth.onlyNewsletters.value"
-        label="Тільки newsletters"
-        color="primary"
-        dense />
 
       <template v-if="auth.currentMessage.value">
-        <q-card flat bordered style="max-width: 60ch; width: 100%">
-          <q-card-section>
-            <div><strong>Від:</strong> {{ auth.currentMessage.value.from }}</div>
-            <div><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</div>
-            <div><strong>Дата:</strong> {{ auth.currentMessage.value.date }}</div>
-          </q-card-section>
-          <q-separator inset />
-          <q-card-section class="message-body">
-            {{ auth.currentMessage.value.body }}
-          </q-card-section>
-        </q-card>
+        <div class="row no-wrap q-col-gutter-md reader">
+          <div class="col-12 col-md-6 column">
+            <q-card flat bordered class="fit column">
+              <q-card-section>
+                <div class="text-overline text-grey-7">Оригінал</div>
+                <div><strong>Від:</strong> {{ auth.currentMessage.value.from }}</div>
+                <div><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</div>
+                <div><strong>Дата:</strong> {{ auth.currentMessage.value.date }}</div>
+              </q-card-section>
+              <q-separator inset />
+              <q-card-section v-if="auth.currentMessage.value.html_body" class="col message-html-section">
+                <iframe
+                  :srcdoc="htmlBodyWithInterceptor"
+                  sandbox="allow-scripts"
+                  class="message-iframe"
+                  referrerpolicy="no-referrer" />
+              </q-card-section>
+              <q-card-section v-else class="message-body col">
+                {{ auth.currentMessage.value.body }}
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-12 col-md-6 column">
+            <q-card flat bordered class="fit column">
+              <NewsletterView :message="auth.currentMessage.value" />
+            </q-card>
+          </div>
+        </div>
       </template>
       <template v-else-if="auth.isMessageLoading.value">
         <q-card flat bordered style="max-width: 60ch; width: 100%">
@@ -70,6 +185,9 @@ function toggleOnlyNewsletters(value) {
       </q-banner>
       <q-banner v-else class="bg-grey-2" rounded dense> Скринька порожня. </q-banner>
 
+      <q-banner v-if="auth.saveErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
+        {{ errorMessage(auth.saveErrorKind.value) }}
+      </q-banner>
       <q-banner v-if="auth.unsubscribeErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.unsubscribeErrorKind.value) }}
       </q-banner>
@@ -103,7 +221,22 @@ function toggleOnlyNewsletters(value) {
           label="Відписатися"
           :disable="!auth.currentMessage.value?.unsubscribe"
           :loading="auth.isUnsubscribing.value" />
+        <q-btn
+          @click="auth.saveCurrent()"
+          flat
+          no-caps
+          icon="sym_o_bookmark_add"
+          label="Зберегти"
+          :disable="!auth.currentMessage.value"
+          :loading="auth.isSaving.value" />
         <q-space />
+        <q-btn
+          @click="openPatternDialog()"
+          flat
+          no-caps
+          icon="sym_o_rule"
+          label="Правило"
+          :disable="!auth.currentMessage.value" />
         <q-btn
           @click="auth.trashCurrent()"
           flat
@@ -119,17 +252,138 @@ function toggleOnlyNewsletters(value) {
           icon="sym_o_skip_next"
           label="Показати інший"
           :loading="auth.isMessageLoading.value" />
+        <q-btn
+          @click="showActionLog = true"
+          flat no-caps
+          icon="sym_o_history"
+          label="Журнал"
+          :color="auth.actionLog.value.length ? 'primary' : undefined" />
+        <q-btn
+          @click="showTemplates = true"
+          flat no-caps
+          icon="sym_o_layers"
+          label="Шаблони" />
+        <q-btn
+          @click="agentOpen = true"
+          flat no-caps
+          icon="sym_o_smart_toy"
+          label="Агент"
+          color="primary" />
+        <q-btn
+          @click="auditOpen = true"
+          flat no-caps
+          icon="sym_o_manage_search"
+          title="Журнал запитів" />
         <q-btn @click="auth.logout()" flat no-caps icon="sym_o_logout" label="Вийти" />
       </q-toolbar>
     </q-page-sticky>
+
+    <TemplatesManager v-model="showTemplates" />
+
+    <q-dialog v-model="showActionLog">
+      <q-card style="min-width: 480px; max-width: 90vw">
+        <q-card-section class="text-h6 row items-center">
+          Журнал дій
+          <q-space />
+          <q-btn v-close-popup flat round dense icon="sym_o_close" />
+        </q-card-section>
+        <q-separator />
+        <q-card-section style="max-height: 60vh; overflow-y: auto">
+          <div v-if="!auth.actionLog.value.length" class="text-grey-6">Журнал порожній.</div>
+          <q-list v-else separator>
+            <q-item v-for="(entry, i) in auth.actionLog.value" :key="i" dense>
+              <q-item-section>
+                <q-item-label>{{ entry.text }}</q-item-label>
+                <q-item-label caption>{{ new Date(entry.ts).toLocaleString('uk-UA') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="showPatternDialog">
+      <q-card style="min-width: 360px; max-width: 90vw">
+        <q-card-section class="text-h6">Правило для схожих листів</q-card-section>
+        <q-card-section class="q-gutter-md">
+          <q-input v-model="patternFrom" label="Від (email)" dense outlined clearable clear-icon="sym_o_close" />
+          <q-input
+            v-model="patternSubject"
+            label="Тема містить"
+            dense
+            outlined
+            clearable
+            clear-icon="sym_o_close"
+            :loading="isSuggesting" />
+          <div class="text-caption text-grey-7">
+            Gmail-запит: <code>{{ patternQuery || '—' }}</code>
+          </div>
+        </q-card-section>
+
+        <q-card-section v-if="auth.trashQueryErrorKind.value || auth.filterErrorKind.value" class="q-pt-none">
+          <q-banner class="bg-red-1 text-red-9" rounded dense>
+            {{ errorMessage(auth.trashQueryErrorKind.value || auth.filterErrorKind.value) }}
+          </q-banner>
+        </q-card-section>
+        <q-card-section v-else-if="auth.filterCreated.value" class="q-pt-none">
+          <q-banner class="bg-green-1 text-green-9" rounded dense>
+            Фільтр створено — нові такі листи йтимуть у кошик.
+          </q-banner>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn v-close-popup flat no-caps label="Закрити" />
+          <q-btn
+            @click="auth.createFilter({ from: patternFrom, subject: patternSubject })"
+            flat
+            no-caps
+            color="primary"
+            icon="sym_o_filter_alt"
+            label="Створити фільтр"
+            :disable="!patternQuery"
+            :loading="auth.isCreatingFilter.value" />
+          <q-btn
+            @click="trashByQueryAndClose"
+            flat
+            no-caps
+            color="negative"
+            icon="sym_o_delete_sweep"
+            label="Видалити всі такі"
+            :disable="!patternQuery"
+            :loading="auth.isTrashingQuery.value" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <AgentDialog v-model="agentOpen" :agent="agent" />
+    <AuditDialog v-model="auditOpen" :agent="agent" />
   </q-page>
 </template>
 
 <style scoped>
-.message-body {
+.reader {
+  width: 100%;
+  align-self: stretch;
+  flex: 1;
+  min-height: 0;
+}
+.message-body,
+.summary-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: inherit;
+}
+.message-html-section {
+  padding: 0;
+  overflow: hidden;
+  flex: 1;
+}
+.message-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  border: none;
+  display: block;
 }
 .has-bar {
   padding-bottom: calc(64px + env(safe-area-inset-bottom));

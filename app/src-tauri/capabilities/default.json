@@ -7,6 +7,7 @@
     "core:default",
     "opener:default",
     "agent:default",
+    "mcp-bridge:default",
     {
       "identifier": "http:default",
       "allow": [

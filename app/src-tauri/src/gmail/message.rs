@@ -18,6 +18,7 @@ pub struct GmailMessage {
     pub subject: String,
     pub date: String,
     pub body: String,
+    pub html_body: Option<String>,
     pub unsubscribe: Option<UnsubscribeAction>,
 }
 
@@ -110,6 +111,10 @@ pub fn extract_header(headers: &[Value], name: &str) -> String {
         }
     }
     String::new()
+}
+
+pub fn extract_html_body(payload: &Value) -> Option<String> {
+    find_part(payload, "text/html")
 }
 
 pub fn extract_plain_text(payload: &Value) -> String {

@@ -43,6 +43,7 @@ pub async fn run_login_flow(
         "openid".into(),
         "email".into(),
         "https://www.googleapis.com/auth/gmail.modify".into(),
+        "https://www.googleapis.com/auth/gmail.settings.basic".into(),
     ];
     let args = SignInArgs {
         web_client_id: web_client_id.to_string(),

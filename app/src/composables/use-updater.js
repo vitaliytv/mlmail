@@ -2,9 +2,15 @@ import { onMounted } from 'vue'
 import { check } from '@tauri-apps/plugin-updater'
 import { useQuasar } from 'quasar'
 
+/**
+ *
+ */
 export function useUpdater() {
   const $q = useQuasar()
 
+  /**
+   *
+   */
   async function checkForUpdates() {
     try {
       const update = await check()
@@ -30,9 +36,9 @@ export function useUpdater() {
             if (event.event === 'Finished') dismiss()
           })
           $q.notify({ message: 'Оновлення встановлено. Перезапусти програму.', color: 'positive', timeout: 0, actions: [{ label: 'OK', color: 'white' }] })
-        } catch (e) {
+        } catch (error) {
           dismiss()
-          $q.notify({ message: `Помилка оновлення: ${e}`, color: 'negative', timeout: 5000 })
+          $q.notify({ message: `Помилка оновлення: ${error}`, color: 'negative', timeout: 5000 })
         }
       })
     } catch {
