@@ -57,7 +57,7 @@ document.addEventListener('click', function(e) {
     window.parent.postMessage({ type: 'open-url', url: a.href }, '*');
   }
 });
-<\/script>`
+</script>`
 
 const LIGHT_BG_STYLE = `<style>
 :root { color-scheme: light !important; }

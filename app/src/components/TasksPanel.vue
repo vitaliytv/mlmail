@@ -17,8 +17,8 @@ async function markDone(templateId, message) {
     await invoke('gmail_trash', { id: message.id })
     emit('remove-message', templateId, message.id)
   }
-  catch (e) {
-    console.error('trash failed', e)
+  catch (error) {
+    console.error('trash failed', error)
   }
 }
 </script>

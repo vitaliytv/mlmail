@@ -51,8 +51,8 @@ export function buildTranslatePrompt(message) {
   const subject = (message?.subject ?? '').trim()
   // Remove anything that looks like a CSS rule block: selector { ... }
   const body = (message?.body ?? '')
-    .replace(/[^{}]*\{[^{}]*\}/g, '')
-    .replace(/\n{3,}/g, '\n\n')
+    .replaceAll(/[^{}]*\{[^{}]*\}/g, '')
+    .replaceAll(/\n{3,}/g, '\n\n')
     .trim()
   const head = [from && `Від: ${from}`, subject && `Тема: ${subject}`].filter(Boolean).join('\n')
   return head ? `${head}\n\n${body}` : body

@@ -50,9 +50,9 @@ async function onSave() {
   if (saveAsBuiltin.value) {
     try {
       await saveBuiltinTemplate(editTemplate.value)
-    } catch (e) {
-      console.error('saveBuiltinTemplate failed:', e)
-      alert(`Помилка збереження системного шаблону: ${e}`)
+    } catch (error) {
+      console.error('saveBuiltinTemplate failed:', error)
+      alert(`Помилка збереження системного шаблону: ${error}`)
       return
     }
     // Remove user-level override so the new builtin is not shadowed.

@@ -13,11 +13,26 @@ import {
 // returns null on any failure (omlx down, network) so the UI can show a notice
 // instead of crashing, and '' for an empty body.
 
+// omlx can stall indefinitely on a large batch instead of erroring (observed:
+// an 80-string batch received no data for 120s+), so every call gets its own
+// abort timeout — otherwise a stuck request leaves the UI spinning forever.
+const LLM_TIMEOUT_MS = 60_000
+
+/**
+ * @param {typeof fetch} fetchFn fetch implementation to wrap
+ * @param {number} timeoutMs abort the request after this many milliseconds
+ * @returns {typeof fetch} fetch wrapped with a default abort timeout
+ */
+function withTimeout(fetchFn, timeoutMs) {
+  return (url, init) => fetchFn(url, { ...init, signal: init?.signal ?? AbortSignal.timeout(timeoutMs) })
+}
+
 /**
  * @returns {{ summarize: (message: object) => Promise<string|null> }} summary helper
  */
 export function useSummary() {
   const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
+  const timedFetch = withTimeout(tauriFetch, LLM_TIMEOUT_MS)
 
   /**
    * Summarize a message in Ukrainian.
@@ -32,7 +47,7 @@ export function useSummary() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch,
+        fetchFn: timedFetch,
       })
       const reply = await chat({
         messages: [
@@ -63,13 +78,15 @@ export function useSummary() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch,
+        fetchFn: timedFetch,
       })
 
       /** @param {string[]} texts */
       async function translateBatch(texts) {
-        // Split into chunks of 80 strings to stay within context limits.
-        const CHUNK = 80
+        // omlx quality/latency degrades sharply past ~35 items per batch (a
+        // 35-item batch already took 41s with a mangled translation; an
+        // 80-item batch hung indefinitely) — keep chunks well under that.
+        const CHUNK = 15
         const result = []
         for (let i = 0; i < texts.length; i += CHUNK) {
           const chunk = texts.slice(i, i + CHUNK)

@@ -44,8 +44,8 @@ export function findTemplateForMessage(message, templates) {
 export function slugify(str) {
   return str
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-|-$/g, '')
 }
 
 export const SYSTEM_PROMPT = [
