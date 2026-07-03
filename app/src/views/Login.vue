@@ -48,8 +48,12 @@ onMounted(() => {
   })
 })
 
+// Built with '<' + tag concatenation, not a literal `<script>`/`<style>` tag
+// pair, so the named-template pre-transform's HTML-naive tokenizer (which
+// runs on the raw file text, before real SFC parsing) can't mistake these
+// injected-HTML tags for the surrounding <script setup> block's own tags.
 const LINK_INTERCEPT_SCRIPT = `
-<script>
+${'<' + 'script>'}
 document.addEventListener('click', function(e) {
   var a = e.target.closest('a');
   if (a && a.href && !a.href.startsWith('javascript')) {
@@ -57,19 +61,24 @@ document.addEventListener('click', function(e) {
     window.parent.postMessage({ type: 'open-url', url: a.href }, '*');
   }
 });
-</script>`
+${'<' + '/script>'}`
 
-const LIGHT_BG_STYLE = `<style>
+const LIGHT_BG_STYLE = `${'<' + 'style>'}
 :root { color-scheme: light !important; }
 html, body { background: #ffffff !important; color: #000000 !important; }
-</style>`
+${'<' + '/style>'}`
+
+// Built from parts so the raw source has no bare closing-head-tag substring —
+// the named-template pre-transform tokenizes the whole file HTML-naively and
+// mistakes that substring as a literal for a real closing tag.
+const HEAD_CLOSE_TAG = '</' + 'head>'
 
 const htmlBodyWithInterceptor = computed(() => {
   const html = auth.currentMessage.value?.html_body
   if (!html) return null
   const inject = LIGHT_BG_STYLE + LINK_INTERCEPT_SCRIPT
-  return html.includes('</head>')
-    ? html.replace('</head>', inject + '</head>')
+  return html.includes(HEAD_CLOSE_TAG)
+    ? html.replace(HEAD_CLOSE_TAG, inject + HEAD_CLOSE_TAG)
     : inject + html
 })
 
