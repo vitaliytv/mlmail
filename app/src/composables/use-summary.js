@@ -90,19 +90,32 @@ export function useSummary() {
         const result = []
         for (let i = 0; i < texts.length; i += CHUNK) {
           const chunk = texts.slice(i, i + CHUNK)
-          const reply = await chat({
-            messages: [
-              { role: 'system', content: TRANSLATE_BATCH_SYSTEM },
-              { role: 'user', content: JSON.stringify(chunk) },
-            ],
-            tools: [],
-          })
-          const raw = (reply?.content ?? '').trim()
-          // Strip potential markdown code fences
-          const jsonStr = raw.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim()
-          let parsed
-          try { parsed = JSON.parse(jsonStr) } catch { parsed = chunk }
-          result.push(...(Array.isArray(parsed) ? parsed : chunk))
+          // A single slow/stuck chunk shouldn't fail the whole email: retry
+          // once, then fall back to the untranslated chunk so long emails
+          // (many sequential chunks, each with its own 60s budget) degrade to
+          // partial translation instead of the generic omlx-down error.
+          let parsed = chunk
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              const reply = await chat({
+                messages: [
+                  { role: 'system', content: TRANSLATE_BATCH_SYSTEM },
+                  { role: 'user', content: JSON.stringify(chunk) },
+                ],
+                tools: [],
+              })
+              const raw = (reply?.content ?? '').trim()
+              // Strip potential markdown code fences
+              const jsonStr = raw.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim()
+              const candidate = JSON.parse(jsonStr)
+              parsed = Array.isArray(candidate) ? candidate : chunk
+              break
+            }
+            catch {
+              parsed = chunk
+            }
+          }
+          result.push(...parsed)
         }
         return result
       }
