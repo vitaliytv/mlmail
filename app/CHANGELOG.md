@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.3] - 2026-07-05
+
+### Changed
+
+- Локальний use-updater.js замінено на спільний useUpdater() з @7n/tauri-components/vue (0.8.0) — та сама логіка, тепер в одній копії для mlmail/myshare/myllm/task.
+
 ## [0.4.2] - 2026-07-05
 
 ### Added
