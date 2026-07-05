@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
@@ -254,6 +254,50 @@ describe('useAuthStore inbox count', () => {
     await store.initialize()
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_inbox_count')
     expect(store.inboxCount.value).toBe(null)
+  })
+})
+
+describe('useAuthStore network retry', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('retries gmail_inbox_count every 15s on Network error until it succeeds', async () => {
+    let calls = 0
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') {
+        calls += 1
+        if (calls < 3) return Promise.reject(Object.assign(new Error('net'), { kind: 'Network' }))
+        return Promise.resolve(42)
+      }
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    const pendingInitialize = store.initialize()
+    await vi.advanceTimersByTimeAsync(15000)
+    await vi.advanceTimersByTimeAsync(15000)
+    await pendingInitialize
+    expect(calls).toBe(3)
+    expect(store.inboxCount.value).toBe(42)
+    expect(store.inboxErrorKind.value).toBe(null)
+  })
+
+  it('does not retry non-Network errors', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.reject(Object.assign(new Error('Http'), { kind: 'Http' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    expect(store.inboxErrorKind.value).toBe('Http')
   })
 })
 

@@ -1,5 +1,37 @@
 import { invoke } from '@tauri-apps/api/core'
+import { Notify } from 'quasar'
 import { dispatch } from '../tool/index.js'
+
+const NETWORK_RETRY_DELAY_MS = 15000
+
+/**
+ * Like dispatch(), but on a Network-kind failure it notifies the user and
+ * keeps retrying every 15s instead of surfacing the error — Gmail calls are
+ * background/UI-triggered, not one-shot user actions, so a flaky connection
+ * shouldn't need a manual retry.
+ * @param {string} name tool name to dispatch
+ * @param {object} [payload] tool payload
+ * @returns {Promise<{ok: boolean, output?: unknown, error?: {kind?: string}}>} dispatch result
+ */
+async function dispatchWithRetry(name, payload) {
+  for (;;) {
+    const result = await dispatch(name, payload)
+    if (result.ok || result.error?.kind !== 'Network') return result
+    // Notify is only registered once Quasar is mounted (main.js); guard so this
+    // composable stays importable in plain unit tests that skip that mount.
+    if (typeof Notify.create === 'function') {
+      Notify.create({
+        type: 'negative',
+        message: "Не вдалося з'єднатися з Google. Перевірте мережу.",
+        caption: 'Повторна спроба через 15 с…',
+        position: 'bottom',
+        timeout: NETWORK_RETRY_DELAY_MS
+      })
+    }
+    // oxlint-disable-next-line promise/avoid-new
+    await new Promise(resolve => setTimeout(resolve, NETWORK_RETRY_DELAY_MS))
+  }
+}
 
 const _email = ref(null)
 const _isAuthenticated = ref(false)
@@ -48,7 +80,7 @@ export function useAuthStore() {
    */
   async function refreshInboxCount() {
     if (!_isAuthenticated.value) return
-    const result = await dispatch('inbox_count')
+    const result = await dispatchWithRetry('inbox_count')
     if (result.ok) {
       _inboxCount.value = result.output
       _inboxErrorKind.value = null
@@ -70,7 +102,7 @@ export function useAuthStore() {
     if (!_isAuthenticated.value) return
     _isMessageLoading.value = true
     _messageErrorKind.value = null
-    const result = await dispatch('random_message')
+    const result = await dispatchWithRetry('random_message')
     if (result.ok) {
       _currentMessage.value = result.output
     } else {
@@ -93,7 +125,7 @@ export function useAuthStore() {
     if (!action) return
     _isUnsubscribing.value = true
     _unsubscribeErrorKind.value = null
-    const result = await dispatch('unsubscribe', { action })
+    const result = await dispatchWithRetry('unsubscribe', { action })
     if (result.ok) {
       await loadRandomMessage()
     } else {
@@ -115,7 +147,7 @@ export function useAuthStore() {
     if (!id) return
     _isTrashing.value = true
     _trashErrorKind.value = null
-    const result = await dispatch('trash', { id })
+    const result = await dispatchWithRetry('trash', { id })
     if (result.ok) {
       await Promise.all([loadRandomMessage(), refreshInboxCount()])
     } else {
@@ -134,7 +166,7 @@ export function useAuthStore() {
     if (!id) return
     _isSaving.value = true
     _saveErrorKind.value = null
-    const result = await dispatch('save', { id })
+    const result = await dispatchWithRetry('save', { id })
     if (result.ok) {
       await Promise.all([loadRandomMessage(), refreshInboxCount()])
     } else {
@@ -157,7 +189,7 @@ export function useAuthStore() {
     _isTrashingQuery.value = true
     _trashQueryErrorKind.value = null
     _lastTrashedCount.value = null
-    const result = await dispatch('trash_query', { q })
+    const result = await dispatchWithRetry('trash_query', { q })
     if (result.ok) {
       const trashed = result.output?.trashed ?? 0
       _lastTrashedCount.value = trashed
@@ -182,7 +214,7 @@ export function useAuthStore() {
     _isCreatingFilter.value = true
     _filterErrorKind.value = null
     _filterCreated.value = false
-    const result = await dispatch('create_filter', { from, subject })
+    const result = await dispatchWithRetry('create_filter', { from, subject })
     if (result.ok) {
       _filterCreated.value = true
     } else {
