@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.4] - 2026-07-05
+
+### Fixed
+
+- Android-білд падав ("Permission updater:default not found") — updater-плагін не реєструється на Android/iOS, тож дозвіл винесено в окрему capability з `platforms: [macOS, windows, linux]`.
+
 ## [0.4.3] - 2026-07-05
 
 ### Changed
