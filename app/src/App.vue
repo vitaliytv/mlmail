@@ -1,8 +1,8 @@
 <script setup>
 import LoginView from './views/Login.vue'
 import TasksPanel from './components/TasksPanel.vue'
+import { useUpdater } from '@7n/tauri-components/vue'
 import { useAuthStore } from './services/auth-store.js'
-import { useUpdater } from './composables/use-updater.js'
 import { useTaskScan } from './composables/use-task-scan.js'
 import { listTemplates } from './services/newsletter-template.js'
 
