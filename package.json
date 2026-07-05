@@ -1,8 +1,13 @@
-{  "name": "mlmail",  "version": "0.1.1",  "private": true,  "workspaces": [
+{
+  "name": "mlmail",
+  "version": "0.1.1",
+  "private": true,
+  "workspaces": [
     "app",
     "scripts"
   ],
-  "type": "module",  "scripts": {
+  "type": "module",
+  "scripts": {
     "start": "bun --cwd=app run tauri dev --config src-tauri/tauri.conf.dev.json",
     "tauri": "bun --cwd=app run tauri",
     "lint": "bun run lint-js && bun run lint-text && bun run lint-style && bun run lint-ga && bun run lint-rust && bun run lint-image && bun run lint-security && oxfmt .",
@@ -18,7 +23,7 @@
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
-    "@nitra/cursor": "^11.1.0",
+    "@nitra/cursor": "^14.10.2",
     "@nitra/eslint-config": "^3.9.4",
     "@nitra/stylelint-config": "^1.4.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",

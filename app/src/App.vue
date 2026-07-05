@@ -33,6 +33,6 @@ watch(
       :is-scanning="taskScan.isScanning.value"
       :scanned-count="taskScan.scannedCount.value"
       :total-count="taskScan.totalCount.value"
-      @remove-message="taskScan.removeMessage" />
+      @complete-task="taskScan.unflagMessage" />
   </q-layout>
 </template>
