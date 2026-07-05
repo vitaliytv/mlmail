@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0] - 2026-07-05
+
+### Added
+
+- Аналіз дзвінків: новий компонент AuditAnalysisDialog.vue з use-call-analysis.js для аналізу записів розмов, backend-сервіс call_analysis.rs у Tauri
+- Розширена каталогізація інструментів у tool/catalog.js
+
+### Changed
+
+- Оновлено NewsletterView.vue й TasksPanel.vue для інтеграції з новим аналізом
+
 ## [0.3.0] - 2026-07-05
 
 ### Added
