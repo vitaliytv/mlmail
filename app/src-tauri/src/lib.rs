@@ -1,4 +1,6 @@
 pub mod auth;
+#[cfg(debug_assertions)]
+pub mod call_analysis;
 pub mod endpoints;
 pub mod gmail;
 pub mod newsletter_template;
@@ -83,6 +85,8 @@ pub fn run() {
                 gmail::gmail_trash,
                 gmail::gmail_trash_query,
                 gmail::gmail_save,
+                gmail::gmail_flag_task,
+                gmail::gmail_unflag_task,
                 gmail::gmail_create_filter,
                 newsletter_template::newsletter_template_list,
                 newsletter_template::newsletter_template_save,
@@ -106,11 +110,14 @@ pub fn run() {
                 gmail::gmail_trash,
                 gmail::gmail_trash_query,
                 gmail::gmail_save,
+                gmail::gmail_flag_task,
+                gmail::gmail_unflag_task,
                 gmail::gmail_create_filter,
                 newsletter_template::newsletter_template_list,
                 newsletter_template::newsletter_template_save,
                 newsletter_template::newsletter_template_delete,
                 newsletter_template::newsletter_template_save_builtin,
+                call_analysis::analyze_call_with_pi,
                 app_open_url,
                 app_set_title,
             ] }

@@ -2,6 +2,7 @@
 import { useNewsletterRender } from '../composables/use-newsletter-render.js'
 import { useSummary } from '../composables/use-summary.js'
 import { useAsk } from '../composables/use-ask.js'
+import { useTaskScan } from '../composables/use-task-scan.js'
 import {
   listTemplates,
   saveTemplate,
@@ -17,6 +18,7 @@ const props = defineProps({
 const renderer = useNewsletterRender()
 const summary = useSummary()
 const asker = useAsk()
+const taskScan = useTaskScan()
 
 const askQuestion = ref('')
 const askAnswer = ref('')
@@ -57,6 +59,12 @@ const translateFailed = ref(false)
 const showEditor = ref(false)
 const editTemplate = ref({ id: '', name: '', from_pattern: '', subject_pattern: '', prompt: '' })
 
+// Per-message result cache so flipping back to an already-processed email
+// shows the previous summary/translation instead of re-running the LLM.
+// Only successful results are cached — a failure should still be retryable.
+const summaryCache = new Map()
+const translateCache = new Map()
+
 async function loadTemplates() {
   templates.value = await listTemplates()
   // Only newsletter-type templates activate the article extractor.
@@ -79,26 +87,43 @@ async function refreshRender(template) {
   }
   else {
     if (!(props.message?.body ?? '').trim()) return
+    const id = props.message.id
+    if (summaryCache.has(id)) {
+      summaryText.value = summaryCache.get(id)
+      return
+    }
     isSummarizing.value = true
     const text = await summary.summarize(props.message)
     isSummarizing.value = false
     summaryFailed.value = text === null
-    summaryText.value = text ?? ''
+    if (text !== null) {
+      summaryText.value = text
+      summaryCache.set(id, text)
+    }
   }
 }
 
 async function refreshTranslate() {
+  const id = props.message.id
+  if (translateCache.has(id)) {
+    translateHtml.value = translateCache.get(id)
+    translateFailed.value = false
+    return
+  }
   translateHtml.value = ''
   translateFailed.value = false
   isTranslating.value = true
   const result = await summary.translateHtml(props.message)
   isTranslating.value = false
   translateFailed.value = result === null
-  translateHtml.value = result?.html ?? ''
+  if (result !== null) {
+    translateHtml.value = result.html
+    translateCache.set(id, result.html)
+  }
 }
 
 async function onModeChange(mode) {
-  if (mode === 'translate' && !translateHtml.value && !isTranslating.value) {
+  if (mode === 'translate' && !isTranslating.value) {
     await refreshTranslate()
   }
 }
@@ -111,6 +136,9 @@ watch(() => props.message, async () => {
   translateFailed.value = false
   await loadTemplates()
   await refreshRender(activeTemplate.value)
+  if (!activeTemplate.value && rightMode.value === 'translate') {
+    await refreshTranslate()
+  }
 }, { immediate: true })
 
 watch(activeTemplate, refreshRender)
@@ -135,11 +163,19 @@ function openEditTemplate() {
   showEditor.value = true
 }
 
+/** Apply the "Задача" Gmail label to the current message. */
+async function flagAsTask() {
+  await taskScan.flagMessage(props.message.id)
+}
+
 async function onSaveTemplate() {
   await saveTemplate(editTemplate.value)
   showEditor.value = false
   await loadTemplates()
   await refreshRender(activeTemplate.value)
+  if (editTemplate.value.type === 'task') {
+    await taskScan.scan(templates.value)
+  }
 }
 
 async function onDeleteTemplate() {
@@ -147,6 +183,8 @@ async function onDeleteTemplate() {
   await loadTemplates()
   await refreshRender(null)
 }
+
+defineExpose({ flagAsTask })
 </script>
 
 <template>
@@ -249,6 +287,15 @@ async function onDeleteTemplate() {
         <!-- Translate -->
         <template v-else>
           <template v-if="isTranslating">
+            <q-linear-progress
+              v-if="summary.translateProgress.value.total"
+              :value="summary.translateProgress.value.done / summary.translateProgress.value.total"
+              size="4px"
+              color="primary"
+              class="q-mt-md" />
+            <div v-if="summary.translateProgress.value.total" class="text-caption text-grey-6 q-mt-xs">
+              Переклад: {{ summary.translateProgress.value.done }}/{{ summary.translateProgress.value.total }}
+            </div>
             <q-skeleton type="text" class="q-mt-md" />
             <q-skeleton type="text" />
             <q-skeleton type="text" width="70%" />
@@ -338,7 +385,8 @@ async function onDeleteTemplate() {
         <q-btn
           flat no-caps color="primary"
           label="Зберегти"
-          :disable="(!editTemplate.from_pattern && !editTemplate.subject_pattern) || !editTemplate.prompt"
+          :disable="(!editTemplate.from_pattern && !editTemplate.subject_pattern)
+            || (editTemplate.type === 'newsletter' && !editTemplate.prompt)"
           @click="onSaveTemplate" />
       </q-card-actions>
     </q-card>

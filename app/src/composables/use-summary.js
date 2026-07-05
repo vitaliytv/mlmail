@@ -28,11 +28,14 @@ function withTimeout(fetchFn, timeoutMs) {
 }
 
 /**
- * @returns {{ summarize: (message: object) => Promise<string|null> }} summary helper
+ * @returns {{ summarize: (message: object) => Promise<string|null>, translateHtml: (message: object) => Promise<{html: string}|null>, translateProgress: import('vue').Ref<{done: number, total: number}> }} summary helper
  */
 export function useSummary() {
   const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
   const timedFetch = withTimeout(tauriFetch, LLM_TIMEOUT_MS)
+  // Chunk progress for the current translateHtml() call, e.g. { done: 3, total: 16 }.
+  // total is 0 outside a translate call so the UI can hide the progress bar.
+  const translateProgress = ref({ done: 0, total: 0 })
 
   /**
    * Summarize a message in Ukrainian.
@@ -72,6 +75,7 @@ export function useSummary() {
   async function translateHtml(message) {
     const html = message?.html_body
     if (!html && !(message?.body ?? '').trim()) return { html: '' }
+    translateProgress.value = { done: 0, total: 0 }
     try {
       await loadEnv()
       const chat = createOpenAiChat({
@@ -88,6 +92,7 @@ export function useSummary() {
         // 80-item batch hung indefinitely) — keep chunks well under that.
         const CHUNK = 15
         const result = []
+        translateProgress.value = { done: 0, total: Math.ceil(texts.length / CHUNK) }
         for (let i = 0; i < texts.length; i += CHUNK) {
           const chunk = texts.slice(i, i + CHUNK)
           // A single slow/stuck chunk shouldn't fail the whole email: retry
@@ -116,6 +121,7 @@ export function useSummary() {
             }
           }
           result.push(...parsed)
+          translateProgress.value = { done: translateProgress.value.done + 1, total: translateProgress.value.total }
         }
         return result
       }
@@ -133,5 +139,5 @@ export function useSummary() {
     }
   }
 
-  return { summarize, translateHtml }
+  return { summarize, translateHtml, translateProgress }
 }

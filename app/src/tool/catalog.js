@@ -80,6 +80,24 @@ export const TOOLS = [
     tauri: 'gmail_save',
   },
   {
+    tier: 'write',
+    name: 'flag_task',
+    summary: 'Apply the "Задача" label to one message, marking it as an open task. The message stays where it is (e.g. still in INBOX).',
+    input: {
+      id: { type: 'string', required: true, description: 'Gmail message id to flag as a task.' },
+    },
+    tauri: 'gmail_flag_task',
+  },
+  {
+    tier: 'write',
+    name: 'unflag_task',
+    summary: 'Remove the "Задача" label from one message, marking its task as done. Does not delete the message.',
+    input: {
+      id: { type: 'string', required: true, description: 'Gmail message id to unflag.' },
+    },
+    tauri: 'gmail_unflag_task',
+  },
+  {
     tier: 'destructive',
     name: 'trash',
     summary: 'Move one message to Trash by its id. Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',

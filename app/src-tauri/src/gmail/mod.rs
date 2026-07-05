@@ -631,12 +631,16 @@ pub async fn gmail_create_filter(
 }
 
 const SAVED_LABEL_NAME: &str = "Збережено";
+const TASK_LABEL_NAME: &str = "Задача";
 
-/// Ensure the "Збережено" user label exists; return its id.
-/// Creates it (green colour) if absent.
-async fn ensure_saved_label(
+/// Ensure a user label named `name` exists; return its id. Creates it
+/// (with the given colours) if absent.
+async fn ensure_label(
     labels_url: &str,
     access_token: &str,
+    name: &str,
+    bg_color: &str,
+    text_color: &str,
 ) -> Result<String, GmailError> {
     let client = reqwest::Client::new();
     // List existing labels.
@@ -657,7 +661,7 @@ async fn ensure_saved_label(
         .map_err(|e| GmailError::Parse(e.to_string()))?;
     if let Some(labels) = v.get("labels").and_then(|l| l.as_array()) {
         for label in labels {
-            if label.get("name").and_then(|n| n.as_str()) == Some(SAVED_LABEL_NAME) {
+            if label.get("name").and_then(|n| n.as_str()) == Some(name) {
                 if let Some(id) = label.get("id").and_then(|i| i.as_str()) {
                     return Ok(id.to_string());
                 }
@@ -666,10 +670,10 @@ async fn ensure_saved_label(
     }
     // Create the label.
     let payload = serde_json::json!({
-        "name": SAVED_LABEL_NAME,
+        "name": name,
         "labelListVisibility": "labelShow",
         "messageListVisibility": "show",
-        "color": { "backgroundColor": "#16a766", "textColor": "#ffffff" },
+        "color": { "backgroundColor": bg_color, "textColor": text_color },
     });
     let resp = client
         .post(labels_url)
@@ -693,6 +697,47 @@ async fn ensure_saved_label(
         .ok_or_else(|| GmailError::Parse("label create response missing id".into()))
 }
 
+/// Ensure the "Збережено" user label exists; return its id.
+async fn ensure_saved_label(labels_url: &str, access_token: &str) -> Result<String, GmailError> {
+    ensure_label(labels_url, access_token, SAVED_LABEL_NAME, "#16a766", "#ffffff").await
+}
+
+/// Ensure the "Задача" user label exists; return its id.
+async fn ensure_task_label(labels_url: &str, access_token: &str) -> Result<String, GmailError> {
+    ensure_label(labels_url, access_token, TASK_LABEL_NAME, "#fb4c2f", "#ffffff").await
+}
+
+/// POST one `batchModify` call (add/remove label ids on a single message id)
+/// and translate the response into a `Result`.
+async fn modify_message(
+    batch_modify_url: &str,
+    access_token: &str,
+    id: &str,
+    add_label_ids: &[&str],
+    remove_label_ids: &[&str],
+) -> Result<(), GmailError> {
+    let payload = serde_json::json!({
+        "ids": [id],
+        "addLabelIds": add_label_ids,
+        "removeLabelIds": remove_label_ids,
+    });
+    let resp = reqwest::Client::new()
+        .post(batch_modify_url)
+        .bearer_auth(access_token)
+        .json(&payload)
+        .send()
+        .await?;
+    let status = resp.status();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        let body = resp.text().await.unwrap_or_default();
+        return Err(GmailError::Http { status: status.as_u16(), body });
+    }
+    Ok(())
+}
+
 /// Apply the "Збережено" label to one message and remove it from INBOX.
 #[tauri::command]
 pub async fn gmail_save(
@@ -708,26 +753,45 @@ pub async fn gmail_save(
     )
     .await?;
     let label_id = ensure_saved_label(&endpoints.gmail_labels, &token).await?;
-    let payload = serde_json::json!({
-        "ids": [id],
-        "addLabelIds": [label_id],
-        "removeLabelIds": ["INBOX"],
-    });
-    let resp = reqwest::Client::new()
-        .post(&endpoints.gmail_batch_modify)
-        .bearer_auth(&token)
-        .json(&payload)
-        .send()
-        .await?;
-    let status = resp.status();
-    if status == reqwest::StatusCode::UNAUTHORIZED {
-        return Err(GmailError::ReauthRequired);
-    }
-    if !status.is_success() {
-        let body = resp.text().await.unwrap_or_default();
-        return Err(GmailError::Http { status: status.as_u16(), body });
-    }
-    Ok(())
+    modify_message(&endpoints.gmail_batch_modify, &token, &id, &[&label_id], &["INBOX"]).await
+}
+
+/// Apply the "Задача" label to one message. Unlike [`gmail_save`], the message
+/// stays wherever it is (INBOX included) — flagging a task doesn't archive mail.
+#[tauri::command]
+pub async fn gmail_flag_task(
+    id: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<(), GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let label_id = ensure_task_label(&endpoints.gmail_labels, &token).await?;
+    modify_message(&endpoints.gmail_batch_modify, &token, &id, &[&label_id], &[]).await
+}
+
+/// Remove the "Задача" label from one message (marks the task done without
+/// otherwise touching the message).
+#[tauri::command]
+pub async fn gmail_unflag_task(
+    id: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<(), GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let label_id = ensure_task_label(&endpoints.gmail_labels, &token).await?;
+    modify_message(&endpoints.gmail_batch_modify, &token, &id, &[], &[&label_id]).await
 }
 
 #[cfg(test)]
@@ -1275,5 +1339,93 @@ mod tests {
             GmailError::Http { status, .. } => assert_eq!(status, 403),
             other => panic!("expected Http, got {other:?}"),
         }
+    }
+
+    #[tokio::test]
+    async fn ensure_label_finds_existing_without_creating() {
+        let mut server = mockito::Server::new_async().await;
+        let list_mock = server
+            .mock("GET", "/labels")
+            .with_status(200)
+            .with_body(r#"{"labels":[{"id":"Label_1","name":"Задача"}]}"#)
+            .create_async()
+            .await;
+        let create_mock = server.mock("POST", "/labels").expect(0).create_async().await;
+        let id = ensure_label(
+            &format!("{}/labels", server.url()),
+            "AT-1",
+            "Задача",
+            "#fb4c2f",
+            "#ffffff",
+        )
+        .await
+        .unwrap();
+        assert_eq!(id, "Label_1");
+        list_mock.assert_async().await;
+        create_mock.assert_async().await;
+    }
+
+    #[tokio::test]
+    async fn ensure_label_creates_when_absent() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/labels")
+            .with_status(200)
+            .with_body(r#"{"labels":[]}"#)
+            .create_async()
+            .await;
+        server
+            .mock("POST", "/labels")
+            .match_body(mockito::Matcher::PartialJsonString(
+                r#"{"name":"Задача"}"#.into(),
+            ))
+            .with_status(200)
+            .with_body(r#"{"id":"Label_new"}"#)
+            .create_async()
+            .await;
+        let id = ensure_label(
+            &format!("{}/labels", server.url()),
+            "AT-1",
+            "Задача",
+            "#fb4c2f",
+            "#ffffff",
+        )
+        .await
+        .unwrap();
+        assert_eq!(id, "Label_new");
+    }
+
+    #[tokio::test]
+    async fn modify_message_posts_add_and_remove_label_ids() {
+        let mut server = mockito::Server::new_async().await;
+        let m = server
+            .mock("POST", "/batchModify")
+            .match_header("authorization", "Bearer AT-1")
+            .match_body(mockito::Matcher::PartialJsonString(
+                r#"{"ids":["m1"],"addLabelIds":["Label_1"],"removeLabelIds":[]}"#.into(),
+            ))
+            .with_status(204)
+            .create_async()
+            .await;
+        modify_message(
+            &format!("{}/batchModify", server.url()),
+            "AT-1",
+            "m1",
+            &["Label_1"],
+            &[],
+        )
+        .await
+        .unwrap();
+        m.assert_async().await;
+    }
+
+    #[tokio::test]
+    async fn modify_message_maps_401_to_reauth() {
+        let mut server = mockito::Server::new_async().await;
+        server.mock("POST", "/batchModify").with_status(401).create_async().await;
+        let err = modify_message(&format!("{}/batchModify", server.url()), "AT-1", "m1", &[], &["Label_1"])
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::ReauthRequired));
     }
 }

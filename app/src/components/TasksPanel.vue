@@ -1,26 +1,14 @@
 <script setup>
-import { invoke } from '@tauri-apps/api/core'
-
-const props = defineProps({
+defineProps({
   tasks: { type: Array, required: true },
   isScanning: { type: Boolean, default: false },
   scannedCount: { type: Number, default: 0 },
   totalCount: { type: Number, default: 0 },
 })
 
-const emit = defineEmits(['remove-message'])
+const emit = defineEmits(['complete-task'])
 
 const show = ref(false)
-
-async function markDone(templateId, message) {
-  try {
-    await invoke('gmail_trash', { id: message.id })
-    emit('remove-message', templateId, message.id)
-  }
-  catch (error) {
-    console.error('trash failed', error)
-  }
-}
 </script>
 
 <template>
@@ -43,7 +31,7 @@ async function markDone(templateId, message) {
         v-else-if="tasks.length > 0"
         floating
         color="negative"
-        :label="tasks.reduce((s, g) => s + g.messages.length, 0)" />
+        :label="tasks.length" />
     </q-btn>
   </q-page-sticky>
 
@@ -74,28 +62,22 @@ async function markDone(templateId, message) {
           Відкритих завдань не знайдено.
         </div>
 
-        <!-- Task groups -->
-        <div v-for="group in tasks" :key="group.template.id">
-          <q-item-label header class="text-primary">
-            {{ group.template.task_label || group.template.name }}
-          </q-item-label>
-          <q-list separator>
-            <q-item v-for="msg in group.messages" :key="msg.id">
-              <q-item-section>
-                <q-item-label>{{ msg.subject }}</q-item-label>
-                <q-item-label caption>{{ msg.from }} · {{ msg.date }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-btn
-                  flat dense no-caps
-                  color="positive"
-                  icon="sym_o_check_circle"
-                  label="Виконано"
-                  @click="markDone(group.template.id, msg)" />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </div>
+        <q-list v-else separator>
+          <q-item v-for="msg in tasks" :key="msg.id">
+            <q-item-section>
+              <q-item-label>{{ msg.subject }}</q-item-label>
+              <q-item-label caption>{{ msg.from }} · {{ msg.date }}</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-btn
+                flat dense no-caps
+                color="positive"
+                icon="sym_o_check_circle"
+                label="Виконано"
+                @click="emit('complete-task', msg.id)" />
+            </q-item-section>
+          </q-item>
+        </q-list>
       </q-card-section>
     </q-card>
   </q-dialog>

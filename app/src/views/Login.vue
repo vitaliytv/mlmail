@@ -2,17 +2,19 @@
 import { invoke } from '@tauri-apps/api/core'
 import { getVersion } from '@tauri-apps/api/app'
 import { useQuasar } from 'quasar'
-import { AgentDialog, AuditDialog } from '@7n/tauri-components/components'
+import { AgentDialog } from '@7n/tauri-components/components'
 import { errorMessage } from '../i18n/auth-errors.js'
 import { useAuthStore } from '../services/auth-store.js'
 import { useAgent } from '../composables/use-agent.js'
 import { usePattern } from '../composables/use-pattern.js'
 import { buildPatternQuery, parseFromEmail } from '../services/pattern.js'
+import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
 import NewsletterView from '../components/NewsletterView.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
 
 const auth = useAuthStore()
 const agent = useAgent()
+const newsletterViewRef = ref(null)
 
 const appVersion = ref('')
 onMounted(async () => {
@@ -169,7 +171,7 @@ async function trashByQueryAndClose() {
           </div>
           <div class="col-12 col-md-6 column">
             <q-card flat bordered class="fit column">
-              <NewsletterView :message="auth.currentMessage.value" />
+              <NewsletterView ref="newsletterViewRef" :message="auth.currentMessage.value" />
             </q-card>
           </div>
         </div>
@@ -238,6 +240,13 @@ async function trashByQueryAndClose() {
           label="Зберегти"
           :disable="!auth.currentMessage.value"
           :loading="auth.isSaving.value" />
+        <q-btn
+          @click="newsletterViewRef?.flagAsTask()"
+          flat
+          no-caps
+          icon="sym_o_task_alt"
+          label="Задача"
+          :disable="!auth.currentMessage.value" />
         <q-space />
         <q-btn
           @click="openPatternDialog()"
@@ -365,7 +374,7 @@ async function trashByQueryAndClose() {
     </q-dialog>
 
     <AgentDialog v-model="agentOpen" :agent="agent" />
-    <AuditDialog v-model="auditOpen" :agent="agent" />
+    <AuditAnalysisDialog v-model="auditOpen" :agent="agent" />
   </q-page>
 </template>
 
