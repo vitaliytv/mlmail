@@ -1,0 +1,35 @@
+app/src/services/auth-store.test.js
+  s_6695049fee2028::t_30873453f90383 895-969
+app/src-tauri/src/gmail/mod.rs
+  s_6695049fee2028::t_e70daeae5f6cb9 633-752,1464-1550
+  s_6695049fee2028::t_1b4cdf36c762dd 1551-1554
+app/src/views/Login.test.js
+  s_6695049fee2028::t_89e6c16fc0bd61 76-81
+  s_6695049fee2028::t_126baf55a1f7d8 25,34-38
+app/.changes/260706-2130.md
+  s_6695049fee2028::t_95c1193f8dad37 1-5
+app/src/services/auth-store.js
+  s_6695049fee2028::t_e70daeae5f6cb9 57-61,236-276,346-350,375-379,392-393,421-425
+app/src-tauri/src/lib.rs
+  s_6695049fee2028::t_e70daeae5f6cb9 91-92,118-119
+app/src/components/GmailFiltersDialog.vue
+  s_6695049fee2028::t_e70daeae5f6cb9 1-72
+app/src/views/Login.vue
+  s_6695049fee2028::t_e70daeae5f6cb9 14,123,297-312,317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c6c7899f8a8d6504b1ac0cde712d3275a12b1514",
+  "prompts": {},
+  "sessions": {
+    "s_6695049fee2028": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "afc73b18-a88e-4c49-a8bc-192662d1297d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
