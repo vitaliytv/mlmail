@@ -5,133 +5,9 @@ globs: "**/*.{css,scss,vue}"
 alwaysApply: false
 ---
 
-## Quasar як стильова основа
+Правило **style** для Vue-проєктів: Quasar як стильова система, SCSS-конвенції кольорів і відступів, фікси компонентів, stylelint через `@nitra/stylelint-config`.
 
-У Vue-проектах використовуй **Quasar** як базову стильову систему:
-
-- **Класи компонентів:** `q-pa-*`, `q-ma-*`, `q-mt-*`, `q-mb-*`, `row`, `col`, `col-*`, `items-center`, `justify-between`, `text-*`, `bg-*`, `shadow-*` тощо — стандартні утиліти Quasar.
-- **Кольори:** використовуй Quasar CSS-змінні через класи (`text-primary`, `bg-accent`, `text-negative` тощо) або через SCSS-змінні (`$primary`, `$accent`) у `.scss`-файлах.
-- **Не пиши власні утиліти**, якщо є відповідний Quasar-клас.
-
-## Кольори: quasar-variables.scss і app.scss
-
-Основні кольори визначай виключно через стандартні Quasar-змінні: `$primary`, `$secondary`, `$accent`, `$positive`, `$negative`, `$warning`.
-
-Якщо потрібен додатковий колір — визнач його в `quasar-variables.scss`, і **обов'язково** додай до `app.scss` відповідні `.text-*` / `.bg-*` класи:
-
-```scss
-/* quasar-variables.scss */
-$white-a1: color.adjust(white, $alpha: -0.85);
-```
-
-```scss
-/* app.scss */
-.text-white-a1 {
-  color: $white-a1 !important;
-}
-
-.bg-white-a1 {
-  background-color: $white-a1 !important;
-}
-```
-
-## Gap між flex/grid-елементами — .n-gap-*
-
-Для відступів між плаваючими елементами (flex, grid) використовуй класи `.n-gap-*` замість `q-gutter-*`. Якщо класів немає в `app.scss` — додай:
-
-```scss
-// GAP
-.n-gap-xs {
-  gap: 4px;
-}
-
-.n-gap-sm {
-  gap: 8px;
-}
-
-.n-gap-md {
-  gap: 16px;
-}
-
-.n-gap-lg {
-  gap: 24px;
-}
-```
-
-## Фікси компонентів Quasar
-
-При використанні компонента `q-scroll-area` або `q-tooltip` додай до `app.scss` відповідні фікси. Аналогічно — фікс масштабування на iOS.
-
-```scss
-// FIX стилі для прокручуваної області по висоті екрана
-.q-scrollarea {
-  display: flex;
-  flex-direction: column;
-  height: auto;
-  min-height: 0;
-  max-height: 100%;
-
-  .scroll {
-    flex: 10000 1 0%;
-  }
-}
-
-// FIX tooltip
-.q-tooltip {
-  font-size: 1em;
-}
-
-// FIX не зумувати на iOS
-@media (width <= 600px) {
-  input,
-  textarea,
-  select {
-    font-size: 16px;
-  }
-}
-```
-
-## Генерація та редагування стилів (Cursor і інші агенти)
-
-- **Джерело правил:** перед тим як писати або суттєво змінювати **`.css`**, **`.scss`** або стилі в **`.vue`**, переглянь у корені проєкту (і в релевантних пакетах монорепо, якщо є) поле **`stylelint`** у **`package.json`** (зокрема `extends`), наявні **`.stylelintrc.*`**, **`stylelint.config.*`** та **`.stylelintignore`**. Не покладайся на «типові» правила stylelint з пам’яті — дотримуйся **проєктного** **`@nitra/stylelint-config`** і будь-яких локальних доповнень у репозиторії.
-- **Форматування** узгоджуй з **`n-text.mdc`** (oxfmt / `.oxfmtrc.json` для css, scss тощо), щоб форматер і stylelint не суперечили один одному.
-- **Запуск stylelint:** лише **`npx stylelint`**. Локально — через скрипт **`lint-style`** (`bun run lint-style`, з `--fix`); у **GitHub Actions** у кроці **`run`** викликай `npx stylelint '**/*.{css,scss,vue}'` напряму **без `--fix`** (CI — read-only, нуль мутацій; не через **`bun run lint-style`**). Не використовуй **`bunx stylelint`**. Після змін запускай **`bun run lint-style`** і виправляй усе, що лишилось після auto-fix; за потреби — повний `bun run lint` (навичка **`/n-lint`**).
-- **Не розширюй винятки:** не додавай зайві **`stylelint-disable`** без потреби; краще підлаштувати стилі під правила проєкту.
-
-## Канон
-
-### `package.json`
-
-- `lint-style` (substring requirement): `package.json`:
-
-```json
-{
-  "scripts": {
-    "lint-style": ["npx stylelint"]
-  }
-}
-```
-- `stylelint.extends`: `package.json`:
-
-```json
-{
-  "stylelint": {
-    "extends": "@nitra/stylelint-config"
-  }
-}
-```
-
-### `.vscode/extensions.json`
-
-- Канон `recommendations`: `extensions.json`:
-
-```json
-{ "recommendations": ["stylelint.vscode-stylelint"] }
-```
-
-### `.vscode/settings.json`
-
-- Вимкнення вбудованої CSS-валідації VS Code: `settings.json`:
+- `settings.json`:
 
 ```json
 {
@@ -140,10 +16,7 @@ $white-a1: color.adjust(white, $alpha: -0.85);
   "scss.validate": false
 }
 ```
-
-### CI: `.github/workflows/lint-style.yml`
-
-- Канон: `lint-style.yml`:
+- `lint-style.yml`:
 
 ```yaml
 name: StyleLint
@@ -184,15 +57,72 @@ jobs:
       - uses: ./.github/actions/setup-bun-deps
 
       - name: StyleLint
-        run: npx stylelint '**/*.{css,scss,vue}'
+        run: bunx n-cursor lint style --read-only
+```
+- `extensions.json`:
+
+```json
+{ "recommendations": ["stylelint.vscode-stylelint"] }
+```
+- `package.json`:
+
+```json
+{
+  "stylelint": {
+    "extends": "@nitra/stylelint-config"
+  }
+}
 ```
 
-**`package.json`:**
+## GitHub Actions workflow: lint-style.yml
+
+Rego-пакет: `style_lint.lint_style_yml`
+
+Цільовий файл: `.github/workflows/lint-style.yml`
+
+Перевіряє, що у workflow є крок `run`, який містить команду `n-cursor lint style --read-only` (substring-match по всіх кроках усіх jobs). Канонічний текст береться з template через `--data`.
+
+Канонічний template: [lint-style.yml.snippet.yml](./template/lint-style.yml.snippet.yml)
+
+**✓ Правильно** — крок `run: n-cursor lint style --read-only` присутній у jobs.stylelint.steps.
+
+**✗ Неправильно** — крок відсутній або містить лише `echo nothing` / `npx stylelint` без канонічного рядка.
+
+## package.json: stylelint-конфіг та devDependencies
+
+Rego-пакет: `style_lint.package_json`
+
+Цільовий файл: `package.json`
+
+Дві незалежні перевірки:
+
+1. **snippet-walker** — якщо поле `stylelint` присутнє у `package.json`, перевіряє `stylelint.extends == "@nitra/stylelint-config"` (2-рівневий обхід через template).
+2. **presence-check** — `@nitra/stylelint-config` має бути у `devDependencies` (ця перевірка завжди активна, не залежить від template).
+
+FS-альтернативи (`.stylelintrc.*` файли) та `.stylelintignore` перевіряються у JS, не в Rego.
+
+Канонічний template: [package.json.snippet.json](./template/package.json.snippet.json)
+
+**✓ Правильно** — `devDependencies` містить `@nitra/stylelint-config`; якщо є поле `stylelint` — `extends` дорівнює `"@nitra/stylelint-config"`.
+
+**✗ Неправильно** — відсутній `@nitra/stylelint-config` у `devDependencies`; або поле `stylelint.extends` має інше значення.
+
+## Генерація та редагування стилів (Cursor і інші агенти)
+
+- **Джерело правил:** перед тим як писати або суттєво змінювати **`.css`**, **`.scss`** або стилі в **`.vue`**, переглянь у корені проєкту (і в релевантних пакетах монорепо, якщо є) поле **`stylelint`** у **`package.json`** (зокрема `extends`), наявні **`.stylelintrc.*`**, **`stylelint.config.*`** та **`.stylelintignore`**. Не покладайся на «типові» правила stylelint з пам'яті — дотримуйся **проєктного** **`@nitra/stylelint-config`** і будь-яких локальних доповнень у репозиторії.
+- **Форматування** узгоджуй з **`n-text.mdc`** (oxfmt / `.oxfmtrc.json` для css, scss тощо), щоб форматер і stylelint не суперечили один одному.
+- **Запуск stylelint:** лише через **`n-cursor lint style`** (локально — з auto-fix; у CI — `--read-only`, нуль мутацій). Під капотом — `npx stylelint`; **не** використовуй **`bunx stylelint`**. Після змін запускай **`n-cursor lint style`** і виправляй усе, що лишилось після auto-fix; за потреби — повний прогін `n-cursor lint --full`.
+- **Не розширюй винятки:** не додавай зайві **`stylelint-disable`** без потреби; краще підлаштувати стилі під правила проєкту.
+
+## Канон налаштувань
+
+### `package.json`
+
+- `stylelint.extends`: [package.json.snippet.json](./policy/package_json/template/package.json.snippet.json)
+
+Окремого `lint-style` скрипта немає — запуск через **`n-cursor lint style`** (CI — `--read-only`).
 
 ```json title="package.json"
-  "scripts": {
-    "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
-  },
   "devDependencies": {
     "@nitra/stylelint-config": "^1.4.0"
   },
@@ -201,7 +131,25 @@ jobs:
   },
 ```
 
-Додай **`.github/workflows/lint-style.yml`** (лише **`.yml`**, **`ga.mdc`**): після **`checkout`** — локальний composite **`setup-bun-deps`**, далі `npx stylelint '**/*.{css,scss,vue}'` (CI — без `--fix`) у кроці **`run`**. **Не** дублюй окремі кроки **`setup-node`** / **`oven-sh/setup-bun`** / кеш / **`npm install`**.
+У корені проєкту має бути **`.stylelintignore`**:
+
+```text title=".stylelintignore"
+dist/
+```
+
+### `.vscode/extensions.json`
+
+- Канон `recommendations`: [extensions.json.snippet.json](./policy/vscode_extensions/template/extensions.json.snippet.json)
+
+### `.vscode/settings.json`
+
+- Вимкнення вбудованої CSS-валідації VS Code: [settings.json.snippet.json](./policy/vscode_settings/template/settings.json.snippet.json)
+
+### CI: `.github/workflows/lint-style.yml`
+
+- Канон: [lint-style.yml.snippet.yml](./policy/lint_style_yml/template/lint-style.yml.snippet.yml)
+
+Додай **`.github/workflows/lint-style.yml`** (лише **`.yml`**, **`ga.mdc`**): після **`checkout`** — локальний composite **`setup-bun-deps`**, далі `n-cursor lint style --read-only` у кроці **`run`**. **Не** дублюй окремі кроки **`setup-node`** / **`oven-sh/setup-bun`** / кеш / **`npm install`**.
 
 ```yaml title=".github/workflows/lint-style.yml"
 name: StyleLint
@@ -245,97 +193,36 @@ jobs:
         run: npx stylelint '**/*.{css,scss,vue}'
 ```
 
-У корені проєкту має бути **`.stylelintignore`**:
+## .vscode/extensions.json: розширення для stylelint
 
-```text title=".stylelintignore"
-dist/
-```
+Rego-пакет: `style_lint.vscode_extensions`
 
-## Адмінські таблиці — n-admin-table
+Цільовий файл: `.vscode/extensions.json`
 
-Для таблиць, що мають займати всю висоту сторінки (або блоку), додавай клас `n-admin-table` і атрибути `hide-no-data`, `dense`, `flat`. Таблиця автоматично розтягнеться на весь доступний простір. У блоках меншої висоти — задай їм явний `height`.
+Перевіряє, що масив `recommendations` містить усі записи з канонічного template (subset-check). Додаткові розширення поза списком — дозволені.
 
-```vue
-<!-- ТАБЛИЦЯ -->
-<q-table class="n-admin-table" hide-no-data flat dense />
-```
+Канонічний template: [extensions.json.snippet.json](./template/extensions.json.snippet.json)
 
-Якщо клас `.n-admin-table` не визначено в `app.scss` — додай:
+**✓ Правильно** — `recommendations` містить `"stylelint.vscode-stylelint"` (може бути і більше елементів).
 
-```scss
-// ADMIN TABLE
-.n-admin-table {
-  height: calc(100vh - 106px);
+**✗ Неправильно** — `recommendations` відсутній або не містить `"stylelint.vscode-stylelint"`.
 
-  thead {
-    position: sticky;
-    z-index: 3;
-    top: 0;
+## .vscode/settings.json: вимкнення вбудованих CSS/SCSS/Less валідаторів
 
-    tr th {
-      background-color: $grey-3;
-      height: 36px !important;
-    }
-  }
+Rego-пакет: `style_lint.vscode_settings`
 
-  // tbody td {
-  //   font-size: 14px;
-  // }
+Цільовий файл: `.vscode/settings.json`
 
-  tbody tr:last-child td {
-    border-bottom: 1px solid rgb(0 0 0 / 12%) !important;
-  }
+Leaf-by-leaf walker: перевіряє кожен ключ з template — його значення у `settings.json` має точно збігатися. Додаткові ключі у файлі — дозволені.
 
-  th:first-child,
-  td:first-child,
-  th:last-child,
-  td:last-child {
-    width: 1px;
-    white-space: nowrap;
-  }
+Канонічний template: [settings.json.snippet.json](./template/settings.json.snippet.json)
 
-  .q-table__bottom {
-    background-color: $grey-3;
-  }
+Обов'язкові значення:
 
-  .q-table__progress th {
-    height: 1px !important;
-  }
+- `"css.validate": false`
+- `"less.validate": false`
+- `"scss.validate": false`
 
-  .text-wrap {
-    max-width: 250px;
-    white-space: normal;
-  }
+**✓ Правильно** — усі три ключі присутні зі значенням `false`; можуть бути й інші ключі.
 
-  // sticky columns
-  td.sticky-left {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    background-color: white;
-    box-shadow: 2px 0 5px #0002;
-  }
-
-  td.sticky-right {
-    position: sticky;
-    right: 0;
-    z-index: 2;
-    background-color: white;
-    box-shadow: -2px 0 5px #0002;
-  }
-
-  th.sticky-left {
-    position: sticky;
-    left: 0;
-    z-index: 3;
-    box-shadow: 2px 0 5px #0002;
-  }
-
-  th.sticky-right {
-    position: sticky;
-    right: 0;
-    z-index: 3;
-    box-shadow: -2px 0 5px #0002;
-  }
-}
-```
+**✗ Неправильно** — будь-який з ключів відсутній, має значення `true` або рядок (`"off"`).

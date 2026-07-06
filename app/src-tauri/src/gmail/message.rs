@@ -166,10 +166,23 @@ fn part_charset(node: &Value) -> String {
 /// Decodes Gmail `body.data` (base64url) and converts the bytes to a `String`
 /// using the part's declared charset, falling back to UTF-8 for an absent or
 /// unknown charset. Decoding is lossy, so non-empty data always yields text.
+///
+/// Some senders mislabel a UTF-8 body with a legacy single-byte charset (e.g.
+/// `windows-1251`) in the `Content-Type` header. A legacy charset's non-ASCII
+/// bytes essentially never happen to form valid UTF-8 by chance, so if the
+/// declared charset isn't already UTF-8 but the raw bytes validate as UTF-8
+/// anyway, trust the bytes over the mislabeled header to avoid mojibake.
 fn decode_part(data: &str, charset: &str) -> Option<String> {
     let bytes = BASE64URL.decode(data.as_bytes()).ok()?;
-    let encoding =
-        encoding_rs::Encoding::for_label(charset.as_bytes()).unwrap_or(encoding_rs::UTF_8);
+    let label = if !charset.eq_ignore_ascii_case("utf-8")
+        && !charset.eq_ignore_ascii_case("utf8")
+        && std::str::from_utf8(&bytes).is_ok()
+    {
+        "utf-8"
+    } else {
+        charset
+    };
+    let encoding = encoding_rs::Encoding::for_label(label.as_bytes()).unwrap_or(encoding_rs::UTF_8);
     let (text, _, _) = encoding.decode(&bytes);
     Some(text.into_owned())
 }
@@ -330,6 +343,19 @@ mod tests {
             "body": { "data": data }
         });
         assert_eq!(extract_plain_text(&payload), "Привіт");
+    }
+
+    #[test]
+    fn extract_plain_text_prefers_valid_utf8_over_mislabeled_charset() {
+        // Sender declares windows-1251 but the body bytes are actually UTF-8 —
+        // a real-world mislabeling that used to produce mojibake.
+        let data = base64::engine::general_purpose::URL_SAFE.encode("Здравствуйте".as_bytes());
+        let payload = json!({
+            "mimeType": "text/plain",
+            "headers": [{"name": "Content-Type", "value": "text/plain; charset=windows-1251"}],
+            "body": { "data": data }
+        });
+        assert_eq!(extract_plain_text(&payload), "Здравствуйте");
     }
 
     #[test]

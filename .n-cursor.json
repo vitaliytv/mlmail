@@ -5,6 +5,7 @@
     "bun",
     "changelog",
     "ci4",
+    "doc-files",
     "ga",
     "image-avif",
     "image-compress",
@@ -16,17 +17,15 @@
     "tauri",
     "test",
     "text",
+    "tool-surface",
     "vue"
   ],
   "skills": [
     "adr-normalize",
-    "coverage-fix",
-    "fix",
-    "fix-tests",
+    "doc-files",
     "lint",
     "llm-patch",
     "publish-telegram",
-    "start-check",
     "taze"
   ]
 }
