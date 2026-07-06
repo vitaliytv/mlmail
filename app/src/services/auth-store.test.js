@@ -892,3 +892,78 @@ describe('useAuthStore.createFilter', () => {
     expect(store.trashQueryErrorKind.value).toBe(null)
   })
 })
+
+describe('useAuthStore.listFilters/deleteFilter', () => {
+  it('invokes gmail_list_filters and stores the result', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_list_filters') return Promise.resolve([{ id: 'f1', criteria: { from: 'a@b.com' } }])
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.listFilters()
+    expect(invokeMock).toHaveBeenCalledWith('gmail_list_filters')
+    expect(store.filters.value).toEqual([{ id: 'f1', criteria: { from: 'a@b.com' } }])
+    expect(store.filtersErrorKind.value).toBe(null)
+  })
+
+  it('maps a scope 403 (ReauthRequired) to logout state on list', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_list_filters')
+        return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.listFilters()
+    expect(store.filtersErrorKind.value).toBe('ReauthRequired')
+    expect(store.isAuthenticated.value).toBe(false)
+    expect(store.filters.value).toEqual([])
+  })
+
+  it('deleteFilter invokes gmail_delete_filter then refetches the list', async () => {
+    let listCallCount = 0
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_delete_filter') return Promise.resolve()
+      if (cmd === 'gmail_list_filters') {
+        listCallCount += 1
+        return Promise.resolve(listCallCount === 1 ? [{ id: 'f1', criteria: {} }] : [])
+      }
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.listFilters()
+    expect(store.filters.value).toHaveLength(1)
+    await store.deleteFilter('f1')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_delete_filter', { id: 'f1' })
+    expect(listCallCount).toBe(2)
+    expect(store.filters.value).toEqual([])
+    expect(store.deleteFilterErrorKind.value).toBe(null)
+  })
+
+  it('maps a scope 403 (ReauthRequired) to logout state on delete', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_delete_filter')
+        return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.deleteFilter('f1')
+    expect(store.deleteFilterErrorKind.value).toBe('ReauthRequired')
+    expect(store.isAuthenticated.value).toBe(false)
+  })
+})

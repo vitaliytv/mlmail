@@ -54,6 +54,11 @@ const _lastTrashedCount = ref(null)
 const _isCreatingFilter = ref(false)
 const _filterErrorKind = ref(null)
 const _filterCreated = ref(false)
+const _isLoadingFilters = ref(false)
+const _filtersErrorKind = ref(null)
+const _filters = ref(/** @type {{ id: string, criteria: { from?: string, subject?: string } }[]} */ ([]))
+const _isDeletingFilterId = ref(null)
+const _deleteFilterErrorKind = ref(null)
 const _actionLog = ref(/** @type {{ ts: number, text: string }[]} */ ([]))
 
 /**
@@ -229,6 +234,47 @@ export function useAuthStore() {
   }
 
   /**
+   * Fetch all configured Gmail filters.
+   */
+  async function listFilters() {
+    _isLoadingFilters.value = true
+    _filtersErrorKind.value = null
+    try {
+      _filters.value = await invoke('gmail_list_filters')
+    } catch (error) {
+      _filters.value = []
+      _filtersErrorKind.value = getErrorKind(error)
+      if (_filtersErrorKind.value === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    } finally {
+      _isLoadingFilters.value = false
+    }
+  }
+
+  /**
+   * Delete a Gmail filter by id, then refresh the list.
+   * @param {string} id filter id to delete
+   */
+  async function deleteFilter(id) {
+    _isDeletingFilterId.value = id
+    _deleteFilterErrorKind.value = null
+    try {
+      await invoke('gmail_delete_filter', { id })
+      await listFilters()
+    } catch (error) {
+      _deleteFilterErrorKind.value = getErrorKind(error)
+      if (_deleteFilterErrorKind.value === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    } finally {
+      _isDeletingFilterId.value = null
+    }
+  }
+
+  /**
    * Clear transient feedback from the pattern panel (errors, counts, success).
    */
   function clearPatternFeedback() {
@@ -297,6 +343,11 @@ export function useAuthStore() {
     _isCreatingFilter.value = false
     _filterErrorKind.value = null
     _filterCreated.value = false
+    _isLoadingFilters.value = false
+    _filtersErrorKind.value = null
+    _filters.value = []
+    _isDeletingFilterId.value = null
+    _deleteFilterErrorKind.value = null
   }
 
   return {
@@ -321,6 +372,11 @@ export function useAuthStore() {
     isCreatingFilter: readonly(_isCreatingFilter),
     filterErrorKind: readonly(_filterErrorKind),
     filterCreated: readonly(_filterCreated),
+    isLoadingFilters: readonly(_isLoadingFilters),
+    filtersErrorKind: readonly(_filtersErrorKind),
+    filters: readonly(_filters),
+    isDeletingFilterId: readonly(_isDeletingFilterId),
+    deleteFilterErrorKind: readonly(_deleteFilterErrorKind),
     actionLog: readonly(_actionLog),
     initialize,
     login,
@@ -333,6 +389,8 @@ export function useAuthStore() {
     trashCurrent,
     trashByQuery,
     createFilter,
+    listFilters,
+    deleteFilter,
     clearPatternFeedback,
   }
 }
@@ -360,4 +418,9 @@ export function _resetForTest() {
   _isCreatingFilter.value = false
   _filterErrorKind.value = null
   _filterCreated.value = false
+  _isLoadingFilters.value = false
+  _filtersErrorKind.value = null
+  _filters.value = []
+  _isDeletingFilterId.value = null
+  _deleteFilterErrorKind.value = null
 }

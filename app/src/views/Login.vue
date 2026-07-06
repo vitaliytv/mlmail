@@ -11,6 +11,7 @@ import { buildPatternQuery, parseFromEmail } from '../services/pattern.js'
 import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
 import NewsletterView from '../components/NewsletterView.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
+import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'
 
 const auth = useAuthStore()
 const agent = useAgent()
@@ -119,6 +120,7 @@ async function openPatternDialog() {
 
 const showActionLog = ref(false)
 const showTemplates = ref(false)
+const showFilters = ref(false)
 
 async function trashByQueryAndClose() {
   const q = patternQuery.value
@@ -292,11 +294,27 @@ async function trashByQueryAndClose() {
           flat no-caps
           icon="sym_o_manage_search"
           title="Журнал запитів" />
-        <q-btn @click="auth.logout()" flat no-caps icon="sym_o_logout" label="Вийти" />
+        <q-btn flat no-caps round icon="sym_o_more_vert">
+          <q-tooltip>Меню</q-tooltip>
+          <q-menu anchor="top right" self="bottom right">
+            <q-list style="min-width: 180px">
+              <q-item clickable v-close-popup @click="showFilters = true">
+                <q-item-section avatar><q-icon name="sym_o_filter_alt" /></q-item-section>
+                <q-item-section>Фільтри Gmail</q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item clickable v-close-popup @click="auth.logout()">
+                <q-item-section avatar><q-icon name="sym_o_logout" /></q-item-section>
+                <q-item-section>Вийти</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </q-toolbar>
     </q-page-sticky>
 
     <TemplatesManager v-model="showTemplates" />
+    <GmailFiltersDialog v-model="showFilters" />
 
     <q-dialog v-model="showActionLog">
       <q-card style="min-width: 480px; max-width: 90vw">

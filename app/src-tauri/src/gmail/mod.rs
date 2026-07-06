@@ -630,6 +630,126 @@ pub async fn gmail_create_filter(
     create_filter_at(&endpoints.gmail_filters, &token, from, subject).await
 }
 
+/// Match criteria of an existing Gmail filter, as returned by the list endpoint.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilterCriteria {
+    #[serde(default)]
+    pub from: Option<String>,
+    #[serde(default)]
+    pub subject: Option<String>,
+}
+
+/// One existing Gmail filter, as returned by the list endpoint.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilterListItem {
+    pub id: String,
+    #[serde(default)]
+    pub criteria: FilterCriteria,
+}
+
+/// List all Gmail filters configured for the account.
+pub(crate) async fn list_filters_at(
+    endpoint: &str,
+    access_token: &str,
+) -> Result<Vec<FilterListItem>, GmailError> {
+    let resp = reqwest::Client::new()
+        .get(endpoint)
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if status == reqwest::StatusCode::FORBIDDEN && body.to_lowercase().contains("scope") {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let items = match v.get("filter") {
+        Some(arr) => {
+            serde_json::from_value(arr.clone()).map_err(|e| GmailError::Parse(e.to_string()))?
+        }
+        None => Vec::new(),
+    };
+    Ok(items)
+}
+
+/// List all Gmail filters for the authenticated user.
+#[tauri::command]
+pub async fn gmail_list_filters(
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<Vec<FilterListItem>, GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    list_filters_at(&endpoints.gmail_filters, &token).await
+}
+
+/// Delete a Gmail filter by id.
+pub(crate) async fn delete_filter_at(
+    endpoint: &str,
+    access_token: &str,
+    id: &str,
+) -> Result<(), GmailError> {
+    let url = format!("{endpoint}/{id}");
+    let resp = reqwest::Client::new()
+        .delete(&url)
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if status == reqwest::StatusCode::FORBIDDEN && body.to_lowercase().contains("scope") {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+    Ok(())
+}
+
+/// Delete a Gmail filter by id.
+#[tauri::command]
+pub async fn gmail_delete_filter(
+    id: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<(), GmailError> {
+    let id = id.trim();
+    if id.is_empty() {
+        return Err(GmailError::EmptyQuery);
+    }
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    delete_filter_at(&endpoints.gmail_filters, &token, id).await
+}
+
 const SAVED_LABEL_NAME: &str = "Збережено";
 const TASK_LABEL_NAME: &str = "Задача";
 
@@ -1337,6 +1457,97 @@ mod tests {
             .unwrap_err();
         match err {
             GmailError::Http { status, .. } => assert_eq!(status, 403),
+            other => panic!("expected Http, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn list_filters_at_parses_filter_array() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/filters")
+            .with_status(200)
+            .with_body(r#"{"filter":[{"id":"f1","criteria":{"from":"a@b.com"}}]}"#)
+            .create_async()
+            .await;
+        let res = list_filters_at(&format!("{}/filters", server.url()), "AT-1")
+            .await
+            .unwrap();
+        assert_eq!(res.len(), 1);
+        assert_eq!(res[0].id, "f1");
+        assert_eq!(res[0].criteria.from.as_deref(), Some("a@b.com"));
+    }
+
+    #[tokio::test]
+    async fn list_filters_at_returns_empty_when_key_absent() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/filters")
+            .with_status(200)
+            .with_body("{}")
+            .create_async()
+            .await;
+        let res = list_filters_at(&format!("{}/filters", server.url()), "AT-1")
+            .await
+            .unwrap();
+        assert!(res.is_empty());
+    }
+
+    #[tokio::test]
+    async fn list_filters_at_maps_401_to_reauth() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/filters")
+            .with_status(401)
+            .create_async()
+            .await;
+        let err = list_filters_at(&format!("{}/filters", server.url()), "AT-1")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::ReauthRequired));
+    }
+
+    #[tokio::test]
+    async fn delete_filter_at_sends_delete_to_id_path() {
+        let mut server = mockito::Server::new_async().await;
+        let m = server
+            .mock("DELETE", "/filters/f1")
+            .with_status(204)
+            .create_async()
+            .await;
+        delete_filter_at(&format!("{}/filters", server.url()), "AT-1", "f1")
+            .await
+            .unwrap();
+        m.assert_async().await;
+    }
+
+    #[tokio::test]
+    async fn delete_filter_at_maps_401_to_reauth() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("DELETE", "/filters/f1")
+            .with_status(401)
+            .create_async()
+            .await;
+        let err = delete_filter_at(&format!("{}/filters", server.url()), "AT-1", "f1")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::ReauthRequired));
+    }
+
+    #[tokio::test]
+    async fn delete_filter_at_maps_5xx_to_http_error() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("DELETE", "/filters/f1")
+            .with_status(503)
+            .create_async()
+            .await;
+        let err = delete_filter_at(&format!("{}/filters", server.url()), "AT-1", "f1")
+            .await
+            .unwrap_err();
+        match err {
+            GmailError::Http { status, .. } => assert_eq!(status, 503),
             other => panic!("expected Http, got {other:?}"),
         }
     }

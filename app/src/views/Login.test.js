@@ -22,7 +22,7 @@ describe('Login.vue', () => {
     expect(w.text()).toContain('Увійти через Google')
   })
 
-  it('renders "Ви увійшли як ..." and "Вийти" when authenticated', async () => {
+  it('renders "Ви увійшли як ..." and a menu with "Вийти" when authenticated', async () => {
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('me@example.com')
@@ -31,7 +31,11 @@ describe('Login.vue', () => {
     const w = mountWithQuasar(Login)
     await flushPromises()
     expect(w.text()).toContain('Ви увійшли як me@example.com')
-    expect(w.text()).toContain('Вийти')
+    const menuBtn = w.findAll('button').find(b => b.html().includes('more_vert'))
+    await menuBtn.trigger('click')
+    await flushPromises()
+    // q-menu content teleports to document.body, outside the wrapper's DOM tree.
+    expect(document.body.textContent).toContain('Вийти')
   })
 
   it('shows Ukrainian error after failed login', async () => {
@@ -69,9 +73,12 @@ describe('Login.vue', () => {
     })
     const w = mountWithQuasar(Login)
     await flushPromises()
-    const buttons = w.findAll('button')
-    const logoutBtn = buttons.find(b => b.text().includes('Вийти'))
-    await logoutBtn.trigger('click')
+    const menuBtn = w.findAll('button').find(b => b.html().includes('more_vert'))
+    await menuBtn.trigger('click')
+    await flushPromises()
+    // q-menu content teleports to document.body, outside the wrapper's DOM tree.
+    const logoutItem = [...document.body.querySelectorAll('.q-item')].find(el => el.textContent.includes('Вийти'))
+    logoutItem.click()
     await flushPromises()
     expect(invokeMock).toHaveBeenCalledWith('auth_logout')
     expect(w.text()).toContain('Увійти через Google')
