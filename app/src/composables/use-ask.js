@@ -6,7 +6,7 @@ import { buildSummaryPrompt } from '../services/summary.js'
 const ASK_SYSTEM = [
   'Ти помічник, що відповідає на запитання щодо конкретного email.',
   'Тобі буде надано вміст листа, а потім запитання від користувача.',
-  'Відповідай стисло, по суті, українською мовою.',
+  'Відповідай стисло, по суті, українською мовою.'
 ].join(' ')
 
 /**
@@ -16,6 +16,11 @@ export function useAsk() {
   const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
   const isAsking = ref(false)
 
+  /**
+   *
+   * @param message
+   * @param question
+   */
   async function ask(message, question) {
     if (!question.trim()) return null
     isAsking.value = true
@@ -25,22 +30,20 @@ export function useAsk() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch,
+        fetchFn: tauriFetch
       })
       const emailContext = buildSummaryPrompt(message)
       const reply = await chat({
         messages: [
           { role: 'system', content: ASK_SYSTEM },
-          { role: 'user', content: `Лист:\n${emailContext}\n\nЗапитання: ${question}` },
+          { role: 'user', content: `Лист:\n${emailContext}\n\nЗапитання: ${question}` }
         ],
-        tools: [],
+        tools: []
       })
       return (reply?.content ?? '').trim() || null
-    }
-    catch {
+    } catch {
       return null
-    }
-    finally {
+    } finally {
       isAsking.value = false
     }
   }

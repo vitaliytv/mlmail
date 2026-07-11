@@ -11,6 +11,11 @@ import { SYSTEM_PROMPT } from '../services/newsletter-template.js'
 export function useNewsletterRender() {
   const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
 
+  /**
+   *
+   * @param message
+   * @param prompt
+   */
   async function render(message, prompt) {
     const body = (message?.body ?? '').trim()
     if (!body) return []
@@ -20,22 +25,24 @@ export function useNewsletterRender() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch,
+        fetchFn: tauriFetch
       })
       const userContent = `${prompt}\n\n---\n${body}`
       const reply = await chat({
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userContent },
+          { role: 'user', content: userContent }
         ],
-        tools: [],
+        tools: []
       })
       const text = (reply?.content ?? '').trim()
       // Strip markdown code fences if the model wrapped the JSON
-      const json = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+      const json = text
+        .replace(/^```(?:json)?\n?/, '')
+        .replace(/\n?```$/, '')
+        .trim()
       return JSON.parse(json)
-    }
-    catch {
+    } catch {
       return null
     }
   }

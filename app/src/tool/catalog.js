@@ -13,119 +13,139 @@ export const TOOLS = [
     name: 'is_authenticated',
     summary: 'Report whether a Gmail session is currently active.',
     input: {},
-    tauri: 'auth_is_authenticated',
+    tauri: 'auth_is_authenticated'
   },
   {
     tier: 'read',
     name: 'current_email',
     summary: 'Return the email address of the signed-in Gmail account.',
     input: {},
-    tauri: 'auth_current_email',
+    tauri: 'auth_current_email'
   },
   {
     tier: 'read',
     name: 'inbox_count',
     summary: 'Return the total number of messages in the Gmail INBOX.',
     input: {},
-    tauri: 'gmail_inbox_count',
+    tauri: 'gmail_inbox_count'
   },
   {
     tier: 'read',
     name: 'search',
-    summary: 'Search the inbox with a Gmail query (e.g. "from:bob unread", "subject:invoice", "newer_than:7d"). Returns up to 15 message summaries (id, from, subject, date).',
+    summary:
+      'Search the inbox with a Gmail query (e.g. "from:bob unread", "subject:invoice", "newer_than:7d"). Returns up to 15 message summaries (id, from, subject, date).',
     input: {
-      q: { type: 'string', required: true, description: 'Gmail search query. Empty string lists recent inbox messages.' },
+      q: {
+        type: 'string',
+        required: true,
+        description: 'Gmail search query. Empty string lists recent inbox messages.'
+      }
     },
-    tauri: 'gmail_search',
+    tauri: 'gmail_search'
   },
   {
     tier: 'read',
     name: 'read',
     summary: 'Read one message in full (from, subject, date, body) by its id.',
     input: {
-      id: { type: 'string', required: true, description: 'Gmail message id (from a search result).' },
+      id: { type: 'string', required: true, description: 'Gmail message id (from a search result).' }
     },
-    tauri: 'gmail_read',
+    tauri: 'gmail_read'
   },
   {
     tier: 'read',
     name: 'random_message',
     summary: 'Fetch one random message from the inbox (from, subject, date, body, unsubscribe).',
     input: {},
-    tauri: 'gmail_random_message',
+    tauri: 'gmail_random_message'
   },
   {
     tier: 'read',
     name: 'random_newsletter',
     summary: 'Fetch one random newsletter (message carrying a List-Unsubscribe header) from the inbox.',
     input: {},
-    tauri: 'gmail_random_newsletter',
+    tauri: 'gmail_random_newsletter'
   },
   {
     tier: 'write',
     name: 'unsubscribe',
     summary: 'Unsubscribe from a newsletter via its List-Unsubscribe action (one-click POST, URL, or mailto).',
     input: {
-      action: { type: 'object', required: true, description: 'The unsubscribe action object from a message (OneClick { url } | Url { url } | Mailto { to, subject? }).' },
+      action: {
+        type: 'object',
+        required: true,
+        description:
+          'The unsubscribe action object from a message (OneClick { url } | Url { url } | Mailto { to, subject? }).'
+      }
     },
-    tauri: 'gmail_unsubscribe',
+    tauri: 'gmail_unsubscribe'
   },
   {
     tier: 'write',
     name: 'save',
-    summary: 'Apply the "Збережено" label to one message and archive it (removes from INBOX). The message stays permanently in Gmail under the Збережено label.',
+    summary:
+      'Apply the "Збережено" label to one message and archive it (removes from INBOX). The message stays permanently in Gmail under the Збережено label.',
     input: {
-      id: { type: 'string', required: true, description: 'Gmail message id to save.' },
+      id: { type: 'string', required: true, description: 'Gmail message id to save.' }
     },
-    tauri: 'gmail_save',
+    tauri: 'gmail_save'
   },
   {
     tier: 'write',
     name: 'flag_task',
-    summary: 'Apply the "Задача" label to one message, marking it as an open task. The message stays where it is (e.g. still in INBOX).',
+    summary:
+      'Apply the "Задача" label to one message, marking it as an open task. The message stays where it is (e.g. still in INBOX).',
     input: {
-      id: { type: 'string', required: true, description: 'Gmail message id to flag as a task.' },
+      id: { type: 'string', required: true, description: 'Gmail message id to flag as a task.' }
     },
-    tauri: 'gmail_flag_task',
+    tauri: 'gmail_flag_task'
   },
   {
     tier: 'write',
     name: 'unflag_task',
     summary: 'Remove the "Задача" label from one message, marking its task as done. Does not delete the message.',
     input: {
-      id: { type: 'string', required: true, description: 'Gmail message id to unflag.' },
+      id: { type: 'string', required: true, description: 'Gmail message id to unflag.' }
     },
-    tauri: 'gmail_unflag_task',
+    tauri: 'gmail_unflag_task'
   },
   {
     tier: 'destructive',
     name: 'trash',
-    summary: 'Move one message to Trash by its id. Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',
+    summary:
+      'Move one message to Trash by its id. Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',
     input: {
-      id: { type: 'string', required: true, description: 'Gmail message id to trash (from a search result).' },
+      id: { type: 'string', required: true, description: 'Gmail message id to trash (from a search result).' }
     },
-    tauri: 'gmail_trash',
+    tauri: 'gmail_trash'
   },
   {
     tier: 'destructive',
     name: 'trash_query',
-    summary: 'Move EVERY inbox message matching a Gmail query to Trash (paginated, batched). Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',
+    summary:
+      'Move EVERY inbox message matching a Gmail query to Trash (paginated, batched). Reversible (Gmail keeps Trash 30 days). Destructive — agents need human approval.',
     input: {
-      q: { type: 'string', required: true, description: 'Gmail search query selecting the messages to trash, e.g. `from:npm subject:"Successfully published"`. Must be non-empty (an empty query would match the whole inbox).' },
+      q: {
+        type: 'string',
+        required: true,
+        description:
+          'Gmail search query selecting the messages to trash, e.g. `from:npm subject:"Successfully published"`. Must be non-empty (an empty query would match the whole inbox).'
+      }
     },
-    tauri: 'gmail_trash_query',
+    tauri: 'gmail_trash_query'
   },
   {
     tier: 'write',
     name: 'create_filter',
-    summary: 'Create a Gmail filter that automatically moves future matching mail to Trash. Matches by sender and/or subject phrase.',
+    summary:
+      'Create a Gmail filter that automatically moves future matching mail to Trash. Matches by sender and/or subject phrase.',
     input: {
       from: { type: 'string', required: false, description: 'Sender to match (email address or domain).' },
-      subject: { type: 'string', required: false, description: 'Subject phrase to match.' },
+      subject: { type: 'string', required: false, description: 'Subject phrase to match.' }
     },
-    validate: data => (!data.from?.trim() && !data.subject?.trim()) ? 'Provide at least one of from/subject' : null,
-    tauri: 'gmail_create_filter',
-  },
+    validate: data => (!data.from?.trim() && !data.subject?.trim() ? 'Provide at least one of from/subject' : null),
+    tauri: 'gmail_create_filter'
+  }
 ]
 
 /**

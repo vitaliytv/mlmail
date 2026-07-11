@@ -6,8 +6,7 @@
     title="Request journal"
     icon="sym_o_history"
     :width="720"
-    body-class=""
-  >
+    body-class="">
     <template #header>
       <q-btn @click="refresh" icon="sym_o_refresh" flat round dense size="sm" :loading="loading" title="Refresh" />
     </template>
@@ -36,8 +35,7 @@
               color="negative"
               unelevated
               no-caps
-              :loading="busyId === rec.id"
-            />
+              :loading="busyId === rec.id" />
             <q-btn @click="onApprove(rec, false)" label="Відхилити" flat no-caps :disable="busyId === rec.id" />
           </div>
         </div>
@@ -53,8 +51,7 @@
               dense
               size="sm"
               :loading="analyzingId === rec.id && analyzingVia === 'pi'"
-              :disable="analyzingId === rec.id"
-            />
+              :disable="analyzingId === rec.id" />
             <q-btn
               @click="runAnalysis(rec, 'omlx')"
               label="Аналіз: omlx"
@@ -64,8 +61,7 @@
               dense
               size="sm"
               :loading="analyzingId === rec.id && analyzingVia === 'omlx'"
-              :disable="analyzingId === rec.id"
-            />
+              :disable="analyzingId === rec.id" />
           </div>
           <div v-if="analysisError[rec.id]" class="audit-analysis-error">{{ analysisError[rec.id] }}</div>
           <div v-if="analysisResult[rec.id]" class="audit-analysis-result">{{ analysisResult[rec.id] }}</div>
@@ -87,7 +83,7 @@ import { useCallAnalysis } from '../composables/use-call-analysis.js'
 // same journal data source, same look, plus an analysis panel per row.
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  agent: { type: Object, required: true },
+  agent: { type: Object, required: true }
 })
 const emit = defineEmits(['update:modelValue', 'changed'])
 
@@ -119,11 +115,9 @@ async function refresh() {
   loading.value = true
   try {
     records.value = await journal.list()
-  }
-  catch (error) {
+  } catch (error) {
     $q.notify({ type: 'negative', message: String(error?.message ?? error) })
-  }
-  finally {
+  } finally {
     loading.value = false
   }
 }
@@ -155,11 +149,9 @@ async function onRespond(rec, message) {
     await respond(rec.id, message)
     await refresh()
     emit('changed')
-  }
-  catch (error) {
+  } catch (error) {
     $q.notify({ type: 'negative', message: String(error?.message ?? error) })
-  }
-  finally {
+  } finally {
     busyId.value = null
   }
 }
@@ -175,11 +167,9 @@ async function onApprove(rec, ok) {
     await approve(rec.id, ok)
     await refresh()
     emit('changed')
-  }
-  catch (error) {
+  } catch (error) {
     $q.notify({ type: 'negative', message: String(error?.message ?? error) })
-  }
-  finally {
+  } finally {
     busyId.value = null
   }
 }
@@ -197,11 +187,9 @@ async function runAnalysis(rec, via) {
   analysisResult[rec.id] = ''
   try {
     analysisResult[rec.id] = via === 'pi' ? await analyzeWithPi(rec) : await analyzeWithOmlx(rec)
-  }
-  catch (error) {
+  } catch (error) {
     analysisError[rec.id] = String(error?.message ?? error)
-  }
-  finally {
+  } finally {
     analyzingId.value = null
     analyzingVia.value = null
   }

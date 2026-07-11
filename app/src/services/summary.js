@@ -9,7 +9,7 @@ export const SUMMARY_SYSTEM = [
   'Ти стисло переказуєш зміст email українською мовою.',
   'Дай коротке резюме (2–5 речень або кілька пунктів): хто відправник, що сталося',
   'та що від користувача очікують або пропонують.',
-  'Пиши лише сам переказ українською — без вступів на кшталт «Ось резюме».',
+  'Пиши лише сам переказ українською — без вступів на кшталт «Ось резюме».'
 ].join(' ')
 
 export const TRANSLATE_SYSTEM = [
@@ -17,14 +17,14 @@ export const TRANSLATE_SYSTEM = [
   'У вхідному тексті може бути CSS-стилі, HTML-атрибути або технічний код — повністю їх ігноруй.',
   'Переклади лише читабельний людський текст листа на українську мову.',
   'Зберігай структуру: абзаци, списки, заголовки.',
-  'Пиши лише переклад — без коментарів, пояснень та вступів.',
+  'Пиши лише переклад — без коментарів, пояснень та вступів.'
 ].join(' ')
 
 export const TRANSLATE_BATCH_SYSTEM = [
   'Ти перекладач. Тобі надається JSON-масив рядків англійського тексту з email.',
   'Переклади кожен рядок на українську. Повертай ТІЛЬКИ JSON-масив рядків — без коментарів та markdown.',
   'Якщо рядок порожній або це не текст (URL, число, пробіл) — повертай його без змін.',
-  'Кількість елементів у відповіді має бути РІВНО такою самою, як у вхідному масиві.',
+  'Кількість елементів у відповіді має бути РІВНО такою самою, як у вхідному масиві.'
 ].join(' ')
 
 /**
@@ -80,7 +80,7 @@ export function extractTextNodes(root) {
       // Skip whitespace-only nodes
       if (!text.trim()) return NodeFilter.FILTER_REJECT
       return NodeFilter.FILTER_ACCEPT
-    },
+    }
   })
   let node
   while ((node = walker.nextNode())) {
@@ -107,12 +107,12 @@ export async function translateHtmlEmail(html, translateBatch) {
   const translated = await translateBatch(texts)
 
   // Apply translations back; fall back to original text on length mismatch.
-  nodes.forEach((node, i) => {
+  for (const [i, node] of nodes.entries()) {
     const replacement = translated[i]
     if (replacement && typeof replacement === 'string') {
       node.textContent = replacement
     }
-  })
+  }
 
   return doc.documentElement.outerHTML
 }

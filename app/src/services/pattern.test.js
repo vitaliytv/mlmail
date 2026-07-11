@@ -23,8 +23,9 @@ describe('parseFromEmail', () => {
 
 describe('buildPatternQuery', () => {
   it('combines from and subject into a Gmail query', () => {
-    expect(buildPatternQuery({ from: 'support@npmjs.com', subject: 'Successfully published' }))
-      .toBe('from:support@npmjs.com subject:"Successfully published"')
+    expect(buildPatternQuery({ from: 'support@npmjs.com', subject: 'Successfully published' })).toBe(
+      'from:support@npmjs.com subject:"Successfully published"'
+    )
   })
 
   it('emits only from when subject is blank', () => {

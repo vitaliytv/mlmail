@@ -44,7 +44,7 @@ const auditOpen = ref(false)
 const $q = useQuasar()
 onMounted(() => {
   auth.initialize()
-  window.addEventListener('message', (e) => {
+  window.addEventListener('message', e => {
     if (e.data?.type === 'open-url' && e.data.url) {
       invoke('app_open_url', { url: e.data.url })
     }
@@ -80,11 +80,8 @@ const htmlBodyWithInterceptor = computed(() => {
   const html = auth.currentMessage.value?.html_body
   if (!html) return null
   const inject = LIGHT_BG_STYLE + LINK_INTERCEPT_SCRIPT
-  return html.includes(HEAD_CLOSE_TAG)
-    ? html.replace(HEAD_CLOSE_TAG, inject + HEAD_CLOSE_TAG)
-    : inject + html
+  return html.includes(HEAD_CLOSE_TAG) ? html.replace(HEAD_CLOSE_TAG, inject + HEAD_CLOSE_TAG) : inject + html
 })
-
 
 const showPatternDialog = ref(false)
 const patternFrom = ref('')
@@ -92,9 +89,7 @@ const patternSubject = ref('')
 const initialSubject = ref('')
 const isSuggesting = ref(false)
 
-const patternQuery = computed(() =>
-  buildPatternQuery({ from: patternFrom.value, subject: patternSubject.value })
-)
+const patternQuery = computed(() => buildPatternQuery({ from: patternFrom.value, subject: patternSubject.value }))
 // Deletion targets the sender only — a subject phrase (even an LLM-suggested
 // one) is too easy to get wrong and trash unrelated mail from the same sender.
 const deleteQuery = computed(() => buildPatternQuery({ from: patternFrom.value }))
@@ -139,6 +134,9 @@ const showActionLog = ref(false)
 const showTemplates = ref(false)
 const showFilters = ref(false)
 
+/**
+ *
+ */
 async function trashByQueryAndClose() {
   const q = deleteQuery.value
   await auth.trashByQuery(q)
@@ -151,7 +149,7 @@ async function trashByQueryAndClose() {
       color: 'positive',
       icon: 'sym_o_delete_sweep',
       timeout: 5000,
-      position: 'top',
+      position: 'top'
     })
   }
 }
@@ -163,7 +161,6 @@ async function trashByQueryAndClose() {
       <q-banner v-if="auth.inboxErrorKind.value" class="bg-red-1 text-red-9" rounded dense>
         {{ errorMessage(auth.inboxErrorKind.value) }}
       </q-banner>
-
 
       <template v-if="auth.currentMessage.value">
         <div class="row no-wrap q-col-gutter-md reader">
@@ -291,36 +288,24 @@ async function trashByQueryAndClose() {
           :loading="auth.isMessageLoading.value" />
         <q-btn
           @click="showActionLog = true"
-          flat no-caps
+          flat
+          no-caps
           icon="sym_o_history"
           label="Журнал"
           :color="auth.actionLog.value.length ? 'primary' : undefined" />
-        <q-btn
-          @click="showTemplates = true"
-          flat no-caps
-          icon="sym_o_layers"
-          label="Шаблони" />
-        <q-btn
-          @click="agentOpen = true"
-          flat no-caps
-          icon="sym_o_smart_toy"
-          label="Агент"
-          color="primary" />
-        <q-btn
-          @click="auditOpen = true"
-          flat no-caps
-          icon="sym_o_manage_search"
-          title="Журнал запитів" />
+        <q-btn @click="showTemplates = true" flat no-caps icon="sym_o_layers" label="Шаблони" />
+        <q-btn @click="agentOpen = true" flat no-caps icon="sym_o_smart_toy" label="Агент" color="primary" />
+        <q-btn @click="auditOpen = true" flat no-caps icon="sym_o_manage_search" title="Журнал запитів" />
         <q-btn flat no-caps round icon="sym_o_more_vert">
           <q-tooltip>Меню</q-tooltip>
           <q-menu anchor="top right" self="bottom right">
             <q-list style="min-width: 180px">
-              <q-item clickable v-close-popup @click="showFilters = true">
+              <q-item v-close-popup @click="showFilters = true" clickable>
                 <q-item-section avatar><q-icon name="sym_o_filter_alt" /></q-item-section>
                 <q-item-section>Фільтри Gmail</q-item-section>
               </q-item>
               <q-separator />
-              <q-item clickable v-close-popup @click="auth.logout()">
+              <q-item v-close-popup @click="auth.logout()" clickable>
                 <q-item-section avatar><q-icon name="sym_o_logout" /></q-item-section>
                 <q-item-section>Вийти</q-item-section>
               </q-item>
@@ -368,11 +353,12 @@ async function trashByQueryAndClose() {
             :clearable="!isSuggesting"
             clear-icon="sym_o_close">
             <template v-if="isSuggesting" #append>
-              <q-icon name="sym_o_close" class="cursor-pointer" @click="cancelSuggestion" />
+              <q-icon @click="cancelSuggestion" name="sym_o_close" class="cursor-pointer" />
             </template>
           </q-input>
           <div class="text-caption text-grey-7">
-            Фільтр: <code>{{ patternQuery || '—' }}</code><br />
+            Фільтр: <code>{{ patternQuery || '—' }}</code
+            ><br />
             Видалення (лише за відправником): <code>{{ deleteQuery || '—' }}</code>
           </div>
         </q-card-section>

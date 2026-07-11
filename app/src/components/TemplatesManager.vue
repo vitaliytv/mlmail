@@ -4,7 +4,7 @@ import {
   saveTemplate,
   saveBuiltinTemplate,
   deleteTemplate,
-  slugify,
+  slugify
 } from '../services/newsletter-template.js'
 
 const isDev = import.meta.env.DEV
@@ -15,14 +15,22 @@ const templates = ref([])
 const showEditor = ref(false)
 const editTemplate = ref({})
 
+/**
+ *
+ */
 async function load() {
   templates.value = await listTemplates()
 }
 
-watch(show, (v) => { if (v) load() })
+watch(show, v => {
+  if (v) load()
+})
 
 const saveAsBuiltin = ref(false)
 
+/**
+ *
+ */
 function openNew() {
   editTemplate.value = {
     id: '',
@@ -31,18 +39,25 @@ function openNew() {
     task_label: '',
     from_pattern: '',
     subject_pattern: '',
-    prompt: '',
+    prompt: ''
   }
   saveAsBuiltin.value = false
   showEditor.value = true
 }
 
+/**
+ *
+ * @param t
+ */
 function openEdit(t) {
   editTemplate.value = { task_label: '', subject_pattern: '', ...t }
   saveAsBuiltin.value = false
   showEditor.value = true
 }
 
+/**
+ *
+ */
 async function onSave() {
   if (!editTemplate.value.id) {
     editTemplate.value.id = slugify(editTemplate.value.name || editTemplate.value.from_pattern)
@@ -64,17 +79,22 @@ async function onSave() {
   await load()
 }
 
+/**
+ *
+ * @param t
+ */
 async function onDelete(t) {
   await deleteTemplate(t.id)
   await load()
 }
 
-const typeLabel = (t) => t.type === 'task' ? 'Завдання' : 'Newsletter'
-const typeColor = (t) => t.type === 'task' ? 'orange' : 'primary'
-const canSave = computed(() =>
-  editTemplate.value.name &&
-  (editTemplate.value.from_pattern || editTemplate.value.subject_pattern) &&
-  (editTemplate.value.type === 'task' || editTemplate.value.prompt)
+const typeLabel = t => (t.type === 'task' ? 'Завдання' : 'Newsletter')
+const typeColor = t => (t.type === 'task' ? 'orange' : 'primary')
+const canSave = computed(
+  () =>
+    editTemplate.value.name &&
+    (editTemplate.value.from_pattern || editTemplate.value.subject_pattern) &&
+    (editTemplate.value.type === 'task' || editTemplate.value.prompt)
 )
 </script>
 
@@ -88,7 +108,7 @@ const canSave = computed(() =>
       </q-bar>
 
       <q-card-section class="row justify-end q-pb-none">
-        <q-btn color="primary" icon="sym_o_add" label="Новий шаблон" no-caps @click="openNew" />
+        <q-btn @click="openNew" color="primary" icon="sym_o_add" label="Новий шаблон" no-caps />
       </q-card-section>
 
       <q-card-section>
@@ -113,8 +133,8 @@ const canSave = computed(() =>
             </q-item-section>
             <q-item-section side>
               <div class="row q-gutter-xs">
-                <q-btn flat dense round icon="sym_o_edit" color="grey-7" @click="openEdit(t)" />
-                <q-btn flat dense round icon="sym_o_delete" color="negative" :disable="t.builtin" @click="onDelete(t)">
+                <q-btn @click="openEdit(t)" flat dense round icon="sym_o_edit" color="grey-7" />
+                <q-btn @click="onDelete(t)" flat dense round icon="sym_o_delete" color="negative" :disable="t.builtin">
                   <q-tooltip v-if="t.builtin">Системний шаблон не можна видалити</q-tooltip>
                 </q-btn>
               </div>
@@ -135,40 +155,45 @@ const canSave = computed(() =>
         <q-input v-model="editTemplate.name" label="Назва" dense outlined />
         <q-btn-toggle
           v-model="editTemplate.type"
-          :options="[{ label: 'Newsletter', value: 'newsletter' }, { label: 'Завдання', value: 'task' }]"
-          dense no-caps rounded color="grey-7" text-color="white" toggle-color="primary" />
+          :options="[
+            { label: 'Newsletter', value: 'newsletter' },
+            { label: 'Завдання', value: 'task' }
+          ]"
+          dense
+          no-caps
+          rounded
+          color="grey-7"
+          text-color="white"
+          toggle-color="primary" />
         <q-input
           v-model="editTemplate.from_pattern"
           label="Відправник (підрядок email, необов'язково)"
           hint="Напр.: hackernoon.com"
-          dense outlined />
-        <q-input
-          v-model="editTemplate.subject_pattern"
-          label="Тема листа (підрядок, необов'язково)"
-          dense outlined />
+          dense
+          outlined />
+        <q-input v-model="editTemplate.subject_pattern" label="Тема листа (підрядок, необов'язково)" dense outlined />
         <q-input
           v-if="editTemplate.type === 'task'"
           v-model="editTemplate.task_label"
           label="Назва завдання"
           hint="Напр.: Здати показання лічильників"
-          dense outlined />
+          dense
+          outlined />
         <q-input
           v-if="editTemplate.type === 'newsletter'"
           v-model="editTemplate.prompt"
           label="Інструкція для LLM"
           type="textarea"
-          autogrow dense outlined />
+          autogrow
+          dense
+          outlined />
       </q-card-section>
       <q-card-section v-if="isDev" class="q-pt-none">
-        <q-toggle
-          v-model="saveAsBuiltin"
-          label="Зберегти як системний (dev)"
-          color="orange"
-          dense />
+        <q-toggle v-model="saveAsBuiltin" label="Зберегти як системний (dev)" color="orange" dense />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn v-close-popup flat no-caps label="Скасувати" />
-        <q-btn flat no-caps color="primary" label="Зберегти" :disable="!canSave" @click="onSave" />
+        <q-btn @click="onSave" flat no-caps color="primary" label="Зберегти" :disable="!canSave" />
       </q-card-actions>
     </q-card>
   </q-dialog>

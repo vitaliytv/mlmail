@@ -16,7 +16,7 @@ const SYSTEM = [
   'similar notifications — drop the variable tail (version numbers, package or',
   'user names, ids, dates, amounts).',
   'Example: "Successfully published @nitra/cursor@12.13.0" → "Successfully published".',
-  'Reply with just that phrase: no quotes, no labels, no explanation.',
+  'Reply with just that phrase: no quotes, no labels, no explanation.'
 ].join(' ')
 
 /**
@@ -39,18 +39,17 @@ export function usePattern() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch,
+        fetchFn: tauriFetch
       })
       const reply = await chat({
         messages: [
           { role: 'system', content: SYSTEM },
-          { role: 'user', content: fallback },
+          { role: 'user', content: fallback }
         ],
-        tools: [],
+        tools: []
       })
       return sanitizeSubjectSuggestion(reply?.content, fallback)
-    }
-    catch {
+    } catch {
       return fallback
     }
   }

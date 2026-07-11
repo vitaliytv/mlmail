@@ -3,7 +3,7 @@ defineProps({
   tasks: { type: Array, required: true },
   isScanning: { type: Boolean, default: false },
   scannedCount: { type: Number, default: 0 },
-  totalCount: { type: Number, default: 0 },
+  totalCount: { type: Number, default: 0 }
 })
 
 const emit = defineEmits(['complete-task'])
@@ -14,24 +14,11 @@ const show = ref(false)
 <template>
   <!-- Floating button with badge -->
   <q-page-sticky position="bottom-right" :offset="[24, 80]">
-    <q-btn
-      round
-      color="primary"
-      icon="sym_o_task_alt"
-      size="md"
-      @click="show = true">
-      <q-badge
-        v-if="isScanning"
-        floating
-        color="orange"
-        rounded>
+    <q-btn @click="show = true" round color="primary" icon="sym_o_task_alt" size="md">
+      <q-badge v-if="isScanning" floating color="orange" rounded>
         <q-spinner size="10px" color="white" />
       </q-badge>
-      <q-badge
-        v-else-if="tasks.length > 0"
-        floating
-        color="negative"
-        :label="tasks.length" />
+      <q-badge v-else-if="tasks.length > 0" floating color="negative" :label="tasks.length" />
     </q-btn>
   </q-page-sticky>
 
@@ -58,9 +45,7 @@ const show = ref(false)
 
       <q-card-section style="max-height: 65vh; overflow-y: auto" class="q-pa-none">
         <!-- Empty -->
-        <div v-if="!isScanning && tasks.length === 0" class="text-grey-6 q-pa-md">
-          Відкритих завдань не знайдено.
-        </div>
+        <div v-if="!isScanning && tasks.length === 0" class="text-grey-6 q-pa-md">Відкритих завдань не знайдено.</div>
 
         <q-list v-else separator>
           <q-item v-for="msg in tasks" :key="msg.id">
@@ -70,11 +55,13 @@ const show = ref(false)
             </q-item-section>
             <q-item-section side>
               <q-btn
-                flat dense no-caps
+                @click="emit('complete-task', msg.id)"
+                flat
+                dense
+                no-caps
                 color="positive"
                 icon="sym_o_check_circle"
-                label="Виконано"
-                @click="emit('complete-task', msg.id)" />
+                label="Виконано" />
             </q-item-section>
           </q-item>
         </q-list>

@@ -7,8 +7,14 @@ const show = defineModel({ default: false })
 const auth = useAuthStore()
 const $q = useQuasar()
 
-watch(show, (v) => { if (v) auth.listFilters() })
+watch(show, v => {
+  if (v) auth.listFilters()
+})
 
+/**
+ *
+ * @param f
+ */
 function criteriaLabel(f) {
   const parts = []
   if (f.criteria?.from) parts.push(`від: ${f.criteria.from}`)
@@ -16,6 +22,10 @@ function criteriaLabel(f) {
   return parts.length ? parts.join(' · ') : '(без умов)'
 }
 
+/**
+ *
+ * @param f
+ */
 function confirmDelete(f) {
   $q.dialog({
     title: 'Видалити фільтр?',
@@ -23,7 +33,7 @@ function confirmDelete(f) {
     cancel: true,
     persistent: true,
     ok: { label: 'Видалити', color: 'negative', flat: true },
-    cancel: { label: 'Скасувати', flat: true },
+    cancel: { label: 'Скасувати', flat: true }
   }).onOk(() => auth.deleteFilter(f.id))
 }
 </script>
@@ -59,10 +69,14 @@ function confirmDelete(f) {
             </q-item-section>
             <q-item-section side>
               <q-btn
-                flat dense round icon="sym_o_delete" color="negative"
+                @click="confirmDelete(f)"
+                flat
+                dense
+                round
+                icon="sym_o_delete"
+                color="negative"
                 :loading="auth.isDeletingFilterId.value === f.id"
-                :disable="!!auth.isDeletingFilterId.value"
-                @click="confirmDelete(f)" />
+                :disable="!!auth.isDeletingFilterId.value" />
             </q-item-section>
           </q-item>
         </q-list>

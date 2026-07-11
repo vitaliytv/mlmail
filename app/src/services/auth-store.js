@@ -166,6 +166,9 @@ export function useAuthStore() {
     _isTrashing.value = false
   }
 
+  /**
+   *
+   */
   async function saveCurrent() {
     const id = _currentMessage.value?.id
     if (!id) return
@@ -391,7 +394,7 @@ export function useAuthStore() {
     createFilter,
     listFilters,
     deleteFilter,
-    clearPatternFeedback,
+    clearPatternFeedback
   }
 }
 

@@ -8,11 +8,11 @@ import {
   saveTemplate,
   deleteTemplate,
   findTemplateForMessage,
-  slugify,
+  slugify
 } from '../services/newsletter-template.js'
 
 const props = defineProps({
-  message: { type: Object, required: true },
+  message: { type: Object, required: true }
 })
 
 const renderer = useNewsletterRender()
@@ -24,6 +24,9 @@ const askQuestion = ref('')
 const askAnswer = ref('')
 const askFailed = ref(false)
 
+/**
+ *
+ */
 async function submitAsk() {
   if (!askQuestion.value.trim()) return
   askAnswer.value = ''
@@ -65,6 +68,9 @@ const editTemplate = ref({ id: '', name: '', from_pattern: '', subject_pattern: 
 const summaryCache = new Map()
 const translateCache = new Map()
 
+/**
+ *
+ */
 async function loadTemplates() {
   templates.value = await listTemplates()
   // Only newsletter-type templates activate the article extractor.
@@ -72,6 +78,10 @@ async function loadTemplates() {
   activeTemplate.value = findTemplateForMessage(props.message, newsletters)
 }
 
+/**
+ *
+ * @param template
+ */
 async function refreshRender(template) {
   articles.value = []
   renderFailed.value = false
@@ -84,8 +94,7 @@ async function refreshRender(template) {
     isRendering.value = false
     if (result === null) renderFailed.value = true
     else articles.value = result
-  }
-  else {
+  } else {
     if (!(props.message?.body ?? '').trim()) return
     const id = props.message.id
     if (summaryCache.has(id)) {
@@ -103,6 +112,9 @@ async function refreshRender(template) {
   }
 }
 
+/**
+ *
+ */
 async function refreshTranslate() {
   const id = props.message.id
   if (translateCache.has(id)) {
@@ -122,27 +134,38 @@ async function refreshTranslate() {
   }
 }
 
+/**
+ *
+ * @param mode
+ */
 async function onModeChange(mode) {
   if (mode === 'translate' && !isTranslating.value) {
     await refreshTranslate()
   }
 }
 
-watch(() => props.message, async () => {
-  askAnswer.value = ''
-  askFailed.value = false
-  askQuestion.value = ''
-  translateHtml.value = ''
-  translateFailed.value = false
-  await loadTemplates()
-  await refreshRender(activeTemplate.value)
-  if (!activeTemplate.value && rightMode.value === 'translate') {
-    await refreshTranslate()
-  }
-}, { immediate: true })
+watch(
+  () => props.message,
+  async () => {
+    askAnswer.value = ''
+    askFailed.value = false
+    askQuestion.value = ''
+    translateHtml.value = ''
+    translateFailed.value = false
+    await loadTemplates()
+    await refreshRender(activeTemplate.value)
+    if (!activeTemplate.value && rightMode.value === 'translate') {
+      await refreshTranslate()
+    }
+  },
+  { immediate: true }
+)
 
 watch(activeTemplate, refreshRender)
 
+/**
+ *
+ */
 function openNewTemplate() {
   const from = props.message?.from ?? ''
   const domain = from.match(/@([\w.-]+)>?/)?.[1] ?? ''
@@ -153,11 +176,15 @@ function openNewTemplate() {
     task_label: '',
     from_pattern: domain || '',
     subject_pattern: '',
-    prompt: 'Extract all article titles and their "Read more" links. Also extract items from "Additional Stories" section. For each article return its title, url, and a 1-2 sentence description.',
+    prompt:
+      'Extract all article titles and their "Read more" links. Also extract items from "Additional Stories" section. For each article return its title, url, and a 1-2 sentence description.'
   }
   showEditor.value = true
 }
 
+/**
+ *
+ */
 function openEditTemplate() {
   editTemplate.value = { subject_pattern: '', task_label: '', type: 'newsletter', ...activeTemplate.value }
   showEditor.value = true
@@ -168,6 +195,9 @@ async function flagAsTask() {
   await taskScan.flagMessage(props.message.id)
 }
 
+/**
+ *
+ */
 async function onSaveTemplate() {
   await saveTemplate(editTemplate.value)
   showEditor.value = false
@@ -178,6 +208,9 @@ async function onSaveTemplate() {
   }
 }
 
+/**
+ *
+ */
 async function onDeleteTemplate() {
   await deleteTemplate(activeTemplate.value.id)
   await loadTemplates()
@@ -192,50 +225,67 @@ defineExpose({ flagAsTask })
     <!-- Header row -->
     <div class="row items-center q-px-md q-pt-sm q-pb-xs">
       <div class="text-overline text-grey-7">
-        {{ activeTemplate ? activeTemplate.name : (rightMode === 'translate' ? 'Переклад українською' : 'Резюме українською') }}
+        {{
+          activeTemplate
+            ? activeTemplate.name
+            : rightMode === 'translate'
+              ? 'Переклад українською'
+              : 'Резюме українською'
+        }}
       </div>
       <q-space />
       <q-spinner v-if="isRendering || isSummarizing || isTranslating" color="primary" size="18px" class="q-mr-xs" />
       <q-btn-toggle
         v-if="!activeTemplate"
         v-model="rightMode"
-        :options="[{ value: 'summary', icon: 'sym_o_summarize' }, { value: 'translate', icon: 'sym_o_translate' }]"
-        dense flat no-caps rounded
+        @update:model-value="onModeChange"
+        :options="[
+          { value: 'summary', icon: 'sym_o_summarize' },
+          { value: 'translate', icon: 'sym_o_translate' }
+        ]"
+        dense
+        flat
+        no-caps
+        rounded
         color="grey-6"
         toggle-color="primary"
         size="sm"
-        class="q-mr-xs"
-        @update:model-value="onModeChange" />
+        class="q-mr-xs" />
       <q-btn
         v-if="activeTemplate"
-        flat dense round
+        @click="openEditTemplate"
+        flat
+        dense
+        round
         icon="sym_o_edit"
         size="sm"
         color="grey-6"
-        title="Редагувати шаблон"
-        @click="openEditTemplate" />
+        title="Редагувати шаблон" />
       <q-btn
         v-if="activeTemplate"
-        flat dense round
+        @click="onDeleteTemplate"
+        flat
+        dense
+        round
         icon="sym_o_delete"
         size="sm"
         color="grey-6"
-        title="Видалити шаблон"
-        @click="onDeleteTemplate" />
+        title="Видалити шаблон" />
       <q-btn
         v-if="!activeTemplate"
-        flat dense round
+        @click="openNewTemplate"
+        flat
+        dense
+        round
         icon="sym_o_add"
         size="sm"
         color="grey-6"
-        title="Створити шаблон для цього відправника"
-        @click="openNewTemplate" />
+        title="Створити шаблон для цього відправника" />
     </div>
     <q-separator inset />
 
     <!-- Content -->
     <div class="col overflow-auto q-px-md q-pb-md">
-
       <!-- === Template mode === -->
       <template v-if="activeTemplate">
         <template v-if="isRendering">
@@ -312,7 +362,6 @@ defineExpose({ flagAsTask })
           <div v-else class="text-grey-6 q-pt-md">Порожній лист — нема що перекладати.</div>
         </template>
       </template>
-
     </div>
 
     <!-- Ask panel -->
@@ -323,17 +372,20 @@ defineExpose({ flagAsTask })
       </q-banner>
       <q-input
         v-model="askQuestion"
+        @keydown.enter.prevent="submitAsk"
         placeholder="Запитати про цей лист…"
-        dense outlined
-        :loading="asker.isAsking.value"
-        @keydown.enter.prevent="submitAsk">
+        dense
+        outlined
+        :loading="asker.isAsking.value">
         <template #append>
           <q-btn
-            flat dense round
+            @click="submitAsk"
+            flat
+            dense
+            round
             icon="sym_o_send"
             color="primary"
-            :disable="!askQuestion.trim() || asker.isAsking.value"
-            @click="submitAsk" />
+            :disable="!askQuestion.trim() || asker.isAsking.value" />
         </template>
       </q-input>
     </div>
@@ -349,8 +401,13 @@ defineExpose({ flagAsTask })
         <q-input v-model="editTemplate.name" label="Назва" dense outlined />
         <q-btn-toggle
           v-model="editTemplate.type"
-          :options="[{ label: 'Newsletter', value: 'newsletter' }, { label: 'Завдання', value: 'task' }]"
-          dense no-caps rounded
+          :options="[
+            { label: 'Newsletter', value: 'newsletter' },
+            { label: 'Завдання', value: 'task' }
+          ]"
+          dense
+          no-caps
+          rounded
           color="grey-7"
           text-color="white"
           toggle-color="primary" />
@@ -358,18 +415,21 @@ defineExpose({ flagAsTask })
           v-model="editTemplate.from_pattern"
           label="Відправник (підрядок email, необов'язково)"
           hint="Напр.: hackernoon.com"
-          dense outlined />
+          dense
+          outlined />
         <q-input
           v-model="editTemplate.subject_pattern"
           label="Тема листа (підрядок, необов'язково)"
           hint="Напр.: скаїтатаju rādījumus"
-          dense outlined />
+          dense
+          outlined />
         <q-input
           v-if="editTemplate.type === 'task'"
           v-model="editTemplate.task_label"
           label="Назва завдання"
           hint="Напр.: Здати показання лічильників"
-          dense outlined />
+          dense
+          outlined />
         <q-input
           v-if="editTemplate.type === 'newsletter'"
           v-model="editTemplate.prompt"
@@ -383,11 +443,15 @@ defineExpose({ flagAsTask })
       <q-card-actions align="right">
         <q-btn v-close-popup flat no-caps label="Скасувати" />
         <q-btn
-          flat no-caps color="primary"
+          @click="onSaveTemplate"
+          flat
+          no-caps
+          color="primary"
           label="Зберегти"
-          :disable="(!editTemplate.from_pattern && !editTemplate.subject_pattern)
-            || (editTemplate.type === 'newsletter' && !editTemplate.prompt)"
-          @click="onSaveTemplate" />
+          :disable="
+            (!editTemplate.from_pattern && !editTemplate.subject_pattern) ||
+            (editTemplate.type === 'newsletter' && !editTemplate.prompt)
+          " />
       </q-card-actions>
     </q-card>
   </q-dialog>

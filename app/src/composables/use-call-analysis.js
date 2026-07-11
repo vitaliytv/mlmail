@@ -11,7 +11,10 @@ import { createOpenAiChat } from '@7n/tauri-components'
  */
 export function buildAnalysisPrompt(rec) {
   const actions = (rec.actions ?? [])
-    .map(a => `- ${a.tool}(${JSON.stringify(a.input)}) -> ${a.envelope?.ok ? 'ok' : `error: ${a.envelope?.error?.message ?? a.envelope?.error ?? '?'}`}`)
+    .map(
+      a =>
+        `- ${a.tool}(${JSON.stringify(a.input)}) -> ${a.envelope?.ok ? 'ok' : `error: ${a.envelope?.error?.message ?? a.envelope?.error ?? '?'}`}`
+    )
     .join('\n')
   const responseText = rec.summary ?? rec.question ?? rec.error ?? '(немає тексту відповіді)'
 
@@ -25,7 +28,7 @@ export function buildAnalysisPrompt(rec) {
     '',
     `Відповідь: ${responseText}`,
     '',
-    'Проаналізуй цей запит і відповідь та запропонуй, як адаптувати код проєкту, щоб такий запит виконувався ефективніше (менше зайвих дій/токенів/помилок). За можливості вказуй конкретні файли й зміни.',
+    'Проаналізуй цей запит і відповідь та запропонуй, як адаптувати код проєкту, щоб такий запит виконувався ефективніше (менше зайвих дій/токенів/помилок). За можливості вказуй конкретні файли й зміни.'
   ].join('\n')
 }
 
@@ -54,7 +57,7 @@ export function useCallAnalysis(agent) {
       baseUrl: agent.baseUrl.value,
       model: agent.model.value,
       apiKey: agent.apiKey.value || undefined,
-      fetchFn: tauriFetch,
+      fetchFn: tauriFetch
     })
     const reply = await chat({ messages: [{ role: 'user', content: buildAnalysisPrompt(rec) }], tools: [] })
     return reply.content ?? ''

@@ -13,11 +13,11 @@ useUpdater()
 // Trigger task scan whenever user becomes authenticated.
 watch(
   () => auth.isAuthenticated.value,
-  async (authed) => {
+  async authed => {
     if (!authed) return
     const templates = await listTemplates()
     taskScan.scan(templates)
-  },
+  }
 )
 </script>
 
@@ -29,10 +29,10 @@ watch(
 
     <TasksPanel
       v-if="auth.isAuthenticated.value"
+      @complete-task="taskScan.unflagMessage"
       :tasks="taskScan.tasks.value"
       :is-scanning="taskScan.isScanning.value"
       :scanned-count="taskScan.scannedCount.value"
-      :total-count="taskScan.totalCount.value"
-      @complete-task="taskScan.unflagMessage" />
+      :total-count="taskScan.totalCount.value" />
   </q-layout>
 </template>

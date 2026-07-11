@@ -6,7 +6,7 @@ describe('buildAnalysisPrompt', () => {
     const rec = {
       intent: 'Знайти листи від npm',
       actions: [{ tool: 'gmail_search', input: { q: 'from:npm' }, envelope: { ok: true } }],
-      summary: 'Знайдено 3 листи.',
+      summary: 'Знайдено 3 листи.'
     }
     const prompt = buildAnalysisPrompt(rec)
     expect(prompt).toContain('Знайти листи від npm')
@@ -17,7 +17,7 @@ describe('buildAnalysisPrompt', () => {
   it('reports failed actions with their error message', () => {
     const rec = {
       intent: 'Видалити лист',
-      actions: [{ tool: 'gmail_trash', input: {}, envelope: { ok: false, error: { message: 'not found' } } }],
+      actions: [{ tool: 'gmail_trash', input: {}, envelope: { ok: false, error: { message: 'not found' } } }]
     }
     expect(buildAnalysisPrompt(rec)).toContain('gmail_trash({}) -> error: not found')
   })

@@ -1,12 +1,7 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { createOpenAiChat } from '@7n/tauri-components'
 import { useOmlx } from '@7n/tauri-components/vue'
-import {
-  buildSummaryPrompt,
-  translateHtmlEmail,
-  SUMMARY_SYSTEM,
-  TRANSLATE_BATCH_SYSTEM,
-} from '../services/summary.js'
+import { buildSummaryPrompt, translateHtmlEmail, SUMMARY_SYSTEM, TRANSLATE_BATCH_SYSTEM } from '../services/summary.js'
 
 // Local-LLM helper for the two-column reader: summarize the current email in
 // Ukrainian via the on-device omlx model. One-shot, no tools. Best-effort —
@@ -50,18 +45,17 @@ export function useSummary() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: timedFetch,
+        fetchFn: timedFetch
       })
       const reply = await chat({
         messages: [
           { role: 'system', content: SUMMARY_SYSTEM },
-          { role: 'user', content: buildSummaryPrompt(message) },
+          { role: 'user', content: buildSummaryPrompt(message) }
         ],
-        tools: [],
+        tools: []
       })
       return (reply?.content ?? '').trim() || null
-    }
-    catch {
+    } catch {
       return null
     }
   }
@@ -82,7 +76,7 @@ export function useSummary() {
         baseUrl: baseUrl.value,
         model: model.value,
         apiKey: apiKey.value || undefined,
-        fetchFn: timedFetch,
+        fetchFn: timedFetch
       })
 
       /** @param {string[]} texts */
@@ -105,18 +99,20 @@ export function useSummary() {
               const reply = await chat({
                 messages: [
                   { role: 'system', content: TRANSLATE_BATCH_SYSTEM },
-                  { role: 'user', content: JSON.stringify(chunk) },
+                  { role: 'user', content: JSON.stringify(chunk) }
                 ],
-                tools: [],
+                tools: []
               })
               const raw = (reply?.content ?? '').trim()
               // Strip potential markdown code fences
-              const jsonStr = raw.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '').trim()
+              const jsonStr = raw
+                .replace(/^```[^\n]*\n?/, '')
+                .replace(/\n?```$/, '')
+                .trim()
               const candidate = JSON.parse(jsonStr)
               parsed = Array.isArray(candidate) ? candidate : chunk
               break
-            }
-            catch {
+            } catch {
               parsed = chunk
             }
           }
@@ -133,8 +129,7 @@ export function useSummary() {
       // Plain-text fallback: translate as single-item batch
       const [translated] = await translateBatch([message.body])
       return { html: `<pre style="white-space:pre-wrap;font-family:inherit">${translated}</pre>` }
-    }
-    catch {
+    } catch {
       return null
     }
   }

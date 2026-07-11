@@ -13,6 +13,6 @@ export function useAgent() {
   return useAgentBase({
     catalog: TOOLS,
     systemPrompt,
-    omlx: { storagePrefix: 'mlmail' },
+    omlx: { storagePrefix: 'mlmail' }
   })
 }

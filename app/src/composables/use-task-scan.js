@@ -26,8 +26,7 @@ export function useTaskScan() {
   async function refresh() {
     try {
       tasks.value = await invoke('gmail_search', { q: TASK_LABEL_QUERY })
-    }
-    catch {
+    } catch {
       tasks.value = []
     }
   }
@@ -44,18 +43,20 @@ export function useTaskScan() {
     scannedCount.value = 0
     totalCount.value = taskTemplates.length
 
-    await Promise.all(taskTemplates.map(async (template) => {
-      const q = buildQuery(template)
-      if (!q) return
-      try {
-        const messages = await invoke('gmail_search', { q })
-        await Promise.all(messages.map(m => invoke('gmail_flag_task', { id: m.id })))
-      }
-      catch { /* ignore per-template failures */ }
-      finally {
-        scannedCount.value++
-      }
-    }))
+    await Promise.all(
+      taskTemplates.map(async template => {
+        const q = buildQuery(template)
+        if (!q) return
+        try {
+          const messages = await invoke('gmail_search', { q })
+          await Promise.all(messages.map(m => invoke('gmail_flag_task', { id: m.id })))
+        } catch {
+          /* ignore per-template failures */
+        } finally {
+          scannedCount.value++
+        }
+      })
+    )
 
     await refresh()
     isScanning.value = false

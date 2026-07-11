@@ -3,8 +3,9 @@ import { buildSummaryPrompt } from './summary.js'
 
 describe('buildSummaryPrompt', () => {
   it('puts sender and subject above the body', () => {
-    expect(buildSummaryPrompt({ from: 'npm <s@npm.com>', subject: 'Published', body: 'A new version…' }))
-      .toBe('Від: npm <s@npm.com>\nТема: Published\n\nA new version…')
+    expect(buildSummaryPrompt({ from: 'npm <s@npm.com>', subject: 'Published', body: 'A new version…' })).toBe(
+      'Від: npm <s@npm.com>\nТема: Published\n\nA new version…'
+    )
   })
 
   it('omits blank header lines', () => {
