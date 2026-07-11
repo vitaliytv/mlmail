@@ -55,6 +55,7 @@ Rego-пакети, що перевіряються через conftest (auto-dis
 ```json
 {
   "version": "0.2",
+  "useGitignore": true,
   "ignorePaths": [
     "**/node_modules/**",
     "**/vscode-extension/**",
@@ -153,7 +154,7 @@ jobs:
           | sh -s -- -b /usr/local/bin
 
       - name: Lint text
-        run: bunx n-cursor lint text --read-only
+        run: bunx n-cursor lint text --no-fix
 ```
 - `package.json`:
 
@@ -186,6 +187,7 @@ Rego-пакет: `text.cspell`
 **Що перевіряється:**
 
 - `version` — має відповідати канону (наразі `"0.2"`)
+- `useGitignore` — має бути `true`: cspell поважає всі `.gitignore` репо, тож білд-артефакти (`target/`, `dist/` тощо) не потрапляють у прогін і не потребують дублювання в `ignorePaths`
 - `language` — поле обов'язкове (presence-only, значення довільне, наприклад `"en,uk"`)
 - `ignorePaths` — масив має бути надмножиною канонічних glob-ів, включно з `docs/adr/**`
 - `import` — має містити підрядок `@nitra/cspell-dict`; заборонені будь-які записи з підрядком `@cspell/dict-` (використовуй лише `@nitra/cspell-dict`)
@@ -198,6 +200,7 @@ Rego-пакет: `text.cspell`
 {
   "version": "0.2",
   "language": "en,uk",
+  "useGitignore": true,
   "import": ["@nitra/cspell-dict/cspell-ext.json"],
   "ignorePaths": ["**/node_modules/**", "**/.git/**", "docs/adr/**"]
 }
@@ -299,7 +302,7 @@ Rego-пакет: `text.markdownlint`
 
 `npx @nitra/cursor lint text` повідомляє неформатовані файли (`oxfmt --list-different`). Fix-режим
 (`npx @nitra/cursor lint`) виправляє їх детерміновано через `oxfmt --write` (T0, поза LLM). У CI
-(`--read-only`) неформатовані файли — порушення без мутацій.
+(`--no-fix`) неформатовані файли — порушення без мутацій.
 
 Типи поза формату-доменою (`.md`, `.json`, `.yaml` тощо), де діє інше тулінг, цей концерн не зачіпає.
 
