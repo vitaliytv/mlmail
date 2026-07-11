@@ -95,6 +95,11 @@ const isSuggesting = ref(false)
 const patternQuery = computed(() =>
   buildPatternQuery({ from: patternFrom.value, subject: patternSubject.value })
 )
+// Deletion targets the sender only — a subject phrase (even an LLM-suggested
+// one) is too easy to get wrong and trash unrelated mail from the same sender.
+const deleteQuery = computed(() => buildPatternQuery({ from: patternFrom.value }))
+
+let suggestionToken = 0
 
 /**
  * Open the "rule from this email" panel, seed sender/subject from the current
@@ -109,13 +114,25 @@ async function openPatternDialog() {
   initialSubject.value = patternSubject.value
   showPatternDialog.value = true
   isSuggesting.value = true
+  const token = ++suggestionToken
   const suggestion = await pattern.suggestSubjectPattern(msg.subject)
-  // Only apply the suggestion if the panel is still open and the user hasn't
+  // Ignore the result if it was cancelled, the panel closed, or the user
   // edited the field while we were waiting.
+  if (token !== suggestionToken) return
   if (showPatternDialog.value && patternSubject.value === initialSubject.value) {
     patternSubject.value = suggestion
   }
   isSuggesting.value = false
+}
+
+/**
+ * Cancel a pending subject suggestion: drop its result when it arrives and
+ * clear the field immediately instead of waiting for the LLM.
+ */
+function cancelSuggestion() {
+  suggestionToken++
+  isSuggesting.value = false
+  patternSubject.value = ''
 }
 
 const showActionLog = ref(false)
@@ -123,7 +140,7 @@ const showTemplates = ref(false)
 const showFilters = ref(false)
 
 async function trashByQueryAndClose() {
-  const q = patternQuery.value
+  const q = deleteQuery.value
   await auth.trashByQuery(q)
   if (!auth.trashQueryErrorKind.value) {
     showPatternDialog.value = false
@@ -348,11 +365,15 @@ async function trashByQueryAndClose() {
             label="Тема містить"
             dense
             outlined
-            clearable
-            clear-icon="sym_o_close"
-            :loading="isSuggesting" />
+            :clearable="!isSuggesting"
+            clear-icon="sym_o_close">
+            <template v-if="isSuggesting" #append>
+              <q-icon name="sym_o_close" class="cursor-pointer" @click="cancelSuggestion" />
+            </template>
+          </q-input>
           <div class="text-caption text-grey-7">
-            Gmail-запит: <code>{{ patternQuery || '—' }}</code>
+            Фільтр: <code>{{ patternQuery || '—' }}</code><br />
+            Видалення (лише за відправником): <code>{{ deleteQuery || '—' }}</code>
           </div>
         </q-card-section>
 
@@ -385,7 +406,7 @@ async function trashByQueryAndClose() {
             color="negative"
             icon="sym_o_delete_sweep"
             label="Видалити всі такі"
-            :disable="!patternQuery"
+            :disable="!deleteQuery"
             :loading="auth.isTrashingQuery.value" />
         </q-card-actions>
       </q-card>
