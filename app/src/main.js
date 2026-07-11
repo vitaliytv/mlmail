@@ -1,5 +1,5 @@
 import '@quasar/extras/material-symbols-outlined/material-symbols-outlined.css'
-import { Quasar, Notify } from 'quasar'
+import { Quasar, Dialog, Notify } from 'quasar'
 import 'quasar/src/css/index.sass'
 import App from './App.vue'
 
@@ -8,7 +8,7 @@ createApp(App)
     config: {
       dark: 'auto'
     },
-    plugins: { Notify },
+    plugins: { Dialog, Notify },
     iconSet: 'material-symbols-outlined'
   })
   .mount('#app')
