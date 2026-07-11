@@ -3,9 +3,8 @@ type: JS Module
 title: use-newsletter-render.js
 resource: app/src/composables/use-newsletter-render.js
 docgen:
-  crc: 44b44a83
+  crc: 0a63a48b
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 90
   issues: surzhik,judge:inaccurate:0.98
   judgeModel: openai-codex/gpt-5.4-mini

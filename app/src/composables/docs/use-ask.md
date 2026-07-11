@@ -3,9 +3,8 @@ type: JS Module
 title: use-ask.js
 resource: app/src/composables/use-ask.js
 docgen:
-  crc: 03956e45
+  crc: a4835982
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
   score: 100
   issues: judge:inaccurate:0.98
   judgeModel: openai-codex/gpt-5.4-mini

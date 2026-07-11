@@ -3,9 +3,8 @@ type: Vue Component
 title: GmailFiltersDialog.vue
 resource: app/src/components/GmailFiltersDialog.vue
 docgen:
-  crc: c42e14d3
+  crc: 5baabbee
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
 ---
 
 Діалог показує список Gmail-фільтрів і дає змогу видаляти окремий фільтр. Він відкриває актуальні дані під час показу та відображає стани завантаження й помилок.

@@ -3,9 +3,8 @@ type: JS Module
 title: use-pattern.js
 resource: app/src/composables/use-pattern.js
 docgen:
-  crc: 5958153d
+  crc: 9f670785
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.98
   judgeModel: openai-codex/gpt-5.4-mini

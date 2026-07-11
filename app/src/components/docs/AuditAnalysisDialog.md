@@ -3,9 +3,8 @@ type: Vue Component
 title: AuditAnalysisDialog.vue
 resource: app/src/components/AuditAnalysisDialog.vue
 docgen:
-  crc: eb577da3
+  crc: 7eb65885
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
 ---
 
 Діалог показує журнал запитів агента з можливістю розгортати окремі записи, відповідати на уточнення, підтверджувати або відхиляти очікуючі дії та запускати аналіз запису. Він працює як локальне розширення журналу, додаючи до кожного рядка панель аналізу без зміни загального вигляду списку.

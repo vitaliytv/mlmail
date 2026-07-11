@@ -3,9 +3,8 @@ type: JS Module
 title: use-call-analysis.js
 resource: app/src/composables/use-call-analysis.js
 docgen:
-  crc: 08b48a4d
+  crc: c254f230
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
   score: 100
   issues: judge:inaccurate:0.96
   judgeModel: openai-codex/gpt-5.4-mini

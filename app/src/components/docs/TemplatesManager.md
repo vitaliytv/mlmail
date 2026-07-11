@@ -3,9 +3,8 @@ type: Vue Component
 title: TemplatesManager.vue
 resource: app/src/components/TemplatesManager.vue
 docgen:
-  crc: 792d1ad4
+  crc: 1d226615
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
 ---
 
 Компонент керує переглядом, створенням, редагуванням і видаленням шаблонів у модальному вікні. Він розрізняє системні та власні шаблони й показує їхній тип, джерело та призначення.

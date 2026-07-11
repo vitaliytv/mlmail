@@ -3,9 +3,8 @@ type: JS Module
 title: use-task-scan.js
 resource: app/src/composables/use-task-scan.js
 docgen:
-  crc: df781bba
+  crc: eb44e952
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini

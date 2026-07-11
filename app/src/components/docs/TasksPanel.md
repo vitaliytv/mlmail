@@ -3,9 +3,8 @@ type: Vue Component
 title: TasksPanel.vue
 resource: app/src/components/TasksPanel.vue
 docgen:
-  crc: 035ac7ae
+  crc: c6a9d585
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
 ---
 
 Компонент показує плаваючу кнопку з індикатором відкритих завдань і відкриває діалог зі списком знайдених задач. Також він відображає стан сканування та дає позначити окреме завдання як виконане.

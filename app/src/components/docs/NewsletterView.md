@@ -3,9 +3,8 @@ type: Vue Component
 title: NewsletterView.vue
 resource: app/src/components/NewsletterView.vue
 docgen:
-  crc: 5309c989
+  crc: 7744fe68
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
 ---
 
 Компонент показує вміст листа в одному з трьох режимів: newsletter-шаблон, резюме або переклад. Також він дає поставити запитання про лист, створити або змінити шаблон і позначити лист як завдання.
