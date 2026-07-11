@@ -462,40 +462,47 @@ defineExpose({ flagAsTask })
   border-left: 3px solid var(--q-primary);
   padding-left: 10px;
 }
+
 .article-title {
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
   display: block;
 }
+
 .article-title:hover {
   text-decoration: underline;
 }
+
 .article-desc {
   font-size: 0.82rem;
   margin-top: 2px;
   line-height: 1.4;
 }
+
 .summary-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: inherit;
 }
+
 .translate-iframe {
   width: 100%;
   min-height: 600px;
   border: none;
   display: block;
 }
+
 .ask-panel {
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
+  border-top: 1px solid rgb(128 128 128 / 20%);
 }
+
 .ask-answer {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   padding: 8px 10px;
   border-left: 3px solid var(--q-primary);
-  background: rgba(var(--q-primary-rgb, 25, 118, 210), 0.06);
+  background: rgb(var(--q-primary-rgb, 25, 118, 210), 0.06);
   border-radius: 4px;
 }
 </style>

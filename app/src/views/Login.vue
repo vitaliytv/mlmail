@@ -410,17 +410,20 @@ async function trashByQueryAndClose() {
   flex: 1;
   min-height: 0;
 }
+
 .message-body,
 .summary-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: inherit;
 }
+
 .message-html-section {
   padding: 0;
   overflow: hidden;
   flex: 1;
 }
+
 .message-iframe {
   width: 100%;
   height: 100%;
@@ -428,11 +431,13 @@ async function trashByQueryAndClose() {
   border: none;
   display: block;
 }
+
 .has-bar {
   padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
+
 .action-bar {
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid rgb(0 0 0 / 12%);
   padding-bottom: env(safe-area-inset-bottom);
 }
 </style>
