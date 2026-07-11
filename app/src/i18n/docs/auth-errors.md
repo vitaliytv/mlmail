@@ -16,15 +16,16 @@ docgen:
 The user wants me to act as a technical writer and rewrite the "overview" section of documentation based on specific constraints and feedback.
 
 **Constraints:**
-1.  **Persona:** Technical Writer.
-2.  **Style:** Concise, behavioral documentation.
-3.  **Language:** Ukrainian.
-4.  **Format:** Clean Markdown, *no* introductory/concluding remarks, *no* code block encapsulation (```).
-5.  **Focus:** Write **WHAT** and **WHY**, not **HOW**.
-6.  **Prohibitions:** Signatures, types, parameters, stdlib module lists, regex descriptions, internal private names.
-7.  **Known Facts:** Public function `errorMessage`. Read-only: no (FS/DB). Caching: NO — do not mention cache guarantees.
-8.  **Task:** Rewrite the draft "overview", removing mentioned issues. Keep language and format (no extra `##` subheadings, no ``` block).
-9.  **Content Change:** Replace vague phrases with a specific description of what `errorMessage` does. Ensure specific mention of `errorMessage`.
+
+1. **Persona:** Technical Writer.
+2. **Style:** Concise, behavioral documentation.
+3. **Language:** Ukrainian.
+4. **Format:** Clean Markdown, *no* introductory/concluding remarks, *no* code block encapsulation (```).
+5. **Focus:** Write **WHAT** and **WHY**, not **HOW**.
+6. **Prohibitions:** Signatures, types, parameters, stdlib module lists, regex descriptions, internal private names.
+7. **Known Facts:** Public function `errorMessage`. Read-only: no (FS/DB). Caching: NO — do not mention cache guarantees.
+8. **Task:** Rewrite the draft "overview", removing mentioned issues. Keep language and format (no extra `##` subheadings, no ``` block).
+9. **Content Change:** Replace vague phrases with a specific description of what `errorMessage` does. Ensure specific mention of `errorMessage`.
 
 **Draft:**
 Файл забезпечує механізм перетворення внутрішніх кодів помилок на зрозумілі користувачам локалізовані повідомлення. Він слугує для формування коректних повідомлень про помилки, які відображаються кінцевому користувачеві.
