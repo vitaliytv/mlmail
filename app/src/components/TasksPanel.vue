@@ -6,9 +6,18 @@ defineProps({
   totalCount: { type: Number, default: 0 }
 })
 
-const emit = defineEmits(['complete-task'])
+const emit = defineEmits(['complete-task', 'open-task'])
 
 const show = ref(false)
+
+/**
+ * Open a task's message and close the panel.
+ * @param {string} id Gmail message id
+ */
+function openTask(id) {
+  emit('open-task', id)
+  show.value = false
+}
 </script>
 
 <template>
@@ -48,14 +57,14 @@ const show = ref(false)
         <div v-if="!isScanning && tasks.length === 0" class="text-grey-6 q-pa-md">Відкритих завдань не знайдено.</div>
 
         <q-list v-else separator>
-          <q-item v-for="msg in tasks" :key="msg.id">
+          <q-item v-for="msg in tasks" :key="msg.id" v-ripple @click="openTask(msg.id)" clickable>
             <q-item-section>
               <q-item-label>{{ msg.subject }}</q-item-label>
               <q-item-label caption>{{ msg.from }} · {{ msg.date }}</q-item-label>
             </q-item-section>
             <q-item-section side>
               <q-btn
-                @click="emit('complete-task', msg.id)"
+                @click.stop="emit('complete-task', msg.id)"
                 flat
                 dense
                 no-caps

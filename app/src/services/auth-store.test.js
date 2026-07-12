@@ -410,6 +410,132 @@ describe('useAuthStore random message', () => {
   })
 })
 
+describe('useAuthStore.openAttachment', () => {
+  const sampleMessage = {
+    id: 'm1',
+    from: 'a@e',
+    subject: 's',
+    date: 'd',
+    body: 'b',
+    attachments: [{ attachment_id: 'att1', filename: 'invoice.pdf', mime_type: 'application/pdf', size: 100 }]
+  }
+
+  it('calls gmail_open_attachment with the current message id', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      if (cmd === 'gmail_open_attachment') return Promise.resolve(null)
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.openAttachment(sampleMessage.attachments[0])
+    expect(invokeMock).toHaveBeenCalledWith('gmail_open_attachment', {
+      messageId: 'm1',
+      attachmentId: 'att1',
+      filename: 'invoice.pdf'
+    })
+    expect(store.openAttachmentErrorKind.value).toBe(null)
+    expect(store.openingAttachmentId.value).toBe(null)
+  })
+
+  it('does nothing without a current message', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.openAttachment({ attachment_id: 'att1', filename: 'invoice.pdf' })
+    expect(invokeMock).not.toHaveBeenCalledWith('gmail_open_attachment', expect.anything())
+  })
+
+  it('captures an error kind on failure', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      if (cmd === 'gmail_open_attachment')
+        return Promise.reject(Object.assign(new Error('Platform'), { kind: 'Platform' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.openAttachment(sampleMessage.attachments[0])
+    expect(store.openAttachmentErrorKind.value).toBe('Platform')
+    expect(store.openingAttachmentId.value).toBe(null)
+  })
+})
+
+describe('useAuthStore.loadMessageById', () => {
+  const sampleMessage = { id: 'm1', from: 'a@e', subject: 's', date: 'd', body: 'b' }
+
+  it('sets currentMessage to the requested id', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      if (cmd === 'gmail_read') return Promise.resolve({ ...sampleMessage, id: 'm2' })
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    expect(store.currentMessage.value.id).toBe('m1')
+    await store.loadMessageById('m2')
+    expect(store.currentMessage.value.id).toBe('m2')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_read', { id: 'm2' })
+  })
+
+  it('does nothing when not authenticated', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.loadMessageById('m2')
+    expect(invokeMock).not.toHaveBeenCalledWith('gmail_read', expect.anything())
+    expect(store.currentMessage.value).toBe(null)
+  })
+
+  it('does nothing when id is empty', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.loadMessageById('')
+    expect(invokeMock).not.toHaveBeenCalledWith('gmail_read', expect.anything())
+    expect(store.currentMessage.value.id).toBe('m1')
+  })
+
+  it('ReauthRequired from gmail_read forces logout state', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      if (cmd === 'gmail_read')
+        return Promise.reject(Object.assign(new Error('ReauthRequired'), { kind: 'ReauthRequired' }))
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.loadMessageById('m2')
+    expect(store.isAuthenticated.value).toBe(false)
+    expect(store.email.value).toBe(null)
+    expect(store.currentMessage.value).toBe(null)
+  })
+})
+
 describe('useAuthStore.unsubscribeFromCurrent', () => {
   const newsletter = {
     id: 'm1',
@@ -780,6 +906,39 @@ describe('useAuthStore.onlyNewsletters', () => {
   })
 })
 
+describe('useAuthStore.trashCurrent', () => {
+  const sampleMessage = { id: 'm1', from: 'a@e', subject: 's', date: 'd', body: 'b' }
+
+  it('trashes the current message and refreshes the task list', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(5)
+      if (cmd === 'gmail_random_message') return Promise.resolve(sampleMessage)
+      if (cmd === 'gmail_trash') return Promise.resolve(null)
+      if (cmd === 'gmail_search') return Promise.resolve([])
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.trashCurrent()
+    expect(invokeMock).toHaveBeenCalledWith('gmail_trash', { id: 'm1' })
+    expect(invokeMock).toHaveBeenCalledWith('gmail_search', { q: 'label:"Задача" -in:trash' })
+    expect(store.trashErrorKind.value).toBe(null)
+  })
+
+  it('is a no-op without a current message', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(false)
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.trashCurrent()
+    expect(invokeMock).not.toHaveBeenCalledWith('gmail_trash', expect.anything())
+  })
+})
+
 describe('useAuthStore.trashByQuery', () => {
   it('invokes gmail_trash_query and records the trashed count', async () => {
     invokeMock.mockImplementation(cmd => {
@@ -832,6 +991,21 @@ describe('useAuthStore.trashByQuery', () => {
     await store.trashByQuery('from:npm')
     expect(store.isAuthenticated.value).toBe(false)
     expect(store.email.value).toBe(null)
+  })
+
+  it('refreshes the task list on success', async () => {
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(0)
+      if (cmd === 'gmail_trash_query') return Promise.resolve({ trashed: 1 })
+      if (cmd === 'gmail_search') return Promise.resolve([])
+      return Promise.resolve(null)
+    })
+    const store = useAuthStore()
+    await store.initialize()
+    await store.trashByQuery('from:npm')
+    expect(invokeMock).toHaveBeenCalledWith('gmail_search', { q: 'label:"Задача" -in:trash' })
   })
 })
 

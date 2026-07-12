@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { Notify } from 'quasar'
 import { dispatch } from '../tool/index.js'
+import { useTaskScan } from '../composables/use-task-scan.js'
 
 const NETWORK_RETRY_DELAY_MS = 15000
 
@@ -61,6 +62,8 @@ const _filters = ref(
 )
 const _isDeletingFilterId = ref(null)
 const _deleteFilterErrorKind = ref(null)
+const _openingAttachmentId = ref(null)
+const _openAttachmentErrorKind = ref(null)
 const _labels = ref(/** @type {{ id: string, name: string }[]} */ ([]))
 const _actionLog = ref(/** @type {{ ts: number, text: string }[]} */ ([]))
 
@@ -126,6 +129,30 @@ export function useAuthStore() {
   }
 
   /**
+   * Load one specific message by id (e.g. from a task-panel entry) and make
+   * it the current message.
+   * @param {string} id Gmail message id
+   */
+  async function loadMessageById(id) {
+    if (!_isAuthenticated.value || !id) return
+    _isMessageLoading.value = true
+    _messageErrorKind.value = null
+    const result = await dispatchWithRetry('read', { id })
+    if (result.ok) {
+      _currentMessage.value = result.output
+    } else {
+      const kind = result.error.kind ?? 'Unknown'
+      _currentMessage.value = null
+      _messageErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    }
+    _isMessageLoading.value = false
+  }
+
+  /**
    *
    */
   async function unsubscribeFromCurrent() {
@@ -157,7 +184,7 @@ export function useAuthStore() {
     _trashErrorKind.value = null
     const result = await dispatchWithRetry('trash', { id })
     if (result.ok) {
-      await Promise.all([loadRandomMessage(), refreshInboxCount()])
+      await Promise.all([loadRandomMessage(), refreshInboxCount(), useTaskScan().refresh()])
     } else {
       const kind = result.error.kind ?? 'Unknown'
       _trashErrorKind.value = kind
@@ -192,6 +219,28 @@ export function useAuthStore() {
   }
 
   /**
+   * Download one attachment of the current message and open it with the OS
+   * default app.
+   * @param {{ attachment_id: string, filename: string }} attachment attachment to open
+   */
+  async function openAttachment({ attachment_id: attachmentId, filename } = {}) {
+    const messageId = _currentMessage.value?.id
+    if (!messageId || !attachmentId) return
+    _openingAttachmentId.value = attachmentId
+    _openAttachmentErrorKind.value = null
+    const result = await dispatchWithRetry('open_attachment', { messageId, attachmentId, filename })
+    if (!result.ok) {
+      const kind = result.error.kind ?? 'Unknown'
+      _openAttachmentErrorKind.value = kind
+      if (kind === 'ReauthRequired') {
+        _email.value = null
+        _isAuthenticated.value = false
+      }
+    }
+    _openingAttachmentId.value = null
+  }
+
+  /**
    * Move every inbox message matching a Gmail query to Trash, then refresh.
    * @param {string} q non-empty Gmail search query
    */
@@ -205,7 +254,7 @@ export function useAuthStore() {
       const trashed = result.output?.trashed ?? 0
       _lastTrashedCount.value = trashed
       _actionLog.value.unshift({ ts: Date.now(), text: `Видалено ${trashed} лист(ів) за запитом: ${q}` })
-      await Promise.all([loadRandomMessage(), refreshInboxCount()])
+      await Promise.all([loadRandomMessage(), refreshInboxCount(), useTaskScan().refresh()])
     } else {
       const kind = result.error.kind ?? 'Unknown'
       _trashQueryErrorKind.value = kind
@@ -367,6 +416,8 @@ export function useAuthStore() {
     _isDeletingFilterId.value = null
     _deleteFilterErrorKind.value = null
     _labels.value = []
+    _openingAttachmentId.value = null
+    _openAttachmentErrorKind.value = null
   }
 
   return {
@@ -398,12 +449,15 @@ export function useAuthStore() {
     deleteFilterErrorKind: readonly(_deleteFilterErrorKind),
     labels: readonly(_labels),
     actionLog: readonly(_actionLog),
+    openingAttachmentId: readonly(_openingAttachmentId),
+    openAttachmentErrorKind: readonly(_openAttachmentErrorKind),
     initialize,
     login,
     getAccessToken,
     logout,
     refreshInboxCount,
     loadRandomMessage,
+    loadMessageById,
     unsubscribeFromCurrent,
     saveCurrent,
     trashCurrent,
@@ -412,6 +466,7 @@ export function useAuthStore() {
     listFilters,
     deleteFilter,
     listLabels,
+    openAttachment,
     clearPatternFeedback
   }
 }
@@ -444,4 +499,6 @@ export function _resetForTest() {
   _filters.value = []
   _isDeletingFilterId.value = null
   _deleteFilterErrorKind.value = null
+  _openingAttachmentId.value = null
+  _openAttachmentErrorKind.value = null
 }

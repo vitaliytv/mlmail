@@ -138,8 +138,8 @@ pub(crate) async fn list_inbox_ids_at_q(
 }
 
 use crate::gmail::message::{
-    extract_header, extract_html_body, extract_plain_text, parse_unsubscribe, GmailMessage,
-    UnsubscribeAction,
+    decode_base64url_bytes, extract_attachments, extract_header, extract_html_body,
+    extract_plain_text, parse_unsubscribe, GmailMessage, UnsubscribeAction,
 };
 use tauri::AppHandle;
 use tauri_plugin_opener::OpenerExt;
@@ -183,6 +183,7 @@ pub(crate) async fn get_message_at(
     let body_text = extract_plain_text(payload);
     let body_truncated: String = body_text.chars().take(10_000).collect();
     let html_body = extract_html_body(payload);
+    let attachments = extract_attachments(payload, html_body.as_deref());
 
     Ok(GmailMessage {
         id: id.to_string(),
@@ -192,6 +193,7 @@ pub(crate) async fn get_message_at(
         body: body_truncated,
         html_body,
         unsubscribe: parse_unsubscribe(headers),
+        attachments,
     })
 }
 
@@ -376,6 +378,106 @@ pub async fn gmail_read(
     )
     .await?;
     get_message_at(&endpoints.gmail_messages_list, &token, &id).await
+}
+
+/// Fetch and base64url-decode one attachment's raw bytes.
+pub(crate) async fn get_attachment_bytes(
+    base_endpoint: &str,
+    access_token: &str,
+    message_id: &str,
+    attachment_id: &str,
+) -> Result<Vec<u8>, GmailError> {
+    let url = format!("{base_endpoint}/{message_id}/attachments/{attachment_id}");
+    let resp = reqwest::Client::new()
+        .get(&url)
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let data = v
+        .get("data")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| GmailError::Parse("attachment has no data".into()))?;
+    decode_base64url_bytes(data).ok_or_else(|| GmailError::Parse("invalid attachment data".into()))
+}
+
+/// Hashes a (message id, attachment id) pair into a short hex string safe to
+/// use as a single filesystem path component (Gmail attachment ids can be
+/// hundreds of characters — past macOS/Linux's ~255-byte component limit).
+fn hash_id(message_id: &str, attachment_id: &str) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    message_id.hash(&mut hasher);
+    attachment_id.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
+}
+
+/// Strips any directory components from a Gmail-supplied filename, keeping
+/// only the basename — the value comes from the sender and must never be
+/// used as a path segment as-is.
+fn sanitize_filename(filename: &str) -> String {
+    std::path::Path::new(filename)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .filter(|s| !s.is_empty())
+        .unwrap_or("attachment")
+        .to_string()
+}
+
+/// Download one attachment to a temp file and open it with the OS default
+/// application (e.g. a PDF viewer) — mirrors double-clicking a downloaded file.
+#[tauri::command]
+pub async fn gmail_open_attachment(
+    app: AppHandle,
+    message_id: String,
+    attachment_id: String,
+    filename: String,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<(), GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    let bytes = get_attachment_bytes(
+        &endpoints.gmail_messages_list,
+        &token,
+        &message_id,
+        &attachment_id,
+    )
+    .await?;
+
+    // Gmail attachment ids can run past macOS's 255-byte path-component limit
+    // (ENAMETOOLONG), so hash the (message, attachment) pair into a short,
+    // filesystem-safe directory name instead of using the raw ids.
+    let dir = std::env::temp_dir()
+        .join("mlmail-attachments")
+        .join(hash_id(&message_id, &attachment_id));
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| GmailError::Platform(format!("create temp dir: {e}")))?;
+    let path = dir.join(sanitize_filename(&filename));
+    std::fs::write(&path, &bytes).map_err(|e| GmailError::Platform(format!("write file: {e}")))?;
+
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)
+        .map_err(|e| GmailError::Platform(format!("open attachment: {e}")))
 }
 
 /// Move one message to Trash by id (reversible; Gmail purges Trash after 30d).
@@ -1419,6 +1521,108 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(msg.body.chars().count(), 10_000);
+    }
+
+    #[tokio::test]
+    async fn get_attachment_bytes_decodes_data() {
+        use base64::Engine;
+        let data = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(b"file contents");
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1/attachments/a1")
+            .match_header("authorization", "Bearer AT-1")
+            .with_status(200)
+            .with_body(serde_json::json!({"size": 13, "data": data}).to_string())
+            .create_async()
+            .await;
+
+        let bytes = get_attachment_bytes(&format!("{}/messages", server.url()), "AT-1", "m1", "a1")
+            .await
+            .unwrap();
+        assert_eq!(bytes, b"file contents");
+    }
+
+    #[tokio::test]
+    async fn get_attachment_bytes_maps_401_to_reauth() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1/attachments/a1")
+            .with_status(401)
+            .with_body("nope")
+            .create_async()
+            .await;
+
+        let err = get_attachment_bytes(&format!("{}/messages", server.url()), "AT-1", "m1", "a1")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::ReauthRequired));
+    }
+
+    #[tokio::test]
+    async fn get_attachment_bytes_maps_5xx_to_http() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1/attachments/a1")
+            .with_status(503)
+            .with_body("down")
+            .create_async()
+            .await;
+
+        let err = get_attachment_bytes(&format!("{}/messages", server.url()), "AT-1", "m1", "a1")
+            .await
+            .unwrap_err();
+        match err {
+            GmailError::Http { status, .. } => assert_eq!(status, 503),
+            other => panic!("expected Http, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_attachment_bytes_errors_when_data_missing() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/messages/m1/attachments/a1")
+            .with_status(200)
+            .with_body(serde_json::json!({"size": 0}).to_string())
+            .create_async()
+            .await;
+
+        let err = get_attachment_bytes(&format!("{}/messages", server.url()), "AT-1", "m1", "a1")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, GmailError::Parse(_)));
+    }
+
+    #[test]
+    fn hash_id_is_short_and_filesystem_safe() {
+        let long_attachment_id = "A".repeat(300);
+        let h = hash_id("m1", &long_attachment_id);
+        assert_eq!(h.len(), 16);
+        assert!(h.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn hash_id_is_deterministic_and_distinguishes_pairs() {
+        assert_eq!(hash_id("m1", "a1"), hash_id("m1", "a1"));
+        assert_ne!(hash_id("m1", "a1"), hash_id("m1", "a2"));
+        assert_ne!(hash_id("m1", "a1"), hash_id("m2", "a1"));
+    }
+
+    #[test]
+    fn sanitize_filename_keeps_plain_name() {
+        assert_eq!(sanitize_filename("invoice.pdf"), "invoice.pdf");
+    }
+
+    #[test]
+    fn sanitize_filename_strips_directory_components() {
+        assert_eq!(sanitize_filename("../../etc/passwd"), "passwd");
+        assert_eq!(sanitize_filename("/etc/passwd"), "passwd");
+    }
+
+    #[test]
+    fn sanitize_filename_falls_back_when_empty() {
+        assert_eq!(sanitize_filename(""), "attachment");
+        assert_eq!(sanitize_filename(".."), "attachment");
     }
 
     #[tokio::test]
