@@ -3,9 +3,8 @@ type: Rust Module
 title: android.rs
 resource: app/src-tauri/src/auth/flow/android.rs
 docgen:
-  crc: d220e724
+  crc: fd67fc41
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini

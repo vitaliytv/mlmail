@@ -3,9 +3,8 @@ type: Rust Module
 title: token_exchange.rs
 resource: app/src-tauri/src/auth/token_exchange.rs
 docgen:
-  crc: 92e4c2f0
+  crc: 64e1df71
   model: openai-codex/gpt-5.5
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini

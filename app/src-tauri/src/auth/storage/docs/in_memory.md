@@ -3,9 +3,8 @@ type: Rust Module
 title: in_memory.rs
 resource: app/src-tauri/src/auth/storage/in_memory.rs
 docgen:
-  crc: db57098f
+  crc: a43731d1
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini

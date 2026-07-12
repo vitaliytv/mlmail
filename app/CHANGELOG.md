@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0] - 2026-07-12
+
+### Fixed
+
+- Fix cross-platform clippy break: gate macOS-only badge-count code and its Manager import so Linux CI compiles clean
+
+## [0.8.0] - 2026-07-12
+
+### Fixed
+
+- Fix remaining CI red: Lint Rust working-directory, cspell words, .vscode/settings.json gitignore conflict, dedup gmail POST helper and Vue template-editor fields
+
 ## [0.7.0] - 2026-07-12
 
 ### Fixed

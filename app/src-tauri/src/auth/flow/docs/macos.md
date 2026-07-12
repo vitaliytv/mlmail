@@ -3,9 +3,8 @@ type: Rust Module
 title: macos.rs
 resource: app/src-tauri/src/auth/flow/macos.rs
 docgen:
-  crc: 48a496a3
+  crc: f3e13081
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini

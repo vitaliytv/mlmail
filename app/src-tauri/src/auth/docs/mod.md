@@ -3,9 +3,8 @@ type: Rust Module
 title: mod.rs
 resource: app/src-tauri/src/auth/mod.rs
 docgen:
-  crc: 836e3db7
+  crc: 5cb0a7d4
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini

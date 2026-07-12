@@ -3,9 +3,8 @@ type: JS Module
 title: summary.js
 resource: app/src/services/summary.js
 docgen:
-  crc: 73283707
+  crc: 3b540a12
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
   score: 100
   issues: judge:inaccurate:0.97
   judgeModel: openai-codex/gpt-5.4-mini

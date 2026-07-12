@@ -3,9 +3,8 @@ type: Rust Module
 title: pkce.rs
 resource: app/src-tauri/src/auth/pkce.rs
 docgen:
-  crc: ef6c6654
+  crc: 309198c9
   model: omlx/gemma-4-e4b-it-OptiQ-4bit
-  tier: local-min
   score: 0
   issues: refusal-filler,best-of-2:retry-lost
 ---

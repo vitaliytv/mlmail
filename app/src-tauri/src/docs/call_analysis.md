@@ -3,9 +3,8 @@ type: Rust Module
 title: call_analysis.rs
 resource: app/src-tauri/src/call_analysis.rs
 docgen:
-  crc: e0ac3738
+  crc: 172b3682
   model: openai-codex/gpt-5.5
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.98
   judgeModel: openai-codex/gpt-5.4-mini
