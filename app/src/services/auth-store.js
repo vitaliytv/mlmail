@@ -56,9 +56,12 @@ const _filterErrorKind = ref(null)
 const _filterCreated = ref(false)
 const _isLoadingFilters = ref(false)
 const _filtersErrorKind = ref(null)
-const _filters = ref(/** @type {{ id: string, criteria: { from?: string, subject?: string } }[]} */ ([]))
+const _filters = ref(
+  /** @type {{ id: string, criteria: { from?: string, to?: string, subject?: string, query?: string, negatedQuery?: string, hasAttachment?: boolean, excludeChats?: boolean, size?: number, sizeComparison?: string }, action: { addLabelIds?: string[], removeLabelIds?: string[], forward?: string } }[]} */ ([])
+)
 const _isDeletingFilterId = ref(null)
 const _deleteFilterErrorKind = ref(null)
+const _labels = ref(/** @type {{ id: string, name: string }[]} */ ([]))
 const _actionLog = ref(/** @type {{ ts: number, text: string }[]} */ ([]))
 
 /**
@@ -278,6 +281,18 @@ export function useAuthStore() {
   }
 
   /**
+   * Fetch all Gmail labels, used to resolve filter action label ids to names.
+   * Best-effort: leaves the previous list in place on failure.
+   */
+  async function listLabels() {
+    try {
+      _labels.value = await invoke('gmail_list_labels')
+    } catch {
+      // Supplementary data for filter action tooltips; ignore failures.
+    }
+  }
+
+  /**
    * Clear transient feedback from the pattern panel (errors, counts, success).
    */
   function clearPatternFeedback() {
@@ -351,6 +366,7 @@ export function useAuthStore() {
     _filters.value = []
     _isDeletingFilterId.value = null
     _deleteFilterErrorKind.value = null
+    _labels.value = []
   }
 
   return {
@@ -380,6 +396,7 @@ export function useAuthStore() {
     filters: readonly(_filters),
     isDeletingFilterId: readonly(_isDeletingFilterId),
     deleteFilterErrorKind: readonly(_deleteFilterErrorKind),
+    labels: readonly(_labels),
     actionLog: readonly(_actionLog),
     initialize,
     login,
@@ -394,6 +411,7 @@ export function useAuthStore() {
     createFilter,
     listFilters,
     deleteFilter,
+    listLabels,
     clearPatternFeedback
   }
 }

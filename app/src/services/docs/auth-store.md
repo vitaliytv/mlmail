@@ -3,9 +3,8 @@ type: JS Module
 title: auth-store.js
 resource: app/src/services/auth-store.js
 docgen:
-  crc: 1dec2fe6
+  crc: c2cceb6c
   model: openai-codex/gpt-5.4-mini
-  tier: cloud-min
   score: 100
   issues: judge:inaccurate:0.98
   judgeModel: openai-codex/gpt-5.4-mini

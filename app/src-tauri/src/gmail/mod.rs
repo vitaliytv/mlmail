@@ -631,13 +631,42 @@ pub async fn gmail_create_filter(
 }
 
 /// Match criteria of an existing Gmail filter, as returned by the list endpoint.
+///
+/// Mirrors the full `Filter.Criteria` schema from the Gmail API so no
+/// condition type is silently dropped during deserialization.
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FilterCriteria {
     #[serde(default)]
     pub from: Option<String>,
     #[serde(default)]
+    pub to: Option<String>,
+    #[serde(default)]
     pub subject: Option<String>,
+    #[serde(default)]
+    pub query: Option<String>,
+    #[serde(default)]
+    pub negated_query: Option<String>,
+    #[serde(default)]
+    pub has_attachment: Option<bool>,
+    #[serde(default)]
+    pub exclude_chats: Option<bool>,
+    #[serde(default)]
+    pub size: Option<i64>,
+    #[serde(default)]
+    pub size_comparison: Option<String>,
+}
+
+/// Action of an existing Gmail filter, as returned by the list endpoint.
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilterAction {
+    #[serde(default)]
+    pub add_label_ids: Vec<String>,
+    #[serde(default)]
+    pub remove_label_ids: Vec<String>,
+    #[serde(default)]
+    pub forward: Option<String>,
 }
 
 /// One existing Gmail filter, as returned by the list endpoint.
@@ -647,6 +676,8 @@ pub struct FilterListItem {
     pub id: String,
     #[serde(default)]
     pub criteria: FilterCriteria,
+    #[serde(default)]
+    pub action: FilterAction,
 }
 
 /// List all Gmail filters configured for the account.
@@ -698,6 +729,67 @@ pub async fn gmail_list_filters(
     )
     .await?;
     list_filters_at(&endpoints.gmail_filters, &token).await
+}
+
+/// One Gmail label, as returned by the labels list endpoint.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct GmailLabel {
+    pub id: String,
+    pub name: String,
+}
+
+/// List all Gmail labels (system and user-created) for the authenticated account.
+pub(crate) async fn list_labels_at(
+    endpoint: &str,
+    access_token: &str,
+) -> Result<Vec<GmailLabel>, GmailError> {
+    let resp = reqwest::Client::new()
+        .get(endpoint)
+        .bearer_auth(access_token)
+        .send()
+        .await?;
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+    if status == reqwest::StatusCode::UNAUTHORIZED {
+        return Err(GmailError::ReauthRequired);
+    }
+    if !status.is_success() {
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
+    }
+    let v: serde_json::Value =
+        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let labels = v
+        .get("labels")
+        .and_then(|l| l.as_array())
+        .cloned()
+        .unwrap_or_default();
+    Ok(labels
+        .into_iter()
+        .filter_map(|l| {
+            let id = l.get("id")?.as_str()?.to_string();
+            let name = l.get("name")?.as_str()?.to_string();
+            Some(GmailLabel { id, name })
+        })
+        .collect())
+}
+
+/// List all Gmail labels for the authenticated user.
+#[tauri::command]
+pub async fn gmail_list_labels(
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, Mutex<AuthState>>,
+) -> Result<Vec<GmailLabel>, GmailError> {
+    let token = auth::acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await?;
+    list_labels_at(&endpoints.gmail_labels, &token).await
 }
 
 /// Delete a Gmail filter by id.
