@@ -45,7 +45,7 @@ const $q = useQuasar()
 onMounted(() => {
   auth.initialize()
   window.addEventListener('message', e => {
-    if (e.data?.type === 'open-url' && e.data.url) {
+    if (['open-url'].includes(e.data?.type) && e.data.url) {
       invoke('app_open_url', { url: e.data.url })
     }
   })
@@ -127,8 +127,8 @@ async function openPatternDialog() {
   const suggestion = await pattern.suggestSubjectPattern(msg.subject)
   // Ignore the result if it was cancelled, the panel closed, or the user
   // edited the field while we were waiting.
-  if (token !== suggestionToken) return
-  if (showPatternDialog.value && patternSubject.value === initialSubject.value) {
+  if (!Object.is(token, suggestionToken)) return
+  if (showPatternDialog.value && Object.is(patternSubject.value, initialSubject.value)) {
     patternSubject.value = suggestion
   }
   isSuggesting.value = false
@@ -142,6 +142,19 @@ function cancelSuggestion() {
   suggestionToken++
   isSuggesting.value = false
   patternSubject.value = ''
+}
+
+/**
+ * Formats a byte count as a human-readable Ukrainian size label (Б/КБ/МБ/ГБ).
+ * @param {number} bytes - size in bytes
+ * @returns {string} formatted size, e.g. "1.2 МБ"
+ */
+function formatFileSize(bytes) {
+  if (!bytes) return '0 Б'
+  const units = ['Б', 'КБ', 'МБ', 'ГБ']
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** i
+  return `${i === 0 ? value : value.toFixed(1)} ${units[i]}`
 }
 
 const showActionLog = ref(false)
@@ -185,6 +198,25 @@ async function trashByQueryAndClose() {
                 <div><strong>Від:</strong> {{ auth.currentMessage.value.from }}</div>
                 <div><strong>Тема:</strong> {{ auth.currentMessage.value.subject }}</div>
                 <div><strong>Дата:</strong> {{ auth.currentMessage.value.date }}</div>
+                <div v-if="auth.currentMessage.value.attachments?.length" class="q-mt-sm attachments-row">
+                  <q-chip
+                    v-for="att in auth.currentMessage.value.attachments"
+                    :key="att.attachment_id"
+                    @click="auth.openAttachment(att)"
+                    icon="sym_o_attach_file"
+                    dense
+                    outline
+                    square
+                    clickable
+                    :disable="auth.openingAttachmentId.value === att.attachment_id">
+                    <q-spinner
+                      v-if="auth.openingAttachmentId.value === att.attachment_id"
+                      size="16px"
+                      class="q-mr-xs" />
+                    {{ att.filename }}
+                    <span class="text-grey-6 q-ml-xs">({{ formatFileSize(att.size) }})</span>
+                  </q-chip>
+                </div>
               </q-card-section>
               <q-separator inset />
               <q-card-section v-if="auth.currentMessage.value.html_body" class="col message-html-section">
@@ -430,6 +462,12 @@ async function trashByQueryAndClose() {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-family: inherit;
+}
+
+.attachments-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .message-html-section {

@@ -136,6 +136,25 @@ export const TOOLS = [
   },
   {
     tier: 'write',
+    name: 'open_attachment',
+    summary: 'Download one message attachment to a temp file and open it with the OS default app (e.g. a PDF viewer).',
+    input: {
+      messageId: { type: 'string', required: true, description: 'Gmail message id the attachment belongs to.' },
+      attachmentId: {
+        type: 'string',
+        required: true,
+        description: 'Gmail attachment id (from the message attachment list).'
+      },
+      filename: {
+        type: 'string',
+        required: true,
+        description: 'Attachment filename, used for the temp file and default app matching.'
+      }
+    },
+    tauri: 'gmail_open_attachment'
+  },
+  {
+    tier: 'write',
     name: 'create_filter',
     summary:
       'Create a Gmail filter that automatically moves future matching mail to Trash. Matches by sender and/or subject phrase.',

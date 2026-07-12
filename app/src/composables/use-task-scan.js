@@ -1,7 +1,10 @@
 import { invoke } from '@tauri-apps/api/core'
 
-/** Gmail search query that matches every message under the "Задача" label. */
-const TASK_LABEL_QUERY = 'label:"Задача"'
+/**
+ * Gmail search query that matches every message under the "Задача" label,
+ * excluding ones already moved to Trash.
+ */
+const TASK_LABEL_QUERY = 'label:"Задача" -in:trash'
 
 /**
  * Build a Gmail search query from template from/subject patterns.

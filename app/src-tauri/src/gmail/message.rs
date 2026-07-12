@@ -20,6 +20,17 @@ pub struct GmailMessage {
     pub body: String,
     pub html_body: Option<String>,
     pub unsubscribe: Option<UnsubscribeAction>,
+    pub attachments: Vec<Attachment>,
+}
+
+/// A real file attachment — excludes inline images (e.g. signature logos)
+/// that are embedded in the HTML body via `cid:` references.
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+pub struct Attachment {
+    pub attachment_id: String,
+    pub filename: String,
+    pub mime_type: String,
+    pub size: u64,
 }
 
 /// RFC 2369 / 8058 `List-Unsubscribe` action. JS sees this tagged as
@@ -114,6 +125,62 @@ pub fn extract_html_body(payload: &Value) -> Option<String> {
     find_part(payload, "text/html")
 }
 
+/// Collects real file attachments, excluding inline images (e.g. signature
+/// logos) that are embedded in the HTML body via a `cid:` reference or
+/// marked `Content-Disposition: inline`.
+pub fn extract_attachments(payload: &Value, html_body: Option<&str>) -> Vec<Attachment> {
+    let mut out = Vec::new();
+    collect_attachments(payload, html_body, &mut out);
+    out
+}
+
+fn collect_attachments(node: &Value, html_body: Option<&str>, out: &mut Vec<Attachment>) {
+    let filename = node.get("filename").and_then(Value::as_str).unwrap_or("");
+    let attachment_id = node
+        .get("body")
+        .and_then(|b| b.get("attachmentId"))
+        .and_then(Value::as_str);
+
+    if let (false, Some(attachment_id)) = (filename.is_empty(), attachment_id) {
+        let empty_headers: Vec<Value> = Vec::new();
+        let headers = node
+            .get("headers")
+            .and_then(Value::as_array)
+            .unwrap_or(&empty_headers);
+        let disposition = extract_header(headers, "Content-Disposition").to_ascii_lowercase();
+        let content_id = extract_header(headers, "Content-ID");
+        let cid = content_id.trim().trim_start_matches('<').trim_end_matches('>');
+        let referenced_in_body =
+            !cid.is_empty() && html_body.is_some_and(|html| html.contains(&format!("cid:{cid}")));
+        let is_inline = disposition.starts_with("inline") || referenced_in_body;
+
+        if !is_inline {
+            let size = node
+                .get("body")
+                .and_then(|b| b.get("size"))
+                .and_then(Value::as_u64)
+                .unwrap_or(0);
+            let mime_type = node
+                .get("mimeType")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string();
+            out.push(Attachment {
+                attachment_id: attachment_id.to_string(),
+                filename: filename.to_string(),
+                mime_type,
+                size,
+            });
+        }
+    }
+
+    if let Some(parts) = node.get("parts").and_then(Value::as_array) {
+        for p in parts {
+            collect_attachments(p, html_body, out);
+        }
+    }
+}
+
 pub fn extract_plain_text(payload: &Value) -> String {
     if let Some(text) = find_part(payload, "text/plain") {
         return text;
@@ -159,6 +226,12 @@ fn part_charset(node: &Value) -> String {
         }
     }
     String::new()
+}
+
+/// Decodes Gmail `body.data` (base64url) into raw bytes, e.g. for an
+/// attachment payload fetched via the `attachments.get` endpoint.
+pub fn decode_base64url_bytes(data: &str) -> Option<Vec<u8>> {
+    BASE64URL.decode(data.as_bytes()).ok()
 }
 
 /// Decodes Gmail `body.data` (base64url) and converts the bytes to a `String`
@@ -458,5 +531,104 @@ mod tests {
     fn parse_unsubscribe_returns_none_when_no_angle_brackets() {
         let headers = vec![json!({"name": "List-Unsubscribe", "value": "https://x.com/u"})];
         assert_eq!(parse_unsubscribe(&headers), None);
+    }
+
+    #[test]
+    fn extract_attachments_returns_regular_attachment() {
+        let payload = json!({
+            "mimeType": "multipart/mixed",
+            "parts": [
+                {"mimeType": "text/plain", "body": {"data": b64url("hi")}},
+                {
+                    "mimeType": "application/pdf",
+                    "filename": "invoice.pdf",
+                    "body": {"attachmentId": "abc123", "size": 4096}
+                }
+            ]
+        });
+        let attachments = extract_attachments(&payload, None);
+        assert_eq!(
+            attachments,
+            vec![Attachment {
+                attachment_id: "abc123".into(),
+                filename: "invoice.pdf".into(),
+                mime_type: "application/pdf".into(),
+                size: 4096,
+            }]
+        );
+    }
+
+    #[test]
+    fn extract_attachments_excludes_inline_content_disposition() {
+        let payload = json!({
+            "mimeType": "multipart/related",
+            "parts": [
+                {
+                    "mimeType": "image/png",
+                    "filename": "logo.png",
+                    "headers": [{"name": "Content-Disposition", "value": "inline; filename=\"logo.png\""}],
+                    "body": {"attachmentId": "sig1", "size": 512}
+                }
+            ]
+        });
+        assert_eq!(extract_attachments(&payload, None), Vec::new());
+    }
+
+    #[test]
+    fn extract_attachments_excludes_images_referenced_by_cid_in_html_body() {
+        let payload = json!({
+            "mimeType": "multipart/related",
+            "parts": [
+                {
+                    "mimeType": "image/png",
+                    "filename": "image001.png",
+                    "headers": [{"name": "Content-ID", "value": "<sig-logo@example.com>"}],
+                    "body": {"attachmentId": "sig2", "size": 1024}
+                }
+            ]
+        });
+        let html = "<p>Regards</p><img src=\"cid:sig-logo@example.com\">";
+        assert_eq!(extract_attachments(&payload, Some(html)), Vec::new());
+    }
+
+    #[test]
+    fn extract_attachments_keeps_named_file_not_referenced_in_body() {
+        let payload = json!({
+            "mimeType": "multipart/mixed",
+            "parts": [
+                {
+                    "mimeType": "image/png",
+                    "filename": "screenshot.png",
+                    "headers": [{"name": "Content-ID", "value": "<not-used@example.com>"}],
+                    "body": {"attachmentId": "att1", "size": 2048}
+                }
+            ]
+        });
+        let html = "<p>See attached</p>";
+        let attachments = extract_attachments(&payload, Some(html));
+        assert_eq!(attachments.len(), 1);
+        assert_eq!(attachments[0].filename, "screenshot.png");
+    }
+
+    #[test]
+    fn decode_base64url_bytes_decodes_padded_data() {
+        assert_eq!(decode_base64url_bytes("aGVsbG8="), Some(b"hello".to_vec()));
+    }
+
+    #[test]
+    fn decode_base64url_bytes_returns_none_for_invalid_input() {
+        assert_eq!(decode_base64url_bytes("not base64!!"), None);
+    }
+
+    #[test]
+    fn extract_attachments_ignores_parts_without_attachment_id() {
+        let payload = json!({
+            "mimeType": "multipart/alternative",
+            "parts": [
+                {"mimeType": "text/plain", "body": {"data": b64url("hi")}},
+                {"mimeType": "text/html", "body": {"data": b64url("<p>hi</p>")}}
+            ]
+        });
+        assert_eq!(extract_attachments(&payload, None), Vec::new());
     }
 }
