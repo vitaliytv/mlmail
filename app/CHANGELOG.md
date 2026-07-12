@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.6.0] - 2026-07-12
+
+### Fixed
+
+- Filters dialog: show all Gmail filter conditions, hide raw id, add search and per-filter action icons
+
 ## [0.5.2] - 2026-07-11
 
 ### Changed
