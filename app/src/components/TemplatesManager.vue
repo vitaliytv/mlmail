@@ -1,5 +1,6 @@
 <script setup>
 import { useQuasar } from 'quasar'
+import TemplateEditorFields from './TemplateEditorFields.vue'
 import {
   listTemplates,
   saveTemplate,
@@ -152,41 +153,7 @@ const canSave = computed(
         {{ editTemplate.id ? 'Редагувати шаблон' : 'Новий шаблон' }}
       </q-card-section>
       <q-card-section class="q-gutter-md">
-        <q-input v-model="editTemplate.name" label="Назва" dense outlined />
-        <q-btn-toggle
-          v-model="editTemplate.type"
-          :options="[
-            { label: 'Newsletter', value: 'newsletter' },
-            { label: 'Завдання', value: 'task' }
-          ]"
-          dense
-          no-caps
-          rounded
-          color="grey-7"
-          text-color="white"
-          toggle-color="primary" />
-        <q-input
-          v-model="editTemplate.from_pattern"
-          label="Відправник (підрядок email, необов'язково)"
-          hint="Напр.: hackernoon.com"
-          dense
-          outlined />
-        <q-input v-model="editTemplate.subject_pattern" label="Тема листа (підрядок, необов'язково)" dense outlined />
-        <q-input
-          v-if="editTemplate.type === 'task'"
-          v-model="editTemplate.task_label"
-          label="Назва завдання"
-          hint="Напр.: Здати показання лічильників"
-          dense
-          outlined />
-        <q-input
-          v-if="editTemplate.type === 'newsletter'"
-          v-model="editTemplate.prompt"
-          label="Інструкція для LLM"
-          type="textarea"
-          autogrow
-          dense
-          outlined />
+        <TemplateEditorFields v-model="editTemplate" />
       </q-card-section>
       <q-card-section v-if="isDev" class="q-pt-none">
         <q-toggle v-model="saveAsBuiltin" label="Зберегти як системний (dev)" color="orange" dense />

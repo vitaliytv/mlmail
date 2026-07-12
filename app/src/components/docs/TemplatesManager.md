@@ -3,7 +3,7 @@ type: Vue Component
 title: TemplatesManager.vue
 resource: app/src/components/TemplatesManager.vue
 docgen:
-  crc: 1d226615
+  crc: e8a06641
   model: openai-codex/gpt-5.4-mini
 ---
 

@@ -3,9 +3,8 @@ type: Rust Module
 title: id_token.rs
 resource: app/src-tauri/src/auth/id_token.rs
 docgen:
-  crc: a2f23e7f
+  crc: 56fd3448
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.99
   judgeModel: openai-codex/gpt-5.4-mini
