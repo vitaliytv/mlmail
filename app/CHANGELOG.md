@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.7.0] - 2026-07-12
+
+### Fixed
+
+- Fix pre-existing eslint/oxlint errors across the codebase (JSDoc, static regex, no-alert, etc.)
+
 ## [0.6.0] - 2026-07-12
 
 ### Fixed
