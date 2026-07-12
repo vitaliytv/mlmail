@@ -6,6 +6,7 @@ use crate::endpoints::Endpoints;
 use crate::gmail::error::GmailError;
 use serde::Deserialize;
 use std::sync::Mutex;
+#[cfg(target_os = "macos")]
 use tauri::Manager;
 use tauri::State;
 
@@ -52,7 +53,7 @@ pub(crate) async fn fetch_inbox_count_at(
 
 #[tauri::command]
 pub async fn gmail_inbox_count<R: tauri::Runtime>(
-    app: tauri::AppHandle<R>,
+    #[cfg_attr(not(target_os = "macos"), allow(unused_variables))] app: tauri::AppHandle<R>,
     endpoints: State<'_, Endpoints>,
     storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
