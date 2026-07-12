@@ -131,7 +131,10 @@ fn classify_http_error(status: reqwest::StatusCode, body: &str) -> AuthError {
     let oauth_error = serde_json::from_str::<serde_json::Value>(body)
         .ok()
         .map(|v| {
-            let kind = v.get("error").and_then(|e| e.as_str()).unwrap_or("oauth_error");
+            let kind = v
+                .get("error")
+                .and_then(|e| e.as_str())
+                .unwrap_or("oauth_error");
             let desc = v
                 .get("error_description")
                 .and_then(|e| e.as_str())
@@ -154,16 +157,20 @@ mod tests {
     #[tokio::test]
     async fn exchange_code_parses_full_success_response() {
         let mut server = mockito::Server::new_async().await;
-        let m = server.mock("POST", "/token")
+        let m = server
+            .mock("POST", "/token")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{
+            .with_body(
+                r#"{
                 "access_token":"AT",
                 "expires_in":3600,
                 "refresh_token":"RT",
                 "id_token":"ID"
-            }"#)
-            .create_async().await;
+            }"#,
+            )
+            .create_async()
+            .await;
 
         let r = exchange_code_at(
             &format!("{}/token", server.url()),
@@ -173,7 +180,9 @@ mod tests {
             "verifier",
             "http://127.0.0.1:1234/callback",
             FlowKind::Desktop,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         assert_eq!(r.access_token, "AT");
         assert_eq!(r.expires_in, 3600);
@@ -185,7 +194,8 @@ mod tests {
     #[tokio::test]
     async fn exchange_code_desktop_sends_pkce_verifier_and_client_secret() {
         let mut server = mockito::Server::new_async().await;
-        let m = server.mock("POST", "/token")
+        let m = server
+            .mock("POST", "/token")
             .match_body(mockito::Matcher::AllOf(vec![
                 mockito::Matcher::UrlEncoded("code_verifier".into(), "the-verifier".into()),
                 mockito::Matcher::UrlEncoded("grant_type".into(), "authorization_code".into()),
@@ -194,7 +204,8 @@ mod tests {
             ]))
             .with_status(200)
             .with_body(r#"{"access_token":"AT","expires_in":1}"#)
-            .create_async().await;
+            .create_async()
+            .await;
 
         let _ = exchange_code_at(
             &format!("{}/token", server.url()),
@@ -204,7 +215,9 @@ mod tests {
             "the-verifier",
             "http://127.0.0.1:0/callback",
             FlowKind::Desktop,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         m.assert_async().await;
     }
@@ -212,14 +225,16 @@ mod tests {
     #[tokio::test]
     async fn exchange_code_android_omits_pkce_and_client_secret() {
         let mut server = mockito::Server::new_async().await;
-        let m = server.mock("POST", "/token")
+        let m = server
+            .mock("POST", "/token")
             .match_body(mockito::Matcher::AllOf(vec![
                 mockito::Matcher::UrlEncoded("grant_type".into(), "authorization_code".into()),
                 mockito::Matcher::UrlEncoded("code".into(), "android-code".into()),
             ]))
             .with_status(200)
             .with_body(r#"{"access_token":"AT","expires_in":1}"#)
-            .create_async().await;
+            .create_async()
+            .await;
 
         let _ = exchange_code_at(
             &format!("{}/token", server.url()),
@@ -229,7 +244,9 @@ mod tests {
             "",
             "",
             FlowKind::Android,
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
 
         m.assert_async().await;
     }
@@ -237,14 +254,24 @@ mod tests {
     #[tokio::test]
     async fn exchange_code_maps_5xx_to_network_error() {
         let mut server = mockito::Server::new_async().await;
-        server.mock("POST", "/token")
+        server
+            .mock("POST", "/token")
             .with_status(503)
             .with_body("upstream failure")
-            .create_async().await;
+            .create_async()
+            .await;
 
         let err = exchange_code_at(
-            &format!("{}/token", server.url()), "cid", Some("s"), "code", "v", "http://r", FlowKind::Desktop,
-        ).await.unwrap_err();
+            &format!("{}/token", server.url()),
+            "cid",
+            Some("s"),
+            "code",
+            "v",
+            "http://r",
+            FlowKind::Desktop,
+        )
+        .await
+        .unwrap_err();
 
         assert!(matches!(err, AuthError::Network(_)));
     }
@@ -252,24 +279,32 @@ mod tests {
     #[tokio::test]
     async fn exchange_refresh_returns_reauth_required_on_invalid_grant() {
         let mut server = mockito::Server::new_async().await;
-        server.mock("POST", "/token")
+        server
+            .mock("POST", "/token")
             .with_status(400)
             .with_body(r#"{"error":"invalid_grant"}"#)
-            .create_async().await;
+            .create_async()
+            .await;
 
-        let err = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt").await.unwrap_err();
+        let err = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt")
+            .await
+            .unwrap_err();
         assert!(matches!(err, AuthError::ReauthRequired));
     }
 
     #[tokio::test]
     async fn exchange_refresh_parses_new_tokens() {
         let mut server = mockito::Server::new_async().await;
-        server.mock("POST", "/token")
+        server
+            .mock("POST", "/token")
             .with_status(200)
             .with_body(r#"{"access_token":"NEW","expires_in":3600}"#)
-            .create_async().await;
+            .create_async()
+            .await;
 
-        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt").await.unwrap();
+        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt")
+            .await
+            .unwrap();
         assert_eq!(r.access_token, "NEW");
         assert_eq!(r.refresh_token, None);
     }
@@ -277,12 +312,16 @@ mod tests {
     #[tokio::test]
     async fn exchange_refresh_returns_rotated_refresh_token_when_present() {
         let mut server = mockito::Server::new_async().await;
-        server.mock("POST", "/token")
+        server
+            .mock("POST", "/token")
             .with_status(200)
             .with_body(r#"{"access_token":"NEW","expires_in":3600,"refresh_token":"ROT"}"#)
-            .create_async().await;
+            .create_async()
+            .await;
 
-        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt").await.unwrap();
+        let r = exchange_refresh_at(&format!("{}/token", server.url()), "cid", None, "rt")
+            .await
+            .unwrap();
         assert_eq!(r.refresh_token.as_deref(), Some("ROT"));
     }
 }

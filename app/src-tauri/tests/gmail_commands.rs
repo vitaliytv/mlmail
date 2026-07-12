@@ -43,13 +43,14 @@ async fn gmail_inbox_count_returns_count_from_gmail_endpoint() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
     };
     let app = make_app(endpoints, "AT-fresh");
 
-    let n = gmail_inbox_count(app.state(), app.state(), app.state())
+    let n = gmail_inbox_count(app.handle().clone(), app.state(), app.state(), app.state())
         .await
         .unwrap();
     assert_eq!(n, 42);
@@ -68,13 +69,14 @@ async fn gmail_inbox_count_maps_401_to_reauth() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
     };
     let app = make_app(endpoints, "AT-fresh");
 
-    let err = gmail_inbox_count(app.state(), app.state(), app.state())
+    let err = gmail_inbox_count(app.handle().clone(), app.state(), app.state(), app.state())
         .await
         .unwrap_err();
     assert!(matches!(err, GmailError::ReauthRequired));
@@ -97,10 +99,7 @@ async fn gmail_random_message_returns_message_when_inbox_has_entries() {
         .await;
     server
         .mock("GET", "/messages/m-only")
-        .match_query(mockito::Matcher::UrlEncoded(
-            "format".into(),
-            "full".into(),
-        ))
+        .match_query(mockito::Matcher::UrlEncoded("format".into(), "full".into()))
         .with_status(200)
         .with_body(
             serde_json::json!({
@@ -123,6 +122,7 @@ async fn gmail_random_message_returns_message_when_inbox_has_entries() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
@@ -152,6 +152,7 @@ async fn gmail_random_message_returns_empty_when_inbox_is_empty() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
@@ -202,6 +203,7 @@ async fn gmail_search_passes_q_and_returns_summaries() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
@@ -239,6 +241,7 @@ async fn gmail_trash_query_trashes_all_matches_and_returns_count() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
@@ -258,6 +261,7 @@ async fn gmail_trash_query_rejects_empty_query() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),
@@ -292,6 +296,7 @@ async fn gmail_create_filter_posts_criteria_and_returns_id() {
     let endpoints = Endpoints {
         google_token: format!("{}/token", server.url()),
         gmail_label_inbox: format!("{}/labels/INBOX", server.url()),
+        gmail_labels: format!("{}/labels", server.url()),
         gmail_messages_list: format!("{}/messages", server.url()),
         gmail_batch_modify: format!("{}/batchModify", server.url()),
         gmail_filters: format!("{}/filters", server.url()),

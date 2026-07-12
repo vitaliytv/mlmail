@@ -36,13 +36,9 @@ async fn refreshes_token_when_state_is_stale_using_stored_refresh_token() {
     storage.save("u@x", "RT-stored").unwrap();
     let state = Mutex::new(AuthState::default());
 
-    let token = acquire_access_token(
-        &format!("{}/token", server.url()),
-        storage.as_ref(),
-        &state,
-    )
-    .await
-    .unwrap();
+    let token = acquire_access_token(&format!("{}/token", server.url()), storage.as_ref(), &state)
+        .await
+        .unwrap();
     assert_eq!(token, "AT-new");
 
     let s = state.lock().unwrap();
@@ -63,13 +59,9 @@ async fn rotates_refresh_token_when_response_includes_one() {
     storage.save("u@x", "RT-old").unwrap();
     let state = Mutex::new(AuthState::default());
 
-    acquire_access_token(
-        &format!("{}/token", server.url()),
-        storage.as_ref(),
-        &state,
-    )
-    .await
-    .unwrap();
+    acquire_access_token(&format!("{}/token", server.url()), storage.as_ref(), &state)
+        .await
+        .unwrap();
 
     assert_eq!(storage.load().unwrap().unwrap().refresh_token, "RT-rotated");
 }
@@ -91,13 +83,9 @@ async fn returns_reauth_required_and_clears_storage_on_invalid_grant() {
         ..Default::default()
     });
 
-    let err = acquire_access_token(
-        &format!("{}/token", server.url()),
-        storage.as_ref(),
-        &state,
-    )
-    .await
-    .unwrap_err();
+    let err = acquire_access_token(&format!("{}/token", server.url()), storage.as_ref(), &state)
+        .await
+        .unwrap_err();
     assert!(matches!(err, AuthError::ReauthRequired));
 
     assert_eq!(storage.load().unwrap(), None);

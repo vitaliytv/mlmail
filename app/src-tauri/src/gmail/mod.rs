@@ -4,15 +4,14 @@ pub mod message;
 use crate::auth::{self, state::AuthState, storage::SharedStorage};
 use crate::endpoints::Endpoints;
 use crate::gmail::error::GmailError;
-use tauri::Manager;
 use serde::Deserialize;
 use std::sync::Mutex;
+use tauri::Manager;
 use tauri::State;
 
 pub const GMAIL_LABEL_INBOX_URL: &str =
     "https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX";
-pub const GMAIL_LABELS_URL: &str =
-    "https://gmail.googleapis.com/gmail/v1/users/me/labels";
+pub const GMAIL_LABELS_URL: &str = "https://gmail.googleapis.com/gmail/v1/users/me/labels";
 
 #[derive(Deserialize)]
 struct LabelResponse {
@@ -52,8 +51,8 @@ pub(crate) async fn fetch_inbox_count_at(
 }
 
 #[tauri::command]
-pub async fn gmail_inbox_count(
-    app: tauri::AppHandle,
+pub async fn gmail_inbox_count<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
     endpoints: State<'_, Endpoints>,
     storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
@@ -72,8 +71,7 @@ pub async fn gmail_inbox_count(
     Ok(count)
 }
 
-pub const GMAIL_MESSAGES_LIST_URL: &str =
-    "https://gmail.googleapis.com/gmail/v1/users/me/messages";
+pub const GMAIL_MESSAGES_LIST_URL: &str = "https://gmail.googleapis.com/gmail/v1/users/me/messages";
 
 pub const GMAIL_BATCH_MODIFY_URL: &str =
     "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify";
@@ -680,11 +678,12 @@ pub struct FilterListItem {
     pub action: FilterAction,
 }
 
-/// List all Gmail filters configured for the account.
-pub(crate) async fn list_filters_at(
+/// GET `endpoint` with a bearer token and return the parsed JSON body,
+/// translating auth-related HTTP statuses into `GmailError::ReauthRequired`.
+async fn authed_get_json(
     endpoint: &str,
     access_token: &str,
-) -> Result<Vec<FilterListItem>, GmailError> {
+) -> Result<serde_json::Value, GmailError> {
     let resp = reqwest::Client::new()
         .get(endpoint)
         .bearer_auth(access_token)
@@ -704,8 +703,15 @@ pub(crate) async fn list_filters_at(
             body,
         });
     }
-    let v: serde_json::Value =
-        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))
+}
+
+/// List all Gmail filters configured for the account.
+pub(crate) async fn list_filters_at(
+    endpoint: &str,
+    access_token: &str,
+) -> Result<Vec<FilterListItem>, GmailError> {
+    let v = authed_get_json(endpoint, access_token).await?;
     let items = match v.get("filter") {
         Some(arr) => {
             serde_json::from_value(arr.clone()).map_err(|e| GmailError::Parse(e.to_string()))?
@@ -743,24 +749,7 @@ pub(crate) async fn list_labels_at(
     endpoint: &str,
     access_token: &str,
 ) -> Result<Vec<GmailLabel>, GmailError> {
-    let resp = reqwest::Client::new()
-        .get(endpoint)
-        .bearer_auth(access_token)
-        .send()
-        .await?;
-    let status = resp.status();
-    let body = resp.text().await.unwrap_or_default();
-    if status == reqwest::StatusCode::UNAUTHORIZED {
-        return Err(GmailError::ReauthRequired);
-    }
-    if !status.is_success() {
-        return Err(GmailError::Http {
-            status: status.as_u16(),
-            body,
-        });
-    }
-    let v: serde_json::Value =
-        serde_json::from_str(&body).map_err(|e| GmailError::Parse(e.to_string()))?;
+    let v = authed_get_json(endpoint, access_token).await?;
     let labels = v
         .get("labels")
         .and_then(|l| l.as_array())
@@ -867,7 +856,10 @@ async fn ensure_label(
     }
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
-        return Err(GmailError::Http { status: status.as_u16(), body });
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
     }
     let v: serde_json::Value = serde_json::from_str(&resp.text().await.unwrap_or_default())
         .map_err(|e| GmailError::Parse(e.to_string()))?;
@@ -899,7 +891,10 @@ async fn ensure_label(
     }
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
-        return Err(GmailError::Http { status: status.as_u16(), body });
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
     }
     let v: serde_json::Value = serde_json::from_str(&resp.text().await.unwrap_or_default())
         .map_err(|e| GmailError::Parse(e.to_string()))?;
@@ -911,12 +906,26 @@ async fn ensure_label(
 
 /// Ensure the "Збережено" user label exists; return its id.
 async fn ensure_saved_label(labels_url: &str, access_token: &str) -> Result<String, GmailError> {
-    ensure_label(labels_url, access_token, SAVED_LABEL_NAME, "#16a766", "#ffffff").await
+    ensure_label(
+        labels_url,
+        access_token,
+        SAVED_LABEL_NAME,
+        "#16a766",
+        "#ffffff",
+    )
+    .await
 }
 
 /// Ensure the "Задача" user label exists; return its id.
 async fn ensure_task_label(labels_url: &str, access_token: &str) -> Result<String, GmailError> {
-    ensure_label(labels_url, access_token, TASK_LABEL_NAME, "#fb4c2f", "#ffffff").await
+    ensure_label(
+        labels_url,
+        access_token,
+        TASK_LABEL_NAME,
+        "#fb4c2f",
+        "#ffffff",
+    )
+    .await
 }
 
 /// POST one `batchModify` call (add/remove label ids on a single message id)
@@ -945,7 +954,10 @@ async fn modify_message(
     }
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
-        return Err(GmailError::Http { status: status.as_u16(), body });
+        return Err(GmailError::Http {
+            status: status.as_u16(),
+            body,
+        });
     }
     Ok(())
 }
@@ -965,7 +977,14 @@ pub async fn gmail_save(
     )
     .await?;
     let label_id = ensure_saved_label(&endpoints.gmail_labels, &token).await?;
-    modify_message(&endpoints.gmail_batch_modify, &token, &id, &[&label_id], &["INBOX"]).await
+    modify_message(
+        &endpoints.gmail_batch_modify,
+        &token,
+        &id,
+        &[&label_id],
+        &["INBOX"],
+    )
+    .await
 }
 
 /// Apply the "Задача" label to one message. Unlike [`gmail_save`], the message
@@ -984,7 +1003,14 @@ pub async fn gmail_flag_task(
     )
     .await?;
     let label_id = ensure_task_label(&endpoints.gmail_labels, &token).await?;
-    modify_message(&endpoints.gmail_batch_modify, &token, &id, &[&label_id], &[]).await
+    modify_message(
+        &endpoints.gmail_batch_modify,
+        &token,
+        &id,
+        &[&label_id],
+        &[],
+    )
+    .await
 }
 
 /// Remove the "Задача" label from one message (marks the task done without
@@ -1003,7 +1029,14 @@ pub async fn gmail_unflag_task(
     )
     .await?;
     let label_id = ensure_task_label(&endpoints.gmail_labels, &token).await?;
-    modify_message(&endpoints.gmail_batch_modify, &token, &id, &[], &[&label_id]).await
+    modify_message(
+        &endpoints.gmail_batch_modify,
+        &token,
+        &id,
+        &[],
+        &[&label_id],
+    )
+    .await
 }
 
 #[cfg(test)]
@@ -1415,7 +1448,10 @@ mod tests {
         // the page-2 request (carrying pageToken) is served here, not by page 1.
         let p2 = server
             .mock("GET", "/messages")
-            .match_query(mockito::Matcher::UrlEncoded("pageToken".into(), "PT2".into()))
+            .match_query(mockito::Matcher::UrlEncoded(
+                "pageToken".into(),
+                "PT2".into(),
+            ))
             .with_status(200)
             .with_body(r#"{"messages":[{"id":"c"}]}"#)
             .create_async()
@@ -1513,9 +1549,14 @@ mod tests {
             .with_body(r#"{"id":"FILTER_1","criteria":{},"action":{}}"#)
             .create_async()
             .await;
-        let res = create_filter_at(&format!("{}/filters", server.url()), "AT-1", "a@b.com", "Hi")
-            .await
-            .unwrap();
+        let res = create_filter_at(
+            &format!("{}/filters", server.url()),
+            "AT-1",
+            "a@b.com",
+            "Hi",
+        )
+        .await
+        .unwrap();
         assert_eq!(res.id, "FILTER_1");
         m.assert_async().await;
     }
@@ -1529,9 +1570,14 @@ mod tests {
             .with_body(r#"{"error":{"message":"Request had insufficient authentication scopes."}}"#)
             .create_async()
             .await;
-        let err = create_filter_at(&format!("{}/filters", server.url()), "AT-1", "a@b.com", "Hi")
-            .await
-            .unwrap_err();
+        let err = create_filter_at(
+            &format!("{}/filters", server.url()),
+            "AT-1",
+            "a@b.com",
+            "Hi",
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(err, GmailError::ReauthRequired));
     }
 
@@ -1544,9 +1590,14 @@ mod tests {
             .with_body(r#"{"error":{"message":"Number of filters exceeded the limit."}}"#)
             .create_async()
             .await;
-        let err = create_filter_at(&format!("{}/filters", server.url()), "AT-1", "a@b.com", "Hi")
-            .await
-            .unwrap_err();
+        let err = create_filter_at(
+            &format!("{}/filters", server.url()),
+            "AT-1",
+            "a@b.com",
+            "Hi",
+        )
+        .await
+        .unwrap_err();
         match err {
             GmailError::Http { status, .. } => assert_eq!(status, 403),
             other => panic!("expected Http, got {other:?}"),
@@ -1653,7 +1704,11 @@ mod tests {
             .with_body(r#"{"labels":[{"id":"Label_1","name":"Задача"}]}"#)
             .create_async()
             .await;
-        let create_mock = server.mock("POST", "/labels").expect(0).create_async().await;
+        let create_mock = server
+            .mock("POST", "/labels")
+            .expect(0)
+            .create_async()
+            .await;
         let id = ensure_label(
             &format!("{}/labels", server.url()),
             "AT-1",
@@ -1725,10 +1780,20 @@ mod tests {
     #[tokio::test]
     async fn modify_message_maps_401_to_reauth() {
         let mut server = mockito::Server::new_async().await;
-        server.mock("POST", "/batchModify").with_status(401).create_async().await;
-        let err = modify_message(&format!("{}/batchModify", server.url()), "AT-1", "m1", &[], &["Label_1"])
-            .await
-            .unwrap_err();
+        server
+            .mock("POST", "/batchModify")
+            .with_status(401)
+            .create_async()
+            .await;
+        let err = modify_message(
+            &format!("{}/batchModify", server.url()),
+            "AT-1",
+            "m1",
+            &[],
+            &["Label_1"],
+        )
+        .await
+        .unwrap_err();
         assert!(matches!(err, GmailError::ReauthRequired));
     }
 }

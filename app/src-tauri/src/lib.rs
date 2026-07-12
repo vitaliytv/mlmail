@@ -33,7 +33,10 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.plugin(
         tauri_plugin_window_state::Builder::default()
-            .with_state_flags(tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::MAXIMIZED)
+            .with_state_flags(
+                tauri_plugin_window_state::StateFlags::all()
+                    & !tauri_plugin_window_state::StateFlags::MAXIMIZED,
+            )
             .build(),
     );
 
@@ -69,64 +72,72 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler({
+            // jscpd:ignore-start -- the two generate_handler! lists are unavoidably
+            // near-identical: `call_analysis` (and its one command) only exists
+            // under #[cfg(debug_assertions)], so the release list can't reuse it.
             #[cfg(not(debug_assertions))]
-            { tauri::generate_handler![
-                auth::auth_start_login,
-                auth::auth_get_access_token,
-                auth::auth_is_authenticated,
-                auth::auth_current_email,
-                auth::auth_logout,
-                gmail::gmail_inbox_count,
-                gmail::gmail_random_message,
-                gmail::gmail_random_newsletter,
-                gmail::gmail_unsubscribe,
-                gmail::gmail_search,
-                gmail::gmail_read,
-                gmail::gmail_trash,
-                gmail::gmail_trash_query,
-                gmail::gmail_save,
-                gmail::gmail_flag_task,
-                gmail::gmail_unflag_task,
-                gmail::gmail_create_filter,
-                gmail::gmail_list_filters,
-                gmail::gmail_delete_filter,
-                gmail::gmail_list_labels,
-                newsletter_template::newsletter_template_list,
-                newsletter_template::newsletter_template_save,
-                newsletter_template::newsletter_template_delete,
-                app_open_url,
-                app_set_title,
-            ] }
+            {
+                tauri::generate_handler![
+                    auth::auth_start_login,
+                    auth::auth_get_access_token,
+                    auth::auth_is_authenticated,
+                    auth::auth_current_email,
+                    auth::auth_logout,
+                    gmail::gmail_inbox_count,
+                    gmail::gmail_random_message,
+                    gmail::gmail_random_newsletter,
+                    gmail::gmail_unsubscribe,
+                    gmail::gmail_search,
+                    gmail::gmail_read,
+                    gmail::gmail_trash,
+                    gmail::gmail_trash_query,
+                    gmail::gmail_save,
+                    gmail::gmail_flag_task,
+                    gmail::gmail_unflag_task,
+                    gmail::gmail_create_filter,
+                    gmail::gmail_list_filters,
+                    gmail::gmail_delete_filter,
+                    gmail::gmail_list_labels,
+                    newsletter_template::newsletter_template_list,
+                    newsletter_template::newsletter_template_save,
+                    newsletter_template::newsletter_template_delete,
+                    app_open_url,
+                    app_set_title,
+                ]
+            }
             #[cfg(debug_assertions)]
-            { tauri::generate_handler![
-                auth::auth_start_login,
-                auth::auth_get_access_token,
-                auth::auth_is_authenticated,
-                auth::auth_current_email,
-                auth::auth_logout,
-                gmail::gmail_inbox_count,
-                gmail::gmail_random_message,
-                gmail::gmail_random_newsletter,
-                gmail::gmail_unsubscribe,
-                gmail::gmail_search,
-                gmail::gmail_read,
-                gmail::gmail_trash,
-                gmail::gmail_trash_query,
-                gmail::gmail_save,
-                gmail::gmail_flag_task,
-                gmail::gmail_unflag_task,
-                gmail::gmail_create_filter,
-                gmail::gmail_list_filters,
-                gmail::gmail_delete_filter,
-                gmail::gmail_list_labels,
-                newsletter_template::newsletter_template_list,
-                newsletter_template::newsletter_template_save,
-                newsletter_template::newsletter_template_delete,
-                newsletter_template::newsletter_template_save_builtin,
-                call_analysis::analyze_call_with_pi,
-                app_open_url,
-                app_set_title,
-            ] }
+            {
+                tauri::generate_handler![
+                    auth::auth_start_login,
+                    auth::auth_get_access_token,
+                    auth::auth_is_authenticated,
+                    auth::auth_current_email,
+                    auth::auth_logout,
+                    gmail::gmail_inbox_count,
+                    gmail::gmail_random_message,
+                    gmail::gmail_random_newsletter,
+                    gmail::gmail_unsubscribe,
+                    gmail::gmail_search,
+                    gmail::gmail_read,
+                    gmail::gmail_trash,
+                    gmail::gmail_trash_query,
+                    gmail::gmail_save,
+                    gmail::gmail_flag_task,
+                    gmail::gmail_unflag_task,
+                    gmail::gmail_create_filter,
+                    gmail::gmail_list_filters,
+                    gmail::gmail_delete_filter,
+                    gmail::gmail_list_labels,
+                    newsletter_template::newsletter_template_list,
+                    newsletter_template::newsletter_template_save,
+                    newsletter_template::newsletter_template_delete,
+                    newsletter_template::newsletter_template_save_builtin,
+                    call_analysis::analyze_call_with_pi,
+                    app_open_url,
+                    app_set_title,
+                ]
+            }
+            // jscpd:ignore-end
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

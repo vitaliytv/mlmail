@@ -90,7 +90,16 @@ mod tests {
     #[test]
     fn build_pi_args_omits_model_flag_when_empty() {
         let args = build_pi_args("", "analyze this");
-        assert_eq!(args, vec!["--tools", "read,grep,find,ls", "--no-session", "-p", "analyze this"]);
+        assert_eq!(
+            args,
+            vec![
+                "--tools",
+                "read,grep,find,ls",
+                "--no-session",
+                "-p",
+                "analyze this"
+            ]
+        );
     }
 
     #[test]

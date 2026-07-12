@@ -5,8 +5,8 @@ const TASK_LABEL_QUERY = 'label:"Задача"'
 
 /**
  * Build a Gmail search query from template from/subject patterns.
- * @param {{ from_pattern: string, subject_pattern: string }} t
- * @returns {string}
+ * @param {{ from_pattern: string, subject_pattern: string }} t the task template
+ * @returns {string} a Gmail search query, or an empty string if the template has no patterns
  */
 function buildQuery(t) {
   const parts = []
@@ -20,7 +20,10 @@ const isScanning = ref(false)
 const scannedCount = ref(0)
 const totalCount = ref(0)
 
-/** Shared singleton so any view can flag/refresh and see it reflected in the tasks panel. */
+/**
+ * Shared singleton so any view can flag/refresh and see it reflected in the tasks panel.
+ * @returns {{ tasks: import('vue').Ref<object[]>, isScanning: import('vue').Ref<boolean>, scannedCount: import('vue').Ref<number>, totalCount: import('vue').Ref<number>, totalTasks: import('vue').ComputedRef<number>, scan: (templates: object[]) => Promise<void>, refresh: () => Promise<void>, flagMessage: (id: string) => Promise<void>, unflagMessage: (id: string) => Promise<void> }} the task-scan composable
+ */
 export function useTaskScan() {
   /** Reload the flat list of every message currently under the "Задача" label. */
   async function refresh() {
@@ -34,7 +37,7 @@ export function useTaskScan() {
   /**
    * Apply the "Задача" label to every message matching each task template
    * (promoting new matches), then reload the flat task list.
-   * @param {import('../services/newsletter-template.js').NewsletterTemplate[]} templates
+   * @param {import('../services/newsletter-template.js').NewsletterTemplate[]} templates all templates; only `type: 'task'` ones are used
    */
   async function scan(templates) {
     const taskTemplates = templates.filter(t => t.type === 'task')

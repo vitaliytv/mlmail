@@ -1,4 +1,5 @@
 <script setup>
+import { useQuasar } from 'quasar'
 import {
   listTemplates,
   saveTemplate,
@@ -8,8 +9,9 @@ import {
 } from '../services/newsletter-template.js'
 
 const isDev = import.meta.env.DEV
+const $q = useQuasar()
 
-const show = defineModel({ default: false })
+const show = defineModel({ type: Boolean, default: false })
 
 const templates = ref([])
 const showEditor = ref(false)
@@ -46,8 +48,7 @@ function openNew() {
 }
 
 /**
- *
- * @param t
+ * @param {object} t the template to load into the editor
  */
 function openEdit(t) {
   editTemplate.value = { task_label: '', subject_pattern: '', ...t }
@@ -67,11 +68,11 @@ async function onSave() {
       await saveBuiltinTemplate(editTemplate.value)
     } catch (error) {
       console.error('saveBuiltinTemplate failed:', error)
-      alert(`Помилка збереження системного шаблону: ${error}`)
+      $q.notify({ type: 'negative', message: `Помилка збереження системного шаблону: ${error}` })
       return
     }
-    // Remove user-level override so the new builtin is not shadowed.
-    await deleteTemplate(editTemplate.value.id).catch(() => {})
+    // Remove user-level override so the new builtin is not shadowed; ok if there was none.
+    await deleteTemplate(editTemplate.value.id).catch(error => console.warn('deleteTemplate failed:', error))
   } else {
     await saveTemplate(editTemplate.value)
   }
@@ -80,8 +81,7 @@ async function onSave() {
 }
 
 /**
- *
- * @param t
+ * @param {{ id: string }} t the template to delete
  */
 async function onDelete(t) {
   await deleteTemplate(t.id)

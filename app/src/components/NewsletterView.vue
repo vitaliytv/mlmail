@@ -11,6 +11,8 @@ import {
   slugify
 } from '../services/newsletter-template.js'
 
+const FROM_DOMAIN_RE = /@([\w.-]+)>?/
+
 const props = defineProps({
   message: { type: Object, required: true }
 })
@@ -79,8 +81,8 @@ async function loadTemplates() {
 }
 
 /**
- *
- * @param template
+ * @param {import('../services/newsletter-template.js').NewsletterTemplate | null} template
+ *   the matched newsletter template, or null to fall back to plain summarization
  */
 async function refreshRender(template) {
   articles.value = []
@@ -135,8 +137,7 @@ async function refreshTranslate() {
 }
 
 /**
- *
- * @param mode
+ * @param {string} mode the newly selected right-panel mode
  */
 async function onModeChange(mode) {
   if (mode === 'translate' && !isTranslating.value) {
@@ -168,7 +169,7 @@ watch(activeTemplate, refreshRender)
  */
 function openNewTemplate() {
   const from = props.message?.from ?? ''
-  const domain = from.match(/@([\w.-]+)>?/)?.[1] ?? ''
+  const domain = from.match(FROM_DOMAIN_RE)?.[1] ?? ''
   editTemplate.value = {
     id: slugify(domain || from),
     name: domain || from,

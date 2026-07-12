@@ -66,16 +66,33 @@ fn apply_token_response(state: &mut AuthState, resp: &TokenResponse, email: Opti
 
 #[cfg(target_os = "macos")]
 async fn run_login(app: &AppHandle) -> Result<TokenResponse, AuthError> {
-    require_configured(config::desktop_client_id(), "MLMAIL_GOOGLE_DESKTOP_CLIENT_ID")?;
-    require_configured(config::desktop_client_secret(), "MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET")?;
+    require_configured(
+        config::desktop_client_id(),
+        "MLMAIL_GOOGLE_DESKTOP_CLIENT_ID",
+    )?;
+    require_configured(
+        config::desktop_client_secret(),
+        "MLMAIL_GOOGLE_DESKTOP_CLIENT_SECRET",
+    )?;
     flow::macos::run_login_flow(app, config::desktop_client_id()).await
 }
 
 #[cfg(target_os = "android")]
 async fn run_login(app: &AppHandle) -> Result<TokenResponse, AuthError> {
-    require_configured(config::android_web_client_id(), "MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID")?;
-    require_configured(config::android_client_id(), "MLMAIL_GOOGLE_ANDROID_CLIENT_ID")?;
-    flow::android::run_login_flow(app, config::android_web_client_id(), config::android_client_id()).await
+    require_configured(
+        config::android_web_client_id(),
+        "MLMAIL_GOOGLE_ANDROID_WEB_CLIENT_ID",
+    )?;
+    require_configured(
+        config::android_client_id(),
+        "MLMAIL_GOOGLE_ANDROID_CLIENT_ID",
+    )?;
+    flow::android::run_login_flow(
+        app,
+        config::android_web_client_id(),
+        config::android_client_id(),
+    )
+    .await
 }
 
 /// Guard against starting an OAuth flow with an empty / placeholder credential:
@@ -135,7 +152,9 @@ pub fn finalize_login(
     storage.save(&email, &refresh)?;
 
     {
-        let mut s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
+        let mut s = state
+            .lock()
+            .map_err(|e| AuthError::Platform(e.to_string()))?;
         apply_token_response(&mut s, &resp, Some(email.clone()));
     }
 
@@ -158,15 +177,15 @@ pub async fn acquire_access_token(
     state: &Mutex<AuthState>,
 ) -> Result<String, AuthError> {
     {
-        let s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
+        let s = state
+            .lock()
+            .map_err(|e| AuthError::Platform(e.to_string()))?;
         if s.is_access_token_fresh() {
             return Ok(s.access_token.clone().unwrap());
         }
     }
 
-    let stored = storage
-        .load()?
-        .ok_or(AuthError::ReauthRequired)?;
+    let stored = storage.load()?.ok_or(AuthError::ReauthRequired)?;
 
     let resp = token_exchange::exchange_refresh_at(
         token_endpoint,
@@ -182,7 +201,9 @@ pub async fn acquire_access_token(
                 storage.save(&stored.email, new_rt)?;
             }
             let token = resp.access_token.clone();
-            let mut s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
+            let mut s = state
+                .lock()
+                .map_err(|e| AuthError::Platform(e.to_string()))?;
             apply_token_response(&mut s, &resp, None);
             Ok(token)
         }
@@ -203,15 +224,17 @@ pub async fn auth_get_access_token(
     storage: State<'_, SharedStorage>,
     state: State<'_, Mutex<AuthState>>,
 ) -> Result<String, AuthError> {
-    acquire_access_token(&endpoints.google_token, storage.inner().as_ref(), state.inner()).await
+    acquire_access_token(
+        &endpoints.google_token,
+        storage.inner().as_ref(),
+        state.inner(),
+    )
+    .await
 }
 
 #[tauri::command]
 pub fn auth_is_authenticated(state: State<'_, Mutex<AuthState>>) -> bool {
-    state
-        .lock()
-        .map(|s| s.email.is_some())
-        .unwrap_or(false)
+    state.lock().map(|s| s.email.is_some()).unwrap_or(false)
 }
 
 #[tauri::command]
@@ -225,11 +248,15 @@ pub async fn auth_logout(
     state: State<'_, Mutex<AuthState>>,
 ) -> Result<(), AuthError> {
     storage.clear()?;
-    let mut s = state.lock().map_err(|e| AuthError::Platform(e.to_string()))?;
+    let mut s = state
+        .lock()
+        .map_err(|e| AuthError::Platform(e.to_string()))?;
     s.reset();
     Ok(())
 }
 
-pub fn collect_session(storage: &dyn RefreshTokenStorage) -> Result<Option<StoredSession>, AuthError> {
+pub fn collect_session(
+    storage: &dyn RefreshTokenStorage,
+) -> Result<Option<StoredSession>, AuthError> {
     Ok(storage.load()?)
 }

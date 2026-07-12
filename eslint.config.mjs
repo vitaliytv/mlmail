@@ -14,5 +14,18 @@ export default [
   ...getConfig({
     node: ['scripts'],
     vue: ['app']
-  })
+  }),
+  {
+    // Build/test tool configs run under Node, not the browser — override the
+    // `vue: ['app']` browser globals above for just these files.
+    files: [
+      'app/vite.config.mjs',
+      'app/vitest.config.mjs',
+      'app/stryker.config.mjs',
+      'app/stryker-vue-macros-ignorer.mjs'
+    ],
+    languageOptions: {
+      globals: { process: 'readonly', URL: 'readonly' }
+    }
+  }
 ]
