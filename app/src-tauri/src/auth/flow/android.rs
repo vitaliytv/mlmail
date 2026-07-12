@@ -2,8 +2,8 @@ use crate::auth::error::AuthError;
 use crate::auth::storage::StoredSession;
 use crate::auth::token_exchange::{self, FlowKind, TokenResponse};
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
 use tauri::plugin::PluginHandle;
+use tauri::AppHandle;
 
 const PLUGIN_NAME: &str = "mlmail-auth";
 const ANDROID_REDIRECT_URI: &str = "";
@@ -61,7 +61,8 @@ pub async fn run_login_flow(
         return Err(AuthError::Platform(err));
     }
 
-    let server_auth_code = result.server_auth_code
+    let server_auth_code = result
+        .server_auth_code
         .ok_or_else(|| AuthError::OAuth("missing server_auth_code".into()))?;
 
     token_exchange::exchange_code(
@@ -99,7 +100,10 @@ pub(crate) fn call_load_session(app: &AppHandle) -> Result<Option<StoredSession>
         .map_err(|e| e.to_string())?;
 
     match (res.email, res.refresh_token) {
-        (Some(email), Some(refresh_token)) => Ok(Some(StoredSession { email, refresh_token })),
+        (Some(email), Some(refresh_token)) => Ok(Some(StoredSession {
+            email,
+            refresh_token,
+        })),
         _ => Ok(None),
     }
 }

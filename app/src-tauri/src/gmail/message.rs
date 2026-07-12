@@ -1,6 +1,6 @@
-use base64::Engine;
 use base64::alphabet;
 use base64::engine::{DecodePaddingMode, GeneralPurpose, GeneralPurposeConfig};
+use base64::Engine;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -34,10 +34,7 @@ pub enum UnsubscribeAction {
     /// Plain HTTP/HTTPS unsubscribe page — open in the user's browser.
     Url { url: String },
     /// Send an empty mail to `to` with optional `subject`.
-    Mailto {
-        to: String,
-        subject: Option<String>,
-    },
+    Mailto { to: String, subject: Option<String> },
 }
 
 pub fn parse_unsubscribe(headers: &[Value]) -> Option<UnsubscribeAction> {
@@ -128,12 +125,13 @@ pub fn extract_plain_text(payload: &Value) -> String {
 }
 
 fn find_part(node: &Value, target_mime: &str) -> Option<String> {
-    let mime = node
-        .get("mimeType")
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let mime = node.get("mimeType").and_then(Value::as_str).unwrap_or("");
     if mime == target_mime {
-        if let Some(data) = node.get("body").and_then(|b| b.get("data")).and_then(Value::as_str) {
+        if let Some(data) = node
+            .get("body")
+            .and_then(|b| b.get("data"))
+            .and_then(Value::as_str)
+        {
             return decode_part(data, &part_charset(node));
         }
         return None;
@@ -366,9 +364,8 @@ mod tests {
 
     #[test]
     fn parse_unsubscribe_parses_https_url() {
-        let headers = vec![
-            json!({"name": "List-Unsubscribe", "value": "<https://example.com/unsub?id=1>"}),
-        ];
+        let headers =
+            vec![json!({"name": "List-Unsubscribe", "value": "<https://example.com/unsub?id=1>"})];
         assert_eq!(
             parse_unsubscribe(&headers),
             Some(UnsubscribeAction::Url {
@@ -379,9 +376,8 @@ mod tests {
 
     #[test]
     fn parse_unsubscribe_parses_mailto() {
-        let headers = vec![
-            json!({"name": "List-Unsubscribe", "value": "<mailto:unsub@example.com>"}),
-        ];
+        let headers =
+            vec![json!({"name": "List-Unsubscribe", "value": "<mailto:unsub@example.com>"})];
         assert_eq!(
             parse_unsubscribe(&headers),
             Some(UnsubscribeAction::Mailto {
@@ -460,9 +456,7 @@ mod tests {
 
     #[test]
     fn parse_unsubscribe_returns_none_when_no_angle_brackets() {
-        let headers = vec![
-            json!({"name": "List-Unsubscribe", "value": "https://x.com/u"}),
-        ];
+        let headers = vec![json!({"name": "List-Unsubscribe", "value": "https://x.com/u"})];
         assert_eq!(parse_unsubscribe(&headers), None);
     }
 }

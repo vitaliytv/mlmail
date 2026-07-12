@@ -13,6 +13,9 @@ import { buildSummaryPrompt, translateHtmlEmail, SUMMARY_SYSTEM, TRANSLATE_BATCH
 // abort timeout — otherwise a stuck request leaves the UI spinning forever.
 const LLM_TIMEOUT_MS = 60_000
 
+const CODE_FENCE_OPEN_RE = /^```[^\n]*\n?/
+const CODE_FENCE_CLOSE_RE = /\n?```$/
+
 /**
  * @param {typeof fetch} fetchFn fetch implementation to wrap
  * @param {number} timeoutMs abort the request after this many milliseconds
@@ -63,8 +66,8 @@ export function useSummary() {
   /**
    * Translate an email's HTML in-place: extract text nodes → batch-translate → reinsert.
    * Falls back to translating the plain body when html_body is absent.
-   * @param {{ html_body?: string, body?: string }} message
-   * @returns {Promise<{ html: string } | null>}
+   * @param {{ html_body?: string, body?: string }} message the email to translate
+   * @returns {Promise<{ html: string } | null>} the translated HTML, or null on failure
    */
   async function translateHtml(message) {
     const html = message?.html_body
@@ -79,8 +82,11 @@ export function useSummary() {
         fetchFn: timedFetch
       })
 
-      /** @param {string[]} texts */
-      async function translateBatch(texts) {
+      /**
+       * @param {string[]} texts strings to translate, in order
+       * @returns {Promise<string[]>} the translated strings, same length and order as `texts`
+       */
+      const translateBatch = async texts => {
         // omlx quality/latency degrades sharply past ~35 items per batch (a
         // 35-item batch already took 41s with a mangled translation; an
         // 80-item batch hung indefinitely) — keep chunks well under that.
@@ -105,10 +111,7 @@ export function useSummary() {
               })
               const raw = (reply?.content ?? '').trim()
               // Strip potential markdown code fences
-              const jsonStr = raw
-                .replace(/^```[^\n]*\n?/, '')
-                .replace(/\n?```$/, '')
-                .trim()
+              const jsonStr = raw.replace(CODE_FENCE_OPEN_RE, '').replace(CODE_FENCE_CLOSE_RE, '').trim()
               const candidate = JSON.parse(jsonStr)
               parsed = Array.isArray(candidate) ? candidate : chunk
               break

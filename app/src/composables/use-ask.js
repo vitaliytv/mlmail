@@ -10,16 +10,16 @@ const ASK_SYSTEM = [
 ].join(' ')
 
 /**
- * @returns {{ ask: (message: object, question: string) => Promise<string|null>, isAsking: import('vue').Ref<boolean> }}
+ * @returns {{ ask: (message: object, question: string) => Promise<string|null>, isAsking: import('vue').Ref<boolean> }} the ask composable
  */
 export function useAsk() {
   const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
   const isAsking = ref(false)
 
   /**
-   *
-   * @param message
-   * @param question
+   * @param {object} message the email being asked about
+   * @param {string} question the user's question about the email
+   * @returns {Promise<string|null>} the model's answer, or null on failure/empty question
    */
   async function ask(message, question) {
     if (!question.trim()) return null

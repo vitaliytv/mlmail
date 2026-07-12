@@ -71,7 +71,9 @@ pub fn android_client_id() -> &'static str {
 }
 
 pub fn android_web_client_id() -> &'static str {
-    ANDROID_WEB.get_or_init(|| resolve(KEY_ANDROID_WEB)).as_str()
+    ANDROID_WEB
+        .get_or_init(|| resolve(KEY_ANDROID_WEB))
+        .as_str()
 }
 
 pub fn is_real_client_id(value: &str) -> bool {
@@ -84,7 +86,9 @@ mod tests {
 
     #[test]
     fn placeholder_value_is_not_considered_real() {
-        assert!(!is_real_client_id("REPLACE_ME_MLMAIL_GOOGLE_DESKTOP_CLIENT_ID"));
+        assert!(!is_real_client_id(
+            "REPLACE_ME_MLMAIL_GOOGLE_DESKTOP_CLIENT_ID"
+        ));
     }
 
     #[test]

@@ -29,19 +29,22 @@ docgen:
 Забезпечує вхідний OAuth flow для доступу до Gmail і керування session-даними для подальших запитів.
 
 Публічні точки входу:
+
 - `run_login_flow` — ініціює авторизацію користувача для Gmail.
 - `call_save_session` — зберігає session після успішного входу.
 - `call_load_session` — відновлює раніше збережену session.
 - `call_clear_session` — скидає збережену session і повертає стан до незалогіненого.
 
 Гарантії:
+
 - Працює у fail-safe режимі: помилки не виходять назовні як exception.
 - За окремих збоїв повертає порожнє значення замість помилки.
 - Не виконує запис у ФС або БД.
 
 Доступи OAuth:
-- https://www.googleapis.com/auth/gmail.modify
-- https://www.googleapis.com/auth/gmail.settings.basic
+
+- <https://www.googleapis.com/auth/gmail.modify>
+- <https://www.googleapis.com/auth/gmail.settings.basic>
 
 ## Гарантії поведінки
 

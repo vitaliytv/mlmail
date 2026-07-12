@@ -12,14 +12,6 @@ export const SUMMARY_SYSTEM = [
   'Пиши лише сам переказ українською — без вступів на кшталт «Ось резюме».'
 ].join(' ')
 
-export const TRANSLATE_SYSTEM = [
-  'Ти перекладач електронних листів.',
-  'У вхідному тексті може бути CSS-стилі, HTML-атрибути або технічний код — повністю їх ігноруй.',
-  'Переклади лише читабельний людський текст листа на українську мову.',
-  'Зберігай структуру: абзаци, списки, заголовки.',
-  'Пиши лише переклад — без коментарів, пояснень та вступів.'
-].join(' ')
-
 export const TRANSLATE_BATCH_SYSTEM = [
   'Ти перекладач. Тобі надається JSON-масив рядків англійського тексту з email.',
   'Переклади кожен рядок на українську. Повертай ТІЛЬКИ JSON-масив рядків — без коментарів та markdown.',
@@ -40,24 +32,6 @@ export function buildSummaryPrompt(message) {
   return head ? `${head}\n\n${body}` : body
 }
 
-/**
- * Strip CSS blocks that end up in plain-text extraction of HTML emails,
- * then build the translation prompt.
- * @param {{ from?: string, subject?: string, body?: string }} message
- * @returns {string}
- */
-export function buildTranslatePrompt(message) {
-  const from = (message?.from ?? '').trim()
-  const subject = (message?.subject ?? '').trim()
-  // Remove anything that looks like a CSS rule block: selector { ... }
-  const body = (message?.body ?? '')
-    .replaceAll(/[^{}]*\{[^{}]*\}/g, '')
-    .replaceAll(/\n{3,}/g, '\n\n')
-    .trim()
-  const head = [from && `Від: ${from}`, subject && `Тема: ${subject}`].filter(Boolean).join('\n')
-  return head ? `${head}\n\n${body}` : body
-}
-
 // Tags whose text content we never want to translate.
 const SKIP_TAGS = new Set(['STYLE', 'SCRIPT', 'NOSCRIPT', 'HEAD', 'META', 'LINK', 'TITLE'])
 
@@ -65,8 +39,8 @@ const SKIP_TAGS = new Set(['STYLE', 'SCRIPT', 'NOSCRIPT', 'HEAD', 'META', 'LINK'
  * Walk a DOM node tree and collect all non-empty text nodes along with
  * a stable placeholder key. Returns `{ nodes, texts }` where `texts` is
  * the array to send to the LLM and `nodes` are the actual Text DOM nodes.
- * @param {Node} root
- * @returns {{ nodes: Text[], texts: string[] }}
+ * @param {Node} root the DOM subtree to walk
+ * @returns {{ nodes: Text[], texts: string[] }} the collected text nodes and their text content
  */
 export function extractTextNodes(root) {
   const nodes = []
@@ -94,8 +68,8 @@ export function extractTextNodes(root) {
  * Parse an HTML string, translate all text nodes via `translateBatch`,
  * and return the translated HTML string.
  * @param {string} html raw HTML of the email
- * @param {(texts: string[]) => Promise<string[]>} translateBatch
- * @returns {Promise<string>}
+ * @param {(texts: string[]) => Promise<string[]>} translateBatch translates a batch of text nodes, in order
+ * @returns {Promise<string>} the translated HTML string
  */
 export async function translateHtmlEmail(html, translateBatch) {
   const parser = new DOMParser()

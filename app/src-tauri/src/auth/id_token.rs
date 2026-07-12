@@ -1,4 +1,4 @@
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 
 pub fn extract_email(id_token: &str) -> Option<String> {
     let payload_b64 = id_token.split('.').nth(1)?;
@@ -10,7 +10,7 @@ pub fn extract_email(id_token: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+    use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 
     fn build_jwt(payload_json: &str) -> String {
         let header = URL_SAFE_NO_PAD.encode(br#"{"alg":"RS256","typ":"JWT"}"#);

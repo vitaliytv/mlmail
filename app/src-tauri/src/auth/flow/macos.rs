@@ -1,7 +1,7 @@
 use crate::auth::error::AuthError;
 use crate::auth::pkce;
 use crate::auth::token_exchange::{self, FlowKind, TokenResponse};
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use rand::RngCore;
 use std::time::Duration;
 use tauri::AppHandle;
@@ -15,15 +15,14 @@ const CALLBACK_TIMEOUT: Duration = Duration::from_secs(300);
 
 const HTML_RESPONSE: &str = "<!doctype html><html lang=\"uk\"><head><meta charset=\"utf-8\"><title>MLMaiL</title></head><body><h1>Готово, можете закрити це вікно.</h1></body></html>";
 
-pub async fn run_login_flow(
-    app: &AppHandle,
-    client_id: &str,
-) -> Result<TokenResponse, AuthError> {
+pub async fn run_login_flow(app: &AppHandle, client_id: &str) -> Result<TokenResponse, AuthError> {
     let pair = pkce::generate();
 
-    let listener = TcpListener::bind("127.0.0.1:0").await
+    let listener = TcpListener::bind("127.0.0.1:0")
+        .await
         .map_err(|e| AuthError::Platform(format!("bind loopback: {e}")))?;
-    let port = listener.local_addr()
+    let port = listener
+        .local_addr()
         .map_err(|e| AuthError::Platform(format!("local_addr: {e}")))?
         .port();
     let redirect_uri = format!("http://127.0.0.1:{port}/callback");
@@ -34,9 +33,10 @@ pub async fn run_login_flow(
         .open_url(&auth_url, None::<&str>)
         .map_err(|e| AuthError::Platform(format!("open browser: {e}")))?;
 
-    let (code, returned_state) = tokio::time::timeout(CALLBACK_TIMEOUT, wait_for_callback(listener))
-        .await
-        .map_err(|_| AuthError::Cancelled)??;
+    let (code, returned_state) =
+        tokio::time::timeout(CALLBACK_TIMEOUT, wait_for_callback(listener))
+            .await
+            .map_err(|_| AuthError::Cancelled)??;
 
     if returned_state != state {
         return Err(AuthError::OAuth("CSRF state mismatch".into()));
@@ -90,13 +90,17 @@ fn push_query(out: &mut String, key: &str, value: &str) {
 }
 
 async fn wait_for_callback(listener: TcpListener) -> Result<(String, String), AuthError> {
-    let (stream, _) = listener.accept().await
+    let (stream, _) = listener
+        .accept()
+        .await
         .map_err(|e| AuthError::Platform(format!("accept: {e}")))?;
     let (read_half, mut write_half) = stream.into_split();
     let mut reader = BufReader::new(read_half);
 
     let mut request_line = String::new();
-    reader.read_line(&mut request_line).await
+    reader
+        .read_line(&mut request_line)
+        .await
         .map_err(|e| AuthError::Platform(format!("read request: {e}")))?;
 
     let response = format!(
@@ -111,9 +115,12 @@ async fn wait_for_callback(listener: TcpListener) -> Result<(String, String), Au
 }
 
 fn parse_callback_query(request_line: &str) -> Result<(String, String), AuthError> {
-    let target = request_line.split_whitespace().nth(1)
+    let target = request_line
+        .split_whitespace()
+        .nth(1)
         .ok_or_else(|| AuthError::OAuth("malformed callback request".into()))?;
-    let query = target.split_once('?')
+    let query = target
+        .split_once('?')
         .map(|(_, q)| q)
         .ok_or_else(|| AuthError::OAuth("missing query in callback".into()))?;
 

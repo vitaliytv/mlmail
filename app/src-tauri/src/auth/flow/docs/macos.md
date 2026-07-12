@@ -13,7 +13,7 @@ docgen:
 
 ## Огляд
 
-`run_login_flow` запускає desktop OAuth-вхід у Google через браузер, спрямовуючи користувача на https://accounts.google.com/o/oauth2/v2/auth і очікуючи локальне повернення на loopback-адресу `http://127.0.0.1:{port}/callback`; у тестовому сценарії також приймає формат `http://127.0.0.1:7777/cb`. Це потрібно, щоб застосунок міг отримати авторизаційний результат для доступів https://www.googleapis.com/auth/gmail.modify і https://www.googleapis.com/auth/gmail.settings.basic без ручного копіювання даних із браузера.
+`run_login_flow` запускає desktop OAuth-вхід у Google через браузер, спрямовуючи користувача на <https://accounts.google.com/o/oauth2/v2/auth> і очікуючи локальне повернення на loopback-адресу `http://127.0.0.1:{port}/callback`; у тестовому сценарії також приймає формат `http://127.0.0.1:7777/cb`. Це потрібно, щоб застосунок міг отримати авторизаційний результат для доступів <https://www.googleapis.com/auth/gmail.modify> і <https://www.googleapis.com/auth/gmail.settings.basic> без ручного копіювання даних із браузера.
 
 Функція звертається до мережі, але працює в режимі read-only: не пише у ФС або БД. Збої під час відкриття браузера, локального callback чи OAuth-обміну вона перехоплює всередині й не викидає винятки назовні; за частини помилкових сценаріїв повертає порожнє значення, наприклад `null`.
 

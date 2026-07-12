@@ -10,3 +10,11 @@ app/src-tauri/tauri.conf.json
 app/src-tauri/capabilities/
 docs/ci4/manifest.json
 .claude/settings.local.json
+.claude/launch.json
+.cursor/skills/n-adr-normalize/meta.json
+.cursor/skills/n-lint/meta.json
+.cursor/skills/n-llm-patch/meta.json
+.cursor/skills/n-publish-telegram/meta.json
+app/src-tauri/icons/src/icon-manifest.json
+app/src-tauri/resources/newsletter-templates/hackernoon.json
+app/src-tauri/resources/newsletter-templates/tldr.json

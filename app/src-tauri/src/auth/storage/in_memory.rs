@@ -8,7 +8,9 @@ pub struct InMemoryStorage {
 
 impl InMemoryStorage {
     pub fn new() -> Self {
-        Self { inner: Mutex::new(None) }
+        Self {
+            inner: Mutex::new(None),
+        }
     }
 }
 
@@ -20,7 +22,9 @@ impl Default for InMemoryStorage {
 
 impl RefreshTokenStorage for InMemoryStorage {
     fn save(&self, email: &str, refresh_token: &str) -> Result<(), StorageError> {
-        let mut g = self.inner.lock()
+        let mut g = self
+            .inner
+            .lock()
             .map_err(|e| StorageError::Backend(e.to_string()))?;
         *g = Some(StoredSession {
             email: email.into(),
@@ -30,13 +34,17 @@ impl RefreshTokenStorage for InMemoryStorage {
     }
 
     fn load(&self) -> Result<Option<StoredSession>, StorageError> {
-        let g = self.inner.lock()
+        let g = self
+            .inner
+            .lock()
             .map_err(|e| StorageError::Backend(e.to_string()))?;
         Ok(g.clone())
     }
 
     fn clear(&self) -> Result<(), StorageError> {
-        let mut g = self.inner.lock()
+        let mut g = self
+            .inner
+            .lock()
             .map_err(|e| StorageError::Backend(e.to_string()))?;
         *g = None;
         Ok(())

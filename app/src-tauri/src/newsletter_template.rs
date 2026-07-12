@@ -3,17 +3,12 @@ use std::collections::HashMap;
 use std::fs;
 use tauri::{AppHandle, Manager};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum TemplateType {
+    #[default]
     Newsletter,
     Task,
-}
-
-impl Default for TemplateType {
-    fn default() -> Self {
-        Self::Newsletter
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,7 +64,10 @@ pub fn newsletter_template_list(app: AppHandle) -> Result<Vec<NewsletterTemplate
         .map(|r| load_dir(&r.join("newsletter-templates")))
         .unwrap_or_default()
         .into_iter()
-        .map(|mut t| { t.builtin = true; (t.id.clone(), t) })
+        .map(|mut t| {
+            t.builtin = true;
+            (t.id.clone(), t)
+        })
         .collect();
 
     // User templates override bundled ones with the same id.

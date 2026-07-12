@@ -6,23 +6,21 @@ import { invoke } from '@tauri-apps/api/core'
  */
 
 /**
- *
+ * @returns {Promise<NewsletterTemplate[]>} all saved newsletter templates
  */
 export async function listTemplates() {
   return /** @type {NewsletterTemplate[]} */ (await invoke('newsletter_template_list'))
 }
 
 /**
- *
- * @param template
+ * @param {NewsletterTemplate} template the template to create or update
  */
 export async function saveTemplate(template) {
   await invoke('newsletter_template_save', { template })
 }
 
 /**
- *
- * @param id
+ * @param {string} id id of the template to delete
  */
 export async function deleteTemplate(id) {
   await invoke('newsletter_template_delete', { id })
@@ -30,7 +28,7 @@ export async function deleteTemplate(id) {
 
 /**
  * Save template as a bundled system template (dev-only).
- * @param template
+ * @param {NewsletterTemplate} template the template to save as a built-in
  */
 export async function saveBuiltinTemplate(template) {
   await invoke('newsletter_template_save_builtin', { template })
@@ -40,9 +38,9 @@ export async function saveBuiltinTemplate(template) {
  * Find the first template that matches the message's from and/or subject.
  * A non-empty pattern field must match (case-insensitive substring).
  * Both non-empty fields must match simultaneously.
- * @param {{ from?: string, subject?: string }} message
- * @param {NewsletterTemplate[]} templates
- * @returns {NewsletterTemplate | null}
+ * @param {{ from?: string, subject?: string }} message the message to match against
+ * @param {NewsletterTemplate[]} templates candidate templates to search
+ * @returns {NewsletterTemplate | null} the first matching template, or null if none match
  */
 export function findTemplateForMessage(message, templates) {
   const lowerFrom = (message?.from ?? '').toLowerCase()
@@ -58,7 +56,8 @@ export function findTemplateForMessage(message, templates) {
 
 /**
  * Generate a slug id from a sender email or domain string.
- * @param str
+ * @param {string} str the source string to slugify
+ * @returns {string} lowercase, hyphen-separated slug
  */
 export function slugify(str) {
   return str

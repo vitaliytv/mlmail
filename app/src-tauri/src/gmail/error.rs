@@ -59,7 +59,10 @@ mod tests {
 
     #[test]
     fn serializes_with_tagged_kind() {
-        let e = GmailError::Http { status: 503, body: "boom".into() };
+        let e = GmailError::Http {
+            status: 503,
+            body: "boom".into(),
+        };
         let s = serde_json::to_string(&e).unwrap();
         assert!(s.contains("\"kind\":\"Http\""));
         assert!(s.contains("\"status\":503"));

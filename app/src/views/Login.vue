@@ -55,8 +55,12 @@ onMounted(() => {
 // pair, so the named-template pre-transform's HTML-naive tokenizer (which
 // runs on the raw file text, before real SFC parsing) can't mistake these
 // injected-HTML tags for the surrounding <script setup> block's own tags.
+// The concatenation is the point, so no-useless-concat is a false positive here.
 const LINK_INTERCEPT_SCRIPT = `
-${'<' + 'script>'}
+${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + 'script>'
+}
 document.addEventListener('click', function(e) {
   var a = e.target.closest('a');
   if (a && a.href && !a.href.startsWith('javascript')) {
@@ -64,16 +68,26 @@ document.addEventListener('click', function(e) {
     window.parent.postMessage({ type: 'open-url', url: a.href }, '*');
   }
 });
-${'<' + '/script>'}`
+${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + '/script>'
+}`
 
-const LIGHT_BG_STYLE = `${'<' + 'style>'}
+const LIGHT_BG_STYLE = `${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + 'style>'
+}
 :root { color-scheme: light !important; }
 html, body { background: #ffffff !important; color: #000000 !important; }
-${'<' + '/style>'}`
+${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + '/style>'
+}`
 
 // Built from parts so the raw source has no bare closing-head-tag substring —
 // the named-template pre-transform tokenizes the whole file HTML-naively and
 // mistakes that substring as a literal for a real closing tag.
+// oxlint-disable-next-line no-useless-concat
 const HEAD_CLOSE_TAG = '</' + 'head>'
 
 const htmlBodyWithInterceptor = computed(() => {
