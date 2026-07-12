@@ -474,22 +474,19 @@ pub(crate) async fn list_all_ids_at_q(
     Ok(ids)
 }
 
-/// Move one batch of message ids (≤1000) to Trash via `batchModify`
-/// (adds the `TRASH` label, removes `INBOX`). Returns 204 on success.
-pub(crate) async fn batch_trash_at(
+/// POST `payload` to `endpoint` with a bearer token; returns the response on
+/// success, translating an unauthorized status into `GmailError::ReauthRequired`.
+/// The caller decides how (or whether) to parse the response body, since some
+/// Gmail endpoints (e.g. `batchModify`) return an empty body on success.
+async fn authed_post(
     endpoint: &str,
     access_token: &str,
-    ids: &[String],
-) -> Result<(), GmailError> {
-    let payload = serde_json::json!({
-        "ids": ids,
-        "addLabelIds": ["TRASH"],
-        "removeLabelIds": ["INBOX"],
-    });
+    payload: &serde_json::Value,
+) -> Result<reqwest::Response, GmailError> {
     let resp = reqwest::Client::new()
         .post(endpoint)
         .bearer_auth(access_token)
-        .json(&payload)
+        .json(payload)
         .send()
         .await?;
     let status = resp.status();
@@ -503,6 +500,22 @@ pub(crate) async fn batch_trash_at(
             body,
         });
     }
+    Ok(resp)
+}
+
+/// Move one batch of message ids (≤1000) to Trash via `batchModify`
+/// (adds the `TRASH` label, removes `INBOX`). Returns 204 on success.
+pub(crate) async fn batch_trash_at(
+    endpoint: &str,
+    access_token: &str,
+    ids: &[String],
+) -> Result<(), GmailError> {
+    let payload = serde_json::json!({
+        "ids": ids,
+        "addLabelIds": ["TRASH"],
+        "removeLabelIds": ["INBOX"],
+    });
+    authed_post(endpoint, access_token, &payload).await?;
     Ok(())
 }
 
@@ -843,26 +856,8 @@ async fn ensure_label(
     bg_color: &str,
     text_color: &str,
 ) -> Result<String, GmailError> {
-    let client = reqwest::Client::new();
     // List existing labels.
-    let resp = client
-        .get(labels_url)
-        .bearer_auth(access_token)
-        .send()
-        .await?;
-    let status = resp.status();
-    if status == reqwest::StatusCode::UNAUTHORIZED {
-        return Err(GmailError::ReauthRequired);
-    }
-    if !status.is_success() {
-        let body = resp.text().await.unwrap_or_default();
-        return Err(GmailError::Http {
-            status: status.as_u16(),
-            body,
-        });
-    }
-    let v: serde_json::Value = serde_json::from_str(&resp.text().await.unwrap_or_default())
-        .map_err(|e| GmailError::Parse(e.to_string()))?;
+    let v = authed_get_json(labels_url, access_token).await?;
     if let Some(labels) = v.get("labels").and_then(|l| l.as_array()) {
         for label in labels {
             if label.get("name").and_then(|n| n.as_str()) == Some(name) {
@@ -879,23 +874,7 @@ async fn ensure_label(
         "messageListVisibility": "show",
         "color": { "backgroundColor": bg_color, "textColor": text_color },
     });
-    let resp = client
-        .post(labels_url)
-        .bearer_auth(access_token)
-        .json(&payload)
-        .send()
-        .await?;
-    let status = resp.status();
-    if status == reqwest::StatusCode::UNAUTHORIZED {
-        return Err(GmailError::ReauthRequired);
-    }
-    if !status.is_success() {
-        let body = resp.text().await.unwrap_or_default();
-        return Err(GmailError::Http {
-            status: status.as_u16(),
-            body,
-        });
-    }
+    let resp = authed_post(labels_url, access_token, &payload).await?;
     let v: serde_json::Value = serde_json::from_str(&resp.text().await.unwrap_or_default())
         .map_err(|e| GmailError::Parse(e.to_string()))?;
     v.get("id")

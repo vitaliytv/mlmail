@@ -3,6 +3,7 @@ import { useNewsletterRender } from '../composables/use-newsletter-render.js'
 import { useSummary } from '../composables/use-summary.js'
 import { useAsk } from '../composables/use-ask.js'
 import { useTaskScan } from '../composables/use-task-scan.js'
+import TemplateEditorFields from './TemplateEditorFields.vue'
 import {
   listTemplates,
   saveTemplate,
@@ -399,47 +400,10 @@ defineExpose({ flagAsTask })
         {{ editTemplate.id === activeTemplate?.id ? 'Редагувати шаблон' : 'Новий шаблон' }}
       </q-card-section>
       <q-card-section class="q-gutter-md">
-        <q-input v-model="editTemplate.name" label="Назва" dense outlined />
-        <q-btn-toggle
-          v-model="editTemplate.type"
-          :options="[
-            { label: 'Newsletter', value: 'newsletter' },
-            { label: 'Завдання', value: 'task' }
-          ]"
-          dense
-          no-caps
-          rounded
-          color="grey-7"
-          text-color="white"
-          toggle-color="primary" />
-        <q-input
-          v-model="editTemplate.from_pattern"
-          label="Відправник (підрядок email, необов'язково)"
-          hint="Напр.: hackernoon.com"
-          dense
-          outlined />
-        <q-input
-          v-model="editTemplate.subject_pattern"
-          label="Тема листа (підрядок, необов'язково)"
-          hint="Напр.: скаїтатаju rādījumus"
-          dense
-          outlined />
-        <q-input
-          v-if="editTemplate.type === 'task'"
-          v-model="editTemplate.task_label"
-          label="Назва завдання"
-          hint="Напр.: Здати показання лічильників"
-          dense
-          outlined />
-        <q-input
-          v-if="editTemplate.type === 'newsletter'"
-          v-model="editTemplate.prompt"
-          label="Інструкція для LLM"
-          type="textarea"
-          autogrow
-          dense
-          outlined
-          hint="Що витягти з листа (назви статей, посилання, розділи тощо)" />
+        <TemplateEditorFields
+          v-model="editTemplate"
+          subject-hint="Напр.: скаїтатаju rādījumus"
+          prompt-hint="Що витягти з листа (назви статей, посилання, розділи тощо)" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn v-close-popup flat no-caps label="Скасувати" />

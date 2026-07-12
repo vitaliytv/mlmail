@@ -3,7 +3,7 @@ type: Vue Component
 title: NewsletterView.vue
 resource: app/src/components/NewsletterView.vue
 docgen:
-  crc: c447a5f1
+  crc: f85a2e3b
   model: openai-codex/gpt-5.4-mini
 ---
 
