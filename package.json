@@ -23,12 +23,12 @@
   },
   "devDependencies": {
     "@nitra/cspell-dict": "^2.1.0",
-    "@nitra/cursor": "^14.25.1",
     "@nitra/eslint-config": "^3.9.4",
     "@nitra/stylelint-config": "^1.4.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@vitest/coverage-v8": "^4.1.8",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "@7n/rules": "^14.25.1"
   },
   "stylelint": {
     "extends": "@nitra/stylelint-config"
