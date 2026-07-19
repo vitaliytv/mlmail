@@ -1,6 +1,5 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat } from '@7n/tauri-components'
-import { useOmlx } from '@7n/tauri-components/vue'
+import { createOpenAiChat, useOmlx } from '../omlx.js'
 import { buildSummaryPrompt } from '../services/summary.js'
 
 const ASK_SYSTEM = [

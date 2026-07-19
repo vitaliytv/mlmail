@@ -3,7 +3,7 @@ type: JS Module
 title: use-summary.js
 resource: app/src/composables/use-summary.js
 docgen:
-  crc: 335a1742
+  crc: 6f14b33b
   model: openai-codex/gpt-5.4
   score: 100
   issues: judge:inaccurate:0.98

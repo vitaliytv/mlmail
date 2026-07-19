@@ -1,6 +1,5 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat } from '@7n/tauri-components'
-import { useOmlx } from '@7n/tauri-components/vue'
+import { createOpenAiChat, useOmlx } from '../omlx.js'
 import { sanitizeSubjectSuggestion } from '../services/pattern.js'
 
 // Local-LLM helper for the "rule from this email" panel: given a concrete

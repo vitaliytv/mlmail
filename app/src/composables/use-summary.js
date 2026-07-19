@@ -1,6 +1,5 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat } from '@7n/tauri-components'
-import { useOmlx } from '@7n/tauri-components/vue'
+import { createOpenAiChat, useOmlx } from '../omlx.js'
 import { buildSummaryPrompt, translateHtmlEmail, SUMMARY_SYSTEM, TRANSLATE_BATCH_SYSTEM } from '../services/summary.js'
 
 // Local-LLM helper for the two-column reader: summarize the current email in

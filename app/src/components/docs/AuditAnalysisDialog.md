@@ -3,7 +3,7 @@ type: Vue Component
 title: AuditAnalysisDialog.vue
 resource: app/src/components/AuditAnalysisDialog.vue
 docgen:
-  crc: 7eb65885
+  crc: eb50a4a7
   model: openai-codex/gpt-5.4-mini
 ---
 

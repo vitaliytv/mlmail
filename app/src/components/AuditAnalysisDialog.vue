@@ -88,8 +88,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'changed'])
 
 const $q = useQuasar()
-const { journal, respond, approve, loadOmlxEnv } = props.agent
-const { analyzeWithPi, analyzeWithOmlx } = useCallAnalysis(props.agent)
+const { journal, respond, approve } = props.agent
+const { analyzeWithPi, analyzeWithOmlx } = useCallAnalysis()
 
 const records = ref([])
 const loading = ref(false)
@@ -123,11 +123,11 @@ async function refresh() {
 }
 
 /**
- * Load the omlx config (base URL/model/key) before the list, so the omlx
- * analysis button works even if the agent dialog was never opened first.
+ * Reload the journal list when the dialog opens.
+ * omlx analysis loads its own config via app-local useOmlx (agent gateway no
+ * longer exposes loadOmlxEnv after @7n/tauri-components@0.11.0).
  */
 async function onShow() {
-  await loadOmlxEnv()
   await refresh()
 }
 

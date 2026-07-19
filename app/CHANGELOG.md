@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.0] - 2026-07-19
+
+### Changed
+
+- `@7n/tauri-components` ^0.8.0 → ^0.11.1: `useAgent` → `useAcpAgent` (CODEX/cursor/pi presets); one-shot omlx helpers вендорені в `app/src/omlx.js` після видалення `createOpenAiChat`/`useOmlx` з пакета
+
 ## [0.10.0] - 2026-07-12
 
 ### Added

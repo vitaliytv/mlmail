@@ -8,3 +8,4 @@ resource: app/src/
 | ------------------ | ------------- |
 | [App.vue](App.md)  | Vue Component |
 | [main.js](main.md) | JS Module     |
+| [omlx.js](omlx.md) | JS Module     |

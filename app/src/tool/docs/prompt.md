@@ -3,9 +3,8 @@ type: JS Module
 title: prompt.js
 resource: app/src/tool/prompt.js
 docgen:
-  crc: 22231f57
+  crc: 77974eaa
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.95
   judgeModel: openai-codex/gpt-5.4-mini

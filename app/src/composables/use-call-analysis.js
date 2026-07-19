@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat } from '@7n/tauri-components'
+import { createOpenAiChat, useOmlx } from '../omlx.js'
 
 /**
  * Render a journaled agent call (request + actions + response) as a
@@ -44,21 +44,24 @@ export async function analyzeWithPi(rec) {
 }
 
 /**
- * The local omlx model (direct HTTP, reusing the agent's own connection),
- * as the other way to run the above analysis for a journal record.
- * @param {object} agent the in-app agent gateway (from useAgent())
+ * Local omlx + pi runners for journal-call analysis.
+ * omlx no longer rides on the agent gateway (useAcpAgent has no baseUrl/model —
+ * see CHANGELOG @7n/tauri-components@0.11.0); it uses the app-local useOmlx.
  * @returns {{analyzeWithPi: (rec: object) => Promise<string>, analyzeWithOmlx: (rec: object) => Promise<string>}} analysis runners
  */
-export function useCallAnalysis(agent) {
+export function useCallAnalysis() {
+  const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
+
   /**
    * @param {object} rec journal record to analyze
    * @returns {Promise<string>} the local model's text answer
    */
   async function analyzeWithOmlx(rec) {
+    await loadEnv()
     const chat = createOpenAiChat({
-      baseUrl: agent.baseUrl.value,
-      model: agent.model.value,
-      apiKey: agent.apiKey.value || undefined,
+      baseUrl: baseUrl.value,
+      model: model.value,
+      apiKey: apiKey.value || undefined,
       fetchFn: tauriFetch
     })
     const reply = await chat({ messages: [{ role: 'user', content: buildAnalysisPrompt(rec) }], tools: [] })

@@ -3,7 +3,7 @@ type: JS Module
 title: use-ask.js
 resource: app/src/composables/use-ask.js
 docgen:
-  crc: dadcd101
+  crc: 3e8043c1
   model: openai-codex/gpt-5.4-mini
   score: 100
   issues: judge:inaccurate:0.98

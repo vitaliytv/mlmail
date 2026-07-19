@@ -3,9 +3,8 @@ type: JS Module
 title: catalog.js
 resource: app/src/tool/catalog.js
 docgen:
-  crc: 11135d75
+  crc: 3d5707ae
   model: openai-codex/gpt-5.4
-  tier: cloud-avg
   score: 100
   issues: judge:inaccurate:0.98
   judgeModel: openai-codex/gpt-5.4-mini
