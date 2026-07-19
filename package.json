@@ -28,7 +28,7 @@
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@vitest/coverage-v8": "^4.1.8",
     "vitest": "^4.1.8",
-    "@7n/rules": "^14.25.1"
+    "@7n/rules": "^1.28.1"
   },
   "stylelint": {
     "extends": "@nitra/stylelint-config"
