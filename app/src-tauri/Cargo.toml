@@ -25,7 +25,7 @@ tauri-plugin-http = { version = "2", features = ["unsafe-headers"] }
 tauri-plugin-agent = { git = "https://github.com/nitra/tauri-components" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "query", "form"] }
 tokio = { version = "1", features = ["net", "io-util", "time", "macros", "rt", "sync", "process"] }
 base64 = "0.22"
 rand = "0.9"
