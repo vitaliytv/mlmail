@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.1] - 2026-07-22
+
+### Fixed
+
+- Відновлено пряме omlx-чат API (createOpenAiChat/useOmlx), видалене з @7n/tauri-components у 0.11.0 — саммарі/переклад/ask/аналіз дзвінків не працювали через відсутній `app/src/omlx.js`. Локальна Rust-команда `omlx_config` читає `~/.omlx/settings.json` замість видаленої `plugin:agent|omlx_config`.
+
 ## [0.11.0] - 2026-07-20
 
 ### Changed
