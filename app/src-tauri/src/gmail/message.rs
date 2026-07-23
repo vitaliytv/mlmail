@@ -149,7 +149,10 @@ fn collect_attachments(node: &Value, html_body: Option<&str>, out: &mut Vec<Atta
             .unwrap_or(&empty_headers);
         let disposition = extract_header(headers, "Content-Disposition").to_ascii_lowercase();
         let content_id = extract_header(headers, "Content-ID");
-        let cid = content_id.trim().trim_start_matches('<').trim_end_matches('>');
+        let cid = content_id
+            .trim()
+            .trim_start_matches('<')
+            .trim_end_matches('>');
         let referenced_in_body =
             !cid.is_empty() && html_body.is_some_and(|html| html.contains(&format!("cid:{cid}")));
         let is_inline = disposition.starts_with("inline") || referenced_in_body;
