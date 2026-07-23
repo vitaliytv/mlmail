@@ -3,7 +3,7 @@ type: Vue Component
 title: Login.vue
 resource: app/src/views/Login.vue
 docgen:
-  crc: b537705f
+  crc: 4f3bba37
   model: omlx/gemma-4-e4b-it-OptiQ-4bit
 ---
 
