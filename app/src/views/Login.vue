@@ -1,13 +1,10 @@
 <script setup>
 import { invoke } from '@tauri-apps/api/core'
 import { getVersion } from '@tauri-apps/api/app'
-import { useQuasar } from 'quasar'
 import { AgentDialog } from '@7n/tauri-components/components'
 import { errorMessage } from '../i18n/auth-errors.js'
 import { useAuthStore } from '../services/auth-store.js'
 import { useAgent } from '../composables/use-agent.js'
-import { usePattern } from '../composables/use-pattern.js'
-import { buildPatternQuery, parseFromEmail } from '../services/pattern.js'
 import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
 import NewsletterView from '../components/NewsletterView.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
@@ -38,10 +35,8 @@ watchEffect(() => {
   document.title = title
   invoke('app_set_title', { title })
 })
-const pattern = usePattern()
 const agentOpen = ref(false)
 const auditOpen = ref(false)
-const $q = useQuasar()
 onMounted(() => {
   auth.initialize()
   window.addEventListener('message', e => {
@@ -97,53 +92,6 @@ const htmlBodyWithInterceptor = computed(() => {
   return html.includes(HEAD_CLOSE_TAG) ? html.replace(HEAD_CLOSE_TAG, inject + HEAD_CLOSE_TAG) : inject + html
 })
 
-const showPatternDialog = ref(false)
-const patternFrom = ref('')
-const patternSubject = ref('')
-const initialSubject = ref('')
-const isSuggesting = ref(false)
-
-const patternQuery = computed(() => buildPatternQuery({ from: patternFrom.value, subject: patternSubject.value }))
-// Deletion targets the sender only — a subject phrase (even an LLM-suggested
-// one) is too easy to get wrong and trash unrelated mail from the same sender.
-const deleteQuery = computed(() => buildPatternQuery({ from: patternFrom.value }))
-
-let suggestionToken = 0
-
-/**
- * Open the "rule from this email" panel, seed sender/subject from the current
- * message, then refine the subject with a local-LLM suggestion (best-effort).
- */
-async function openPatternDialog() {
-  const msg = auth.currentMessage.value
-  if (!msg) return
-  auth.clearPatternFeedback()
-  patternFrom.value = parseFromEmail(msg.from)
-  patternSubject.value = (msg.subject ?? '').trim()
-  initialSubject.value = patternSubject.value
-  showPatternDialog.value = true
-  isSuggesting.value = true
-  const token = ++suggestionToken
-  const suggestion = await pattern.suggestSubjectPattern(msg.subject)
-  // Ignore the result if it was cancelled, the panel closed, or the user
-  // edited the field while we were waiting.
-  if (!Object.is(token, suggestionToken)) return
-  if (showPatternDialog.value && Object.is(patternSubject.value, initialSubject.value)) {
-    patternSubject.value = suggestion
-  }
-  isSuggesting.value = false
-}
-
-/**
- * Cancel a pending subject suggestion: drop its result when it arrives and
- * clear the field immediately instead of waiting for the LLM.
- */
-function cancelSuggestion() {
-  suggestionToken++
-  isSuggesting.value = false
-  patternSubject.value = ''
-}
-
 /**
  * Formats a byte count as a human-readable Ukrainian size label (Б/КБ/МБ/ГБ).
  * @param {number} bytes - size in bytes
@@ -160,26 +108,6 @@ function formatFileSize(bytes) {
 const showActionLog = ref(false)
 const showTemplates = ref(false)
 const showFilters = ref(false)
-
-/**
- *
- */
-async function trashByQueryAndClose() {
-  const q = deleteQuery.value
-  await auth.trashByQuery(q)
-  if (!auth.trashQueryErrorKind.value) {
-    showPatternDialog.value = false
-    const count = auth.lastTrashedCount.value ?? 0
-    $q.notify({
-      message: `Переміщено в кошик: ${count}`,
-      caption: q,
-      color: 'positive',
-      icon: 'sym_o_delete_sweep',
-      timeout: 5000,
-      position: 'top'
-    })
-  }
-}
 </script>
 
 <template>
@@ -311,13 +239,6 @@ async function trashByQueryAndClose() {
           :disable="!auth.currentMessage.value" />
         <q-space />
         <q-btn
-          @click="openPatternDialog()"
-          flat
-          no-caps
-          icon="sym_o_rule"
-          label="Правило"
-          :disable="!auth.currentMessage.value" />
-        <q-btn
           @click="auth.trashCurrent()"
           flat
           no-caps
@@ -383,64 +304,6 @@ async function trashByQueryAndClose() {
             </q-item>
           </q-list>
         </q-card-section>
-      </q-card>
-    </q-dialog>
-
-    <q-dialog v-model="showPatternDialog">
-      <q-card style="min-width: 360px; max-width: 90vw">
-        <q-card-section class="text-h6">Правило для схожих листів</q-card-section>
-        <q-card-section class="q-gutter-md">
-          <q-input v-model="patternFrom" label="Від (email)" dense outlined clearable clear-icon="sym_o_close" />
-          <q-input
-            v-model="patternSubject"
-            label="Тема містить"
-            dense
-            outlined
-            :clearable="!isSuggesting"
-            clear-icon="sym_o_close">
-            <template v-if="isSuggesting" #append>
-              <q-icon @click="cancelSuggestion" name="sym_o_close" class="cursor-pointer" />
-            </template>
-          </q-input>
-          <div class="text-caption text-grey-7">
-            Фільтр: <code>{{ patternQuery || '—' }}</code
-            ><br />
-            Видалення (лише за відправником): <code>{{ deleteQuery || '—' }}</code>
-          </div>
-        </q-card-section>
-
-        <q-card-section v-if="auth.trashQueryErrorKind.value || auth.filterErrorKind.value" class="q-pt-none">
-          <q-banner class="bg-red-1 text-red-9" rounded dense>
-            {{ errorMessage(auth.trashQueryErrorKind.value || auth.filterErrorKind.value) }}
-          </q-banner>
-        </q-card-section>
-        <q-card-section v-else-if="auth.filterCreated.value" class="q-pt-none">
-          <q-banner class="bg-green-1 text-green-9" rounded dense>
-            Фільтр створено — нові такі листи йтимуть у кошик.
-          </q-banner>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn v-close-popup flat no-caps label="Закрити" />
-          <q-btn
-            @click="auth.createFilter({ from: patternFrom, subject: patternSubject })"
-            flat
-            no-caps
-            color="primary"
-            icon="sym_o_filter_alt"
-            label="Створити фільтр"
-            :disable="!patternQuery"
-            :loading="auth.isCreatingFilter.value" />
-          <q-btn
-            @click="trashByQueryAndClose"
-            flat
-            no-caps
-            color="negative"
-            icon="sym_o_delete_sweep"
-            label="Видалити всі такі"
-            :disable="!deleteQuery"
-            :loading="auth.isTrashingQuery.value" />
-        </q-card-actions>
       </q-card>
     </q-dialog>
 
