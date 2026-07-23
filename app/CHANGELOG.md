@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.2] - 2026-07-23
+
+### Fixed
+
+- cargo fmt у gmail/message.rs (CI lint-rust debt)
+
 ## [0.11.1] - 2026-07-22
 
 ### Fixed

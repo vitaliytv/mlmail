@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.3] - 2026-07-23
+
+### Fixed
+
+- Замінено gray-matter на @11ty/gray-matter (e18e-рекомендований форк, CI lint-js debt)
+
 Усі помітні зміни цього пакета документуються тут.
 
 Формат — [Keep a Changelog](https://keepachangelog.com/uk/1.1.0/), нумерація — [SemVer](https://semver.org/lang/uk/).
