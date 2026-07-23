@@ -1,4 +1,4 @@
-import matter from 'gray-matter'
+import matter from '@11ty/gray-matter'
 import { readFile } from 'node:fs/promises'
 import { join, basename } from 'node:path'
 import { glob } from 'tinyglobby'
