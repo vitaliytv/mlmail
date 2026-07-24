@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.4] - 2026-07-24
+
+### Fixed
+
+- Усунено desync bun.lock/package.json, через який build-desktop падав на `bun install --frozen-lockfile` і DMG для Apple Silicon не потрапляв у реліз v0.11.3
+
 ## [0.11.3] - 2026-07-23
 
 ### Changed
