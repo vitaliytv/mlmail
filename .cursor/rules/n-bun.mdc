@@ -35,6 +35,11 @@ Gate порівнює кожен leaf-ключ у кожній секції ша
 - секція відсутня або не є обʼєктом (`bunfig.toml: відсутня секція [install]`)
 - leaf-ключ має інше значення (`bunfig.toml: у секції [install] має бути linker = "hoisted"`)
 
+## Навіщо саме `linker = "hoisted"`
+
+Канонічна лінковка для кореневого `bunfig.toml` — **hoisted**: пласке `node_modules`,
+сумісне з інструментами, які не розуміють ізольований (isolated) layout Bun.
+
 ## Структура lockfile та менеджер пакетів
 
 Проект використовує **тільки Bun** для керування залежностями та запуску скриптів.
@@ -96,6 +101,20 @@ FROM oven/bun:alpine AS build-env
 
 Якщо в репозиторії action збережено під **`./npm/github-actions/setup-bun-deps`**, у `uses:` вкажи цей шлях замість `.github/actions/…` (**ga.mdc**).
 
+## Лінт через n-rules, не package.json-скрипти
+
+Лінт запускається через CLI **`n-rules`** (локально) / **`npx @7n/rules`** (без локальної інсталяції),
+**не** через `package.json`-скрипти:
+
+- **`npx @7n/rules lint --full`** — весь репо (CI-режим);
+- **`npx @7n/rules lint`** — дельта vs origin (лише змінені файли, типовий задачний прогін);
+- **`n-rules lint <rule…>`** — конкретні правила, напр. **`n-rules lint ga`**.
+
+У кореневому `package.json` **не повинно бути** `lint`/`lint-*` скриптів — єдина точка лінту — CLI
+`n-rules` (пакет `@7n/rules`). Цей запис механічно перевіряється Rego-gate'ом
+[`bun.package_json`](../package_json/package_json.mdc) (deny на `scripts.lint` / `scripts.lint-*`) —
+тут лишається лише пояснення *чому* так (єдина точка входу для лінту), без дублювання самого чеку.
+
 ## Rego-gate: заборонені поля та devDependencies у кореневому package.json
 
 Rego-пакет: `bun.package_json`
@@ -107,6 +126,8 @@ Rego-пакет: `bun.package_json`
 Gate виносить два класи deny:
 
 1. **Заборонені top-level поля** — будь-яке поле з `package.json.deny.json` присутнє у файлі (навіть із порожнім значенням `{}`).
-2. **devDependencies не з білого списку** — дозволені лише `@nitra/*` та root-only тестові peer/tools (`vitest`, `@vitest/coverage-v8`, `@stryker-mutator/vitest-runner`, `@playwright/test`). Будь-який інший пакет → deny. CLI-тули, які `n-cursor lint` спавнить через `bunx` (oxlint, jscpd, v8r, github-actionlint тощо), у root не пінуються — вони приїжджають як `dependencies` пакета `@nitra/cursor` (npm-module.mdc).
+2. **devDependencies не з білого списку** — дозволені лише `@nitra/*`/`@7n/*` та root-only тестові peer/tools (`vitest`, `@vitest/coverage-v8`, `@vitest/browser`, `@vitest/browser-playwright`, `@stryker-mutator/vitest-runner`, `@stryker-mutator/core`, `@playwright/test`, `playwright`, `@storybook/addon-vitest`, `@7n/test`). Будь-який інший пакет → deny. CLI-тули, які `n-rules lint` спавнить через `bunx` (oxlint, jscpd, v8r, github-actionlint тощо), у root не пінуються — вони приїжджають як `dependencies` пакета `@7n/rules` (npm-module.mdc).
+
+`@vitest/browser`/`@vitest/browser-playwright`/`playwright`/`@storybook/addon-vitest` — додані для named vitest project "storybook" (канон Storybook, кластер 5: browser-mode, лише chromium) — той самий root vitest.config, що й `unit`-проект; `@storybook/addon-vitest` постачає `storybookTest`-плагін для цього vitest-конфіга (канонічний template правила `storybook`). `@vitest/browser-playwright` — окремий npm-пакет: vitest@^4 прибрав рядкове API browser-провайдера (`provider: 'playwright'`), потрібна factory `import { playwright } from '@vitest/browser-playwright'` → `provider: playwright()` (звірено з реальним `bun.lock` пілотного консюмера — усі три `@vitest/*`/`playwright`-пакети встановлені поруч). **Межа з `npm-module.mdc`**: Storybook-специфічні identity-пакети (`storybook`, `@storybook/vue3-vite`, `@storybook/vue3`, `msw`, `msw-storybook-addon`) у цей allowlist **не** додаються — вони живуть у `npm/package.json` консюмер-пакета (канон Storybook, кластер 7 Governance), бо `isStorybookRoot()` у `@7n/test` детектує Storybook-скоуп саме за тим файлом, не кореневим. `@storybook/addon-vitest` — виняток із цієї межі: він test-tooling (vitest-плагін), а не identity-маркер, тож root, як і решта vitest-peer'ів.
 
 Перевірки, що потребують FS або cross-file контексту (наприклад наявність `yarn.lock`), лишаються у JS-шарі.

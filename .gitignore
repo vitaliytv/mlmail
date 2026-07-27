@@ -62,3 +62,5 @@ reports/stryker/incremental.json
 
 # @nitra/cursor — локальні git-worktree, не коміти
 .worktrees/
+# @7n/rules (adr) — локальні артефакти Stop-hook, не коміти
+.claude/scheduled_tasks.lock

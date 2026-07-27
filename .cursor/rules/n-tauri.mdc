@@ -2,7 +2,7 @@
 description: Tauri
 globs: "**/src-tauri/**,**/tauri.conf.json"
 alwaysApply: false
-version: '1.8'
+version: '1.9'
 ---
 
 Правило встановлює канонічні вимоги для Tauri-проєктів: виявлення маркерів у монорепо, VS Code-розширення, налаштування mutation-testing для platform bridge, компіляційну ізоляцію agent/LLM-логіки від app-shell, реалізацію Tool Surface поверх Tauri+Rust, реліз-flow через change-файли (тег → DMG/updater-артефакти), автооновлення через спільний `useUpdater()` з `@7n/tauri-components` та верифікацію застосунку LLM-агентом через `tauri-plugin-mcp-bridge`.
@@ -142,13 +142,25 @@ rebuild (лінковка, bundling, іноді webview) замість секу
 
 ```
 my-tauri-app/
-├── src-tauri/           ← app-shell: Tauri runtime, window/AppHandle, НЕ містить LLM-залежностей
-│   └── Cargo.toml       ← [workspace] members = [".", "../agent-core"]
-└── agent-core/          ← agent/LLM-логіка: prompt building, tool dispatch, provider abstraction
-    ├── Cargo.toml       ← без залежності на tauri
+├── Cargo.toml            ← workspace root (virtual, без [package]): [workspace] members = ["src-tauri", "agent-core"]
+├── src-tauri/            ← app-shell: Tauri runtime, window/AppHandle, НЕ містить LLM-залежностей
+│   └── Cargo.toml        ← [package], без [workspace] — сам по собі НЕ workspace root
+└── agent-core/           ← agent/LLM-логіка: prompt building, tool dispatch, provider abstraction
+    ├── Cargo.toml        ← без залежності на tauri
     └── tests/
         └── fake_provider.rs   ← FakeLlmProvider / MockLlmClient — без мережі
 ```
+
+`[workspace] members = [".", "../agent-core"]` **всередині** `src-tauri/Cargo.toml` — невалідний
+Cargo layout: `../agent-core` лежить поза деревом workspace root (`src-tauri/`), і Cargo відмовляє
+з `workspace member '.../agent-core/Cargo.toml' is not hierarchically below the workspace root`.
+Тому `[workspace]` живе у product-root `Cargo.toml`, що лежить НАД обома крейтами (канон
+`rust/workspace_root.mdc` — один кореневий Cargo workspace на репозиторій).
+
+**Наслідок:** `target/` компілюється у корінь цього workspace (`my-tauri-app/target/`), а не в
+`src-tauri/target/` — це впливає на очікуваний запис у `.gitignore` (`tauri/gitignore_target`) і на
+шлях у `workspaces:`-полі `Swatinem/rust-cache` GitHub Action (action бере шлях буквально як
+`<path>/target`, тож там має стояти корінь цього workspace, не `src-tauri`).
 
 Концерн `tauri/core_test_isolation.mjs` (read-only detector, `structural`, авто-фікс ризикований)
 для кожного `src-tauri/Cargo.toml` перевіряє:
@@ -156,9 +168,11 @@ my-tauri-app/
 1. **LLM-залежність не в app-shell.** Якщо сам `src-tauri/Cargo.toml` має залежність на відомий
    LLM SDK (напр. `async-openai`, `anthropic`, `ollama-rs`, `rig-core`, ...) — фейл: винеси
    agent-логіку в окремий crate.
-2. **Окремий crate не тягне tauri.** Якщо у `[workspace] members` є crate з LLM-залежністю, і
-   цей crate сам залежить від `tauri`/`tauri-*` — фейл: `cargo test -p` цього крейту все одно
-   перезбирає Tauri runtime.
+2. **Окремий crate не тягне tauri.** `[workspace] members` резолвиться або з самого
+   `src-tauri/Cargo.toml` (standalone-патерн), або — коли там `[workspace]` немає — з
+   найближчого предка-workspace root (product-root `Cargo.toml` над `src-tauri/`). Якщо серед
+   members є crate з LLM-залежністю, і цей crate сам залежить від `tauri`/`tauri-*` — фейл:
+   `cargo test -p` цього крейту все одно перезбирає Tauri runtime.
 3. **Є fake-провайдер.** Якщо такий crate є і не залежить від tauri, але ніде в його дереві
    (`**/*.rs`) немає маркера `Fake*Llm`/`Mock*Provider`/`Stub*Client` — фейл: інтеграційні тести
    на prompt/tool ітерації або мовчки пропускають LLM-логіку, або б'ють по реальному провайдеру.
@@ -168,6 +182,50 @@ LLM-залежністю — Tauri-проєкти без LLM/agent-логіки 
 
 **Не автофіксується:** виділення crate, перенесення коду і написання fake-провайдера потребують
 людського розсуду — детектор лише репортує з посиланням на це правило.
+
+## `.gitignore`: ignore build-артефактів фактичного Cargo workspace root
+
+Кожен `<ws>/src-tauri/` (Rust-крейт Tauri) компілюється в `target/` свого фактичного
+Cargo workspace root — а не завжди в `<ws>/src-tauri/target/`. Якщо над `src-tauri/` є
+предок-workspace (канон `rust/workspace_root.mdc` — один кореневий Cargo workspace на
+репозиторій, наприклад `<ws>/Cargo.toml` чи кореневий `Cargo.toml` монорепо), Cargo кладе
+`target/` саме туди. Корінний `.gitignore` монорепо повинен містити точний ignore-запис
+для кожного такого крейту, обчислений від цього фактичного workspace root:
+
+```gitignore
+# Tauri — Rust build artifacts (tauri.mdc)
+<workspace-root>/target/
+```
+
+де `<workspace-root>` — найближчий предок `src-tauri/` з `[workspace]`, чиї `members`
+покривають цей крейт (якщо це корінь монорепо — запис голий `target/`); якщо предка-workspace
+немає — крейт сам собі workspace root, і запис лишається `<ws>/src-tauri/target/`.
+
+### Чому точний шлях, а не голий `target/`
+
+Реальний прецедент: у `nitra/task` коміт `3cb0df3` помилково "виправив" коректний запис
+`owner/target/` назад на `owner/src-tauri/target/` — автор вважав це друкарською помилкою,
+не врахувавши, що `owner/Cargo.toml` є Cargo workspace root для `owner/src-tauri` і тому
+`target/` справді компілюється в `owner/target/`, а не в `owner/src-tauri/target/`. Коміт
+`ac3451e` це скасував. Тобто `<ws>/src-tauri/target/` — не універсальний дефолт, а лише
+окремий випадок (crate без workspace root над собою); перевірка мусить рахувати очікуваний
+шлях від реального workspace root, а не від фіксованого суфікса.
+
+Тому перевірка звіряє **точний рядок** обчисленого запису для кожного знайденого `src-tauri/`,
+а не факт наявності підрядка `target/` десь у файлі — голий `target/` чи запис не того рівня
+не закривають violation. Сторонній/мертвий каталог `target/` на диску (за старим, вже
+невірним шляхом) також не задовольняє перевірку — вона звіряє лише вміст `.gitignore`.
+
+### Область дії
+
+- Обхід усіх `<ws>/src-tauri/` — спільний з `tauri/cargo_mutants_config` (`findSrcTauriDirs`, без дублювання обходу монорепо).
+- Очікуваний шлях — `findAncestorWorkspaceRoot` (`scripts/utils/cargo-workspace.mjs`, спільно з `rust/workspace_root`).
+- Ціль фіксу — **один** корінний `.gitignore` монорепо (не по workspace).
+- Детектор лише **додає** відсутнє: сторонні/застарілі ignore-записи не видаляються — вони можуть бути навмисними чи потребувати ручного review.
+
+### Автофікс (T0)
+
+Дописує відсутні записи в кінець секції `# Tauri — Rust build artifacts (tauri.mdc)`: якщо секція вже є — поруч із наявними entries (мінімальний diff, без переписування файла); якщо нема — створює новий блок у кінці `.gitignore`. Ідемпотентно: повторний прогін на вже виправленому файлі нічого не змінює.
 
 ## Системні залежності Tauri (Linux) у `lint-rust.yml`
 
@@ -190,9 +248,24 @@ Clippy (`cargo clippy --all-targets --all-features`) компілює весь �
 
 ## Реліз-flow: change-файли → тег → DMG/updater-артефакти
 
-Версія Tauri-застосунку — **єдина**, керується change-файлами за конвенцією `n-changelog.mdc`. Ручні v-теги і ручний bump `version` у `tauri.conf.json`/`package.json` **заборонені**: у CI версію проставляє `npx @nitra/cursor release`, а release-build синхронізує її з тегу (нижче).
+Версія Tauri-застосунку — **єдина**, керується change-файлами за конвенцією `n-changelog.mdc`. Ручні v-теги і ручний bump `version` у `tauri.conf.json`/`package.json` **заборонені**: у CI версію проставляє `npx @7n/rules release`, а release-build синхронізує її з тегу (нижче).
 
 Канон складається з двох workflow-файлів і відповідного `tauri.conf.json`-конфігу; референс — `.github/workflows/{changelog-release,release}.yml` та `src-tauri/tauri.conf.json` чотирьох production Tauri-репо, де цей flow вже впроваджено.
+
+### Change-файл — крок вирішення задачі, а не post-hoc lint-фікс
+
+Change-файл (`<app>/.changes/<ts>.md`) створюється **одразу під час вирішення задачі**, що
+чіпає код Tauri-workspace — той самий момент, що lint і doc-files, а не окремий крок після
+сигналу `changeset-missing` від delta-lint concern `changelog/presence`. Без нього мердж у
+`main` не тригерить `changelog-release.yml` (тригер — `paths: [app/.changes/**]`), і зміна
+осідає в репозиторії без релізу, доки хтось не помітить і не додасть change-файл у коміт окремо.
+
+Команда: `npx @7n/n ch --bump <major|minor|patch> --section <Added|Changed|Fixed|Removed> --message "<опис>"`
+(інтерактивно — `npx @7n/n ch`). Повна модель (база порівняння, формат CHANGELOG,
+post-release-інваріант) — у `n-changelog.mdc` і `release/main.mdc`.
+
+`changelog/presence` лишається gate-запобіжником на випадок, якщо крок пропущено (delta-lint
+у CI/hook), а не первинним механізмом створення change-файлу.
 
 ### `changelog-release.yml` — бамп версії з change-файлів
 
@@ -222,16 +295,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-      - run: npx @nitra/cursor release
+      - run: npx @7n/rules release
       # якщо HEAD став release:* — прочитати нову версію з app/package.json,
       # тегнути app@$VER і v$VER, запушити, тоді dispatch release.yml
 ```
 
 - `paths: [app/.changes/**]` (шлях підставляється під реальний workspace, де лежить `src-tauri`) — тригер лише на change-файли, не на будь-який push у `main`. **У `<app>/.changes/` має жити tracked `.gitkeep`**: реліз споживає всі change-файли, і без нього glob перестає матчити tracked-файли — ga/workflows (`unmatched-paths-glob`) червоніє.
-- **Push-auth обовʼязковий**: `persist-credentials: false` — ga-канон (і дефолт `checkout@v6`), тож без явного `git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@…"` push із `n-cursor release` мовчки відхиляється, а тихий git-раннер маскує причину («git push не вдався після 5 спроб (non-fast-forward?)»).
+- **Push-auth обовʼязковий**: `persist-credentials: false` — ga-канон (і дефолт `checkout@v6`), тож без явного `git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@…"` push із `n-rules release` мовчки відхиляється, а тихий git-раннер маскує причину («git push не вдався після 5 спроб (non-fast-forward?)»).
 - `if: "!startsWith(github.event.head_commit.message, 'release:')"` — страховка від циклу: коміт `release:*` теж матче `paths` (він видаляє change-файли), тому job має пропускати сам себе.
 - `permissions: {contents: write, actions: write}` — `actions: write` потрібен для останнього кроку.
-- Після успішного `npx @nitra/cursor release` (детектується за `git log -1 --pretty=%s` що починається з `release:`) — тегнути `app@$VER` і `v$VER`, запушити обидва.
+- Після успішного `npx @7n/rules release` (детектується за `git log -1 --pretty=%s` що починається з `release:`) — тегнути `app@$VER` і `v$VER`, запушити обидва.
 - **Останній крок — явний `gh workflow run release.yml --ref "v$VER"`.** Тег пушиться токеном `GITHUB_TOKEN`, а GitHub не тригерить `on.push.tags` workflow-и для push-подій від `GITHUB_TOKEN` — тому без явного dispatch `release.yml` ніколи не запуститься.
 
 Детальна модель change-файлів (база порівняння, формат CHANGELOG, post-release-інваріант) — у `n-changelog.mdc`; тут лише інтеграція з Tauri release-циклом.
@@ -256,8 +329,10 @@ jobs:
       contents: write
       id-token: write # OIDC для Infisical
     steps:
-      # ... checkout, rust-toolchain, потім (rust.mdc вимагає кеш, zizmor фейлить
+      # ... checkout, потім (rust.mdc вимагає кеш, zizmor фейлить
       # cache-poisoning у тег-тригереному release — прийнятий ризик приглушуємо inline):
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: aarch64-apple-darwin }
       - uses: Swatinem/rust-cache@v2 # zizmor: ignore[cache-poisoning]
       - name: Sync app version from tag
         run: |
@@ -268,11 +343,12 @@ jobs:
       - uses: Infisical/secrets-action@v1
         with: { secret-path: '/updater' }
       - uses: tauri-apps/tauri-action@v0
-        with: { projectPath: app }
+        with: { projectPath: app, args: '--target aarch64-apple-darwin' }
 ```
 
-- **«Sync app version from tag» має йти перед кроком `tauri-apps/tauri-action`** — тег `vX.Y.Z` є єдиним джерелом версії для build-артефактів; `tauri.conf.json#version` у робочому дереві не редагується вручну (він там лишається тим, що востаннє поставив `n-cursor release`, і синхронізується цим кроком лише в CI, не в git).
+- **«Sync app version from tag» має йти перед кроком `tauri-apps/tauri-action`** — тег `vX.Y.Z` є єдиним джерелом версії для build-артефактів; `tauri.conf.json#version` у робочому дереві не редагується вручну (він там лишається тим, що востаннє поставив `n-rules release`, і синхронізується цим кроком лише в CI, не в git).
 - Секрети підпису — з Infisical: Apple-сертифікати (`secret-path: /apple`) і `TAURI_SIGNING_PRIVATE_KEY` (`secret-path: /updater`) — обидва потрібні `tauri-apps/tauri-action`, щоб зібрати підписаний DMG з updater-артефактами.
+- **macOS-таргет — завжди `aarch64-apple-darwin`, ніколи `universal-apple-darwin`.** Без умовного галуження за кількістю `[[bin]]` у крейті: lipo-merge крок `tauri-action` зливає між арками лише головний GUI-бінарник, а будь-який додатковий `[[bin]]`-таргет лишається поза `universal-apple-darwin`-директорією — бандлер падає на `Failed to copy binary from ".../universal-apple-darwin/release/<bin>": ... does not exist`. Синхронно звузити `with.targets` кроку `dtolnay/rust-toolchain@…` до `aarch64-apple-darwin` (без `x86_64-apple-darwin`).
 
 ### `tauri.conf.json` — updater-артефакти й endpoint
 
@@ -292,6 +368,36 @@ jobs:
 
 - `bundle.createUpdaterArtifacts: true` — без цього `tauri-action` не генерує `.sig`/`latest.json`, і клієнтський `check()` (updater.mdc) ніколи не знаходить оновлення.
 - `plugins.updater.endpoints` вказує на GitHub Releases `latest.json` того самого репозиторію, куди `release.yml` публікує реліз.
+
+## Tool Surface у Tauri (реалізація ядра `tool-surface`)
+
+Це per-stack реалізація правила **`tool-surface`** (`n-tool-surface`) для Tauri+Rust. Контракт (каталог → `dispatch` → UI/оркестратор/LLM, інваріант паритету, конверт) — у тому правилі; тут — як він лягає на Tauri.
+
+**Реальна робота живе в Rust, JS-каталог — тонкий call surface.** Handler тула не містить логіки сам — він **делегує** в native. Одна реалізація в Rust-крейті backs два споживачі:
+
+- **Бінарник** (`src-tauri` як CLI, або окремий crate-bin) — headless-вхід для оркестратора;
+- **Tauri-команда** (`#[tauri::command]`) — той самий крейт-fn, обгорнутий для UI.
+
+**Два транспорти одного каталогу** (`src/tool/transports`):
+
+- **UI (in-app):** `invoke(tool.tauri, input)` → Tauri-команда → крейт. Ключі `input` мапляться 1:1 на аргументи команди (camelCase, напр. `tasksDir`); поля вкладених struct лишаються snake_case (Tauri конвертить лише імена top-level аргументів).
+- **Оркестратор (headless):** `bin/<app>.mjs` спавнить зібраний бінарник (`<bin> <verb> …` per-verb, або уніфікований `<bin> exec '<json>'`), парсить JSON stdout.
+
+**Конверт:** Tauri-команда повертає `Result<T, String>`; адаптер мапить у `{ ok, output }` / `{ ok:false, error }`. Бінарник друкує конверт у stdout, exit ≠ 0 на `ok:false`.
+
+**Єдине джерело схем:** надавай перевагу `schemars`-derive на Rust-param-структурах → бінарник віддає маніфест (`<bin> schema`); або тримай схему в JS-каталозі й валідуй до `invoke`. **Не дублюй** контракт між Rust і JS — лише деривація + спільні тест-вектори.
+
+**LLM-раннер in-app:** chat-loop ходить до OpenAI-сумісного ендпоінта через `tauri-plugin-http` fetch (бо webview-fetch обмежений CSP/capability), а тули виконує через спільний `dispatch` (той самий, що й UI).
+
+### Що перевіряє автоматичний lint (`main.mjs`)
+
+Для кожного Tauri-workspace (маркер — `tauri.conf.json` чи `src-tauri/tauri.conf.json`) детектор збирає slugs плагінів, яких торкається JS/TS/Vue-код у `src/**`: через wrapper-import `@tauri-apps/plugin-<slug>` або прямий `invoke('plugin:<slug>|<command>')`. Для кожного знайденого `<slug>` перевіряються три незалежні умови — будь-яка провалена дає окрему violation:
+
+1. **`tool-surface-plugin-dep-missing`** — `src-tauri/Cargo.toml` не оголошує crate `tauri-plugin-<slug>` у жодній секції `[dependencies]`/`[target.*.dependencies]`.
+2. **`tool-surface-plugin-not-registered`** — `src-tauri/src/lib.rs` ніде не згадує rust-ідентифікатор плагіна (`tauri-plugin-dialog` → `tauri_plugin_dialog`, дефіси заміняються на підкреслення), тобто `builder` його не реєструє.
+3. **`tool-surface-plugin-capability-missing`** — жоден файл `src-tauri/capabilities/*.json` не дає permission `<slug>` чи `<slug>:*`.
+
+Кожна з трьох дір — тихий рантайм-фейл без компіляційної помилки: (1) код не збереться на CI іншого профілю або впаде при оновленні залежностей, (2) `invoke` впаде з "plugin not found", (3) `invoke` впаде permission-denied, видимий лише в `console.error`. Перевірено вживу на проєкті myllm.
 
 ## Виявлення проєкту Tauri та VS Code-розширення
 
