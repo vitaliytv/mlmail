@@ -1,0 +1,25 @@
+.n-minify-image.tsv
+  s_f967ff8e9fb61e::t_11d99ef160524f 3-22
+.github/workflows/lint-ga.yml
+  s_f967ff8e9fb61e::t_66c6d353c9daef 15-17
+package.json
+  s_f967ff8e9fb61e::t_1d185ad791091d 26-28
+bun.lock
+  s_f967ff8e9fb61e::t_64908959cac61a 8-10,62,74,76,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "5a0651f12d1fb5ab9d4e573ad576c1e33031b5a2",
+  "prompts": {},
+  "sessions": {
+    "s_f967ff8e9fb61e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a57b882a-5c4f-43f6-87e6-0f38bb7fea80",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
