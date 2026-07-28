@@ -1,0 +1,53 @@
+app/src-tauri/gen/android/app/src/main/res/mipmap-mdpi/.n-minify-image.tsv
+  s_f967ff8e9fb61e::t_ed78f260efc099 1-4
+app/src/services/auth-store.js
+  s_f967ff8e9fb61e::t_ffba45706956f2 443
+  s_f967ff8e9fb61e::t_eb2aad7543448f 117-118
+  s_f967ff8e9fb61e::t_200b6664896387 134-139
+  s_f967ff8e9fb61e::t_9daef954c4d8d9 410
+  s_f967ff8e9fb61e::t_b118a90551afb2 472
+  s_f967ff8e9fb61e::t_d47d5722ca425e 499
+  s_f967ff8e9fb61e::t_c554ee1e886757 46
+  s_f967ff8e9fb61e::t_93227ee94ca64b 133
+app/src/services/newsletter-template.js
+  s_f967ff8e9fb61e::t_9b61eda02b9aa5 12-13
+app/src-tauri/gen/android/app/src/main/res/mipmap-hdpi/.n-minify-image.tsv
+  s_f967ff8e9fb61e::t_2a0c699f56ddb6 1-4
+package.json
+  s_f967ff8e9fb61e::t_58fbbaa5154c05 22-23
+app/src/views/Login.vue
+  s_f967ff8e9fb61e::t_f8ad4439922ac3 111-112,114-118
+  s_f967ff8e9fb61e::t_0bb682fc014eb0 264-265,267
+  s_f967ff8e9fb61e::t_52445c5e58ddcc 113
+  s_f967ff8e9fb61e::t_a7f39677a5685f 266
+app/src-tauri/gen/android/app/src/main/res/mipmap-xhdpi/.n-minify-image.tsv
+  s_f967ff8e9fb61e::t_2a0c699f56ddb6 1-4
+app/src-tauri/gen/android/app/src/main/res/mipmap-xxhdpi/.n-minify-image.tsv
+  s_f967ff8e9fb61e::t_2a0c699f56ddb6 1-4
+app/src/composables/use-task-scan.js
+  s_f967ff8e9fb61e::t_60643ef39741e0 34
+app/src-tauri/gen/android/app/src/main/res/mipmap-xxxhdpi/.n-minify-image.tsv
+  s_f967ff8e9fb61e::t_2a0c699f56ddb6 1-4
+.trufflehog-exclude
+  s_f967ff8e9fb61e::t_cde44541c5c363 5
+.cspell.json
+  s_f967ff8e9fb61e::t_6423e7994e4074 45,298
+.gitignore
+  s_f967ff8e9fb61e::t_ae53e353bebd36 67-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2fd5bc4e821ff458b3874f49bf9bdb5e93e1361d",
+  "prompts": {},
+  "sessions": {
+    "s_f967ff8e9fb61e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a57b882a-5c4f-43f6-87e6-0f38bb7fea80",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "vitaliytv <v@nitra.ai>"
+    }
+  }
+}
