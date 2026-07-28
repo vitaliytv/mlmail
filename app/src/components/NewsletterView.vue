@@ -1,3 +1,259 @@
+<template>
+  <div class="column fit">
+    <!-- Header row -->
+    <div class="row items-center q-px-md q-pt-sm q-pb-xs">
+      <div class="text-overline text-grey-7">
+        {{
+          activeTemplate
+            ? activeTemplate.name
+            : rightMode === 'translate'
+              ? 'Переклад українською'
+              : 'Резюме українською'
+        }}
+      </div>
+      <q-space />
+      <q-spinner v-if="isRendering || isSummarizing || isTranslating" color="primary" size="18px" class="q-mr-xs" />
+      <q-btn-toggle
+        v-if="!activeTemplate"
+        v-model="rightMode"
+        @update:model-value="onModeChange"
+        :options="[
+          { value: 'summary', icon: 'sym_o_summarize' },
+          { value: 'translate', icon: 'sym_o_translate' }
+        ]"
+        dense
+        flat
+        no-caps
+        rounded
+        color="grey-6"
+        toggle-color="primary"
+        size="sm"
+        class="q-mr-xs" />
+      <q-btn
+        v-if="activeTemplate"
+        @click="openEditTemplate"
+        flat
+        dense
+        round
+        icon="sym_o_edit"
+        size="sm"
+        color="grey-6"
+        title="Редагувати шаблон" />
+      <q-btn
+        v-if="activeTemplate"
+        @click="onDeleteTemplate"
+        flat
+        dense
+        round
+        icon="sym_o_delete"
+        size="sm"
+        color="grey-6"
+        title="Видалити шаблон" />
+      <q-btn
+        v-if="!activeTemplate"
+        @click="openNewTemplate"
+        flat
+        dense
+        round
+        icon="sym_o_add"
+        size="sm"
+        color="grey-6"
+        title="Створити шаблон для цього відправника" />
+    </div>
+    <q-separator inset />
+
+    <!-- Content -->
+    <div class="col overflow-auto q-px-md q-pb-md">
+      <!-- === Template mode === -->
+      <template v-if="activeTemplate">
+        <template v-if="isRendering">
+          <div v-for="i in 3" :key="i" class="q-pt-md">
+            <q-skeleton type="text" width="60%" />
+            <q-skeleton type="text" />
+            <q-skeleton type="text" width="80%" />
+          </div>
+        </template>
+        <q-banner v-else-if="renderFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
+          Не вдалося отримати статті. Перевірте, чи запущено локальну модель (omlx).
+        </q-banner>
+        <div v-else-if="articles.length === 0" class="text-grey-6 q-pt-md text-body2">
+          Шаблон не знайшов статей у цьому листі.
+        </div>
+        <div v-else class="q-gutter-y-sm q-pt-md">
+          <div v-for="(article, i) in articles" :key="i" class="article-item">
+            <a
+              v-if="article.url"
+              :href="article.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="article-title text-primary">
+              {{ article.title }}
+            </a>
+            <div v-else class="article-title text-dark">{{ article.title }}</div>
+            <div v-if="article.description" class="article-desc text-grey-8">
+              {{ article.description }}
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- === Summary / Translate fallback mode === -->
+      <template v-else>
+        <!-- Summary -->
+        <template v-if="rightMode === 'summary'">
+          <template v-if="isSummarizing">
+            <q-skeleton type="text" class="q-mt-md" />
+            <q-skeleton type="text" />
+            <q-skeleton type="text" width="70%" />
+          </template>
+          <q-banner v-else-if="summaryFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
+            Не вдалося отримати резюме. Перевірте, чи запущено локальну модель (omlx).
+          </q-banner>
+          <div v-else-if="summaryText" class="summary-body q-pt-md">{{ summaryText }}</div>
+          <div v-else class="text-grey-6 q-pt-md">Порожній лист — нема що резюмувати.</div>
+        </template>
+        <!-- Translate -->
+        <template v-else>
+          <template v-if="isTranslating">
+            <q-linear-progress
+              v-if="summary.translateProgress.value.total"
+              :value="summary.translateProgress.value.done / summary.translateProgress.value.total"
+              size="4px"
+              color="primary"
+              class="q-mt-md" />
+            <div v-if="summary.translateProgress.value.total" class="text-caption text-grey-6 q-mt-xs">
+              Переклад: {{ summary.translateProgress.value.done }}/{{ summary.translateProgress.value.total }}
+            </div>
+            <q-skeleton type="text" class="q-mt-md" />
+            <q-skeleton type="text" />
+            <q-skeleton type="text" width="70%" />
+          </template>
+          <q-banner v-else-if="translateFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
+            Не вдалося перекласти. Перевірте, чи запущено локальну модель (omlx).
+          </q-banner>
+          <iframe
+            v-else-if="translateHtml"
+            :srcdoc="translateHtml"
+            sandbox="allow-scripts"
+            class="translate-iframe"
+            referrerpolicy="no-referrer" />
+          <div v-else class="text-grey-6 q-pt-md">Порожній лист — нема що перекладати.</div>
+        </template>
+      </template>
+    </div>
+
+    <!-- Ask panel -->
+    <div class="ask-panel q-px-md q-pb-sm q-pt-xs">
+      <div v-if="askAnswer" class="ask-answer q-mb-sm text-body2">{{ askAnswer }}</div>
+      <q-banner v-if="askFailed" class="bg-orange-1 text-orange-9 q-mb-sm" rounded dense>
+        Не вдалося отримати відповідь. Перевірте локальну модель (omlx).
+      </q-banner>
+      <q-input
+        v-model="askQuestion"
+        @keydown.enter.prevent="submitAsk"
+        placeholder="Запитати про цей лист…"
+        dense
+        outlined
+        :loading="asker.isAsking.value">
+        <template #append>
+          <q-btn
+            @click="submitAsk"
+            flat
+            dense
+            round
+            icon="sym_o_send"
+            color="primary"
+            :disable="!askQuestion.trim() || asker.isAsking.value" />
+        </template>
+      </q-input>
+    </div>
+
+    <!-- Rule-from-this-email panel -->
+    <div class="rule-panel q-px-md q-pb-sm q-pt-sm">
+      <div class="text-overline text-grey-7 q-mb-xs">Правило для схожих листів</div>
+      <div class="q-gutter-sm">
+        <q-input v-model="patternFrom" label="Від (email)" dense outlined clearable clear-icon="sym_o_close" />
+        <q-input
+          v-model="patternSubject"
+          label="Тема містить"
+          dense
+          outlined
+          :clearable="!isSuggesting"
+          clear-icon="sym_o_close">
+          <template v-if="isSuggesting" #append>
+            <q-icon @click="cancelSuggestion" name="sym_o_close" class="cursor-pointer" />
+          </template>
+        </q-input>
+        <div class="text-caption text-grey-7">
+          Фільтр: <code>{{ patternQuery || '—' }}</code
+          ><br />
+          Видалення (лише за відправником): <code>{{ deleteQuery || '—' }}</code>
+        </div>
+      </div>
+
+      <q-banner
+        v-if="auth.trashQueryErrorKind.value || auth.filterErrorKind.value"
+        class="bg-red-1 text-red-9 q-mt-sm"
+        rounded
+        dense>
+        {{ errorMessage(auth.trashQueryErrorKind.value || auth.filterErrorKind.value) }}
+      </q-banner>
+      <q-banner v-else-if="auth.filterCreated.value" class="bg-green-1 text-green-9 q-mt-sm" rounded dense>
+        Фільтр створено — нові такі листи йтимуть у кошик.
+      </q-banner>
+
+      <div class="row justify-end q-gutter-sm q-mt-sm">
+        <q-btn
+          @click="auth.createFilter({ from: patternFrom, subject: patternSubject })"
+          flat
+          no-caps
+          color="primary"
+          icon="sym_o_filter_alt"
+          label="Створити фільтр"
+          :disable="!patternQuery"
+          :loading="auth.isCreatingFilter.value" />
+        <q-btn
+          @click="trashByQueryAndNotify"
+          flat
+          no-caps
+          color="negative"
+          icon="sym_o_delete_sweep"
+          label="Видалити всі такі"
+          :disable="!deleteQuery"
+          :loading="auth.isTrashingQuery.value" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Template editor dialog -->
+  <q-dialog v-model="showEditor">
+    <q-card style="min-width: 420px; max-width: 90vw">
+      <q-card-section class="text-h6">
+        {{ editTemplate.id === activeTemplate?.id ? 'Редагувати шаблон' : 'Новий шаблон' }}
+      </q-card-section>
+      <q-card-section class="q-gutter-md">
+        <TemplateEditorFields
+          v-model="editTemplate"
+          subject-hint="Напр.: скаїтатаju rādījumus"
+          prompt-hint="Що витягти з листа (назви статей, посилання, розділи тощо)" />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn v-close-popup flat no-caps label="Скасувати" />
+        <q-btn
+          @click="onSaveTemplate"
+          flat
+          no-caps
+          color="primary"
+          label="Зберегти"
+          :disable="
+            (!editTemplate.from_pattern && !editTemplate.subject_pattern) ||
+            (editTemplate.type === 'newsletter' && !editTemplate.prompt)
+          " />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+</template>
+
 <script setup>
 import { useQuasar } from 'quasar'
 import { useNewsletterRender } from '../composables/use-newsletter-render.js'
@@ -292,262 +548,6 @@ async function onDeleteTemplate() {
 
 defineExpose({ flagAsTask })
 </script>
-
-<template>
-  <div class="column fit">
-    <!-- Header row -->
-    <div class="row items-center q-px-md q-pt-sm q-pb-xs">
-      <div class="text-overline text-grey-7">
-        {{
-          activeTemplate
-            ? activeTemplate.name
-            : rightMode === 'translate'
-              ? 'Переклад українською'
-              : 'Резюме українською'
-        }}
-      </div>
-      <q-space />
-      <q-spinner v-if="isRendering || isSummarizing || isTranslating" color="primary" size="18px" class="q-mr-xs" />
-      <q-btn-toggle
-        v-if="!activeTemplate"
-        v-model="rightMode"
-        @update:model-value="onModeChange"
-        :options="[
-          { value: 'summary', icon: 'sym_o_summarize' },
-          { value: 'translate', icon: 'sym_o_translate' }
-        ]"
-        dense
-        flat
-        no-caps
-        rounded
-        color="grey-6"
-        toggle-color="primary"
-        size="sm"
-        class="q-mr-xs" />
-      <q-btn
-        v-if="activeTemplate"
-        @click="openEditTemplate"
-        flat
-        dense
-        round
-        icon="sym_o_edit"
-        size="sm"
-        color="grey-6"
-        title="Редагувати шаблон" />
-      <q-btn
-        v-if="activeTemplate"
-        @click="onDeleteTemplate"
-        flat
-        dense
-        round
-        icon="sym_o_delete"
-        size="sm"
-        color="grey-6"
-        title="Видалити шаблон" />
-      <q-btn
-        v-if="!activeTemplate"
-        @click="openNewTemplate"
-        flat
-        dense
-        round
-        icon="sym_o_add"
-        size="sm"
-        color="grey-6"
-        title="Створити шаблон для цього відправника" />
-    </div>
-    <q-separator inset />
-
-    <!-- Content -->
-    <div class="col overflow-auto q-px-md q-pb-md">
-      <!-- === Template mode === -->
-      <template v-if="activeTemplate">
-        <template v-if="isRendering">
-          <div v-for="i in 3" :key="i" class="q-pt-md">
-            <q-skeleton type="text" width="60%" />
-            <q-skeleton type="text" />
-            <q-skeleton type="text" width="80%" />
-          </div>
-        </template>
-        <q-banner v-else-if="renderFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
-          Не вдалося отримати статті. Перевірте, чи запущено локальну модель (omlx).
-        </q-banner>
-        <div v-else-if="articles.length === 0" class="text-grey-6 q-pt-md text-body2">
-          Шаблон не знайшов статей у цьому листі.
-        </div>
-        <div v-else class="q-gutter-y-sm q-pt-md">
-          <div v-for="(article, i) in articles" :key="i" class="article-item">
-            <a
-              v-if="article.url"
-              :href="article.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="article-title text-primary">
-              {{ article.title }}
-            </a>
-            <div v-else class="article-title text-dark">{{ article.title }}</div>
-            <div v-if="article.description" class="article-desc text-grey-8">
-              {{ article.description }}
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- === Summary / Translate fallback mode === -->
-      <template v-else>
-        <!-- Summary -->
-        <template v-if="rightMode === 'summary'">
-          <template v-if="isSummarizing">
-            <q-skeleton type="text" class="q-mt-md" />
-            <q-skeleton type="text" />
-            <q-skeleton type="text" width="70%" />
-          </template>
-          <q-banner v-else-if="summaryFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
-            Не вдалося отримати резюме. Перевірте, чи запущено локальну модель (omlx).
-          </q-banner>
-          <div v-else-if="summaryText" class="summary-body q-pt-md">{{ summaryText }}</div>
-          <div v-else class="text-grey-6 q-pt-md">Порожній лист — нема що резюмувати.</div>
-        </template>
-        <!-- Translate -->
-        <template v-else>
-          <template v-if="isTranslating">
-            <q-linear-progress
-              v-if="summary.translateProgress.value.total"
-              :value="summary.translateProgress.value.done / summary.translateProgress.value.total"
-              size="4px"
-              color="primary"
-              class="q-mt-md" />
-            <div v-if="summary.translateProgress.value.total" class="text-caption text-grey-6 q-mt-xs">
-              Переклад: {{ summary.translateProgress.value.done }}/{{ summary.translateProgress.value.total }}
-            </div>
-            <q-skeleton type="text" class="q-mt-md" />
-            <q-skeleton type="text" />
-            <q-skeleton type="text" width="70%" />
-          </template>
-          <q-banner v-else-if="translateFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
-            Не вдалося перекласти. Перевірте, чи запущено локальну модель (omlx).
-          </q-banner>
-          <iframe
-            v-else-if="translateHtml"
-            :srcdoc="translateHtml"
-            sandbox="allow-scripts"
-            class="translate-iframe"
-            referrerpolicy="no-referrer" />
-          <div v-else class="text-grey-6 q-pt-md">Порожній лист — нема що перекладати.</div>
-        </template>
-      </template>
-    </div>
-
-    <!-- Ask panel -->
-    <div class="ask-panel q-px-md q-pb-sm q-pt-xs">
-      <div v-if="askAnswer" class="ask-answer q-mb-sm text-body2">{{ askAnswer }}</div>
-      <q-banner v-if="askFailed" class="bg-orange-1 text-orange-9 q-mb-sm" rounded dense>
-        Не вдалося отримати відповідь. Перевірте локальну модель (omlx).
-      </q-banner>
-      <q-input
-        v-model="askQuestion"
-        @keydown.enter.prevent="submitAsk"
-        placeholder="Запитати про цей лист…"
-        dense
-        outlined
-        :loading="asker.isAsking.value">
-        <template #append>
-          <q-btn
-            @click="submitAsk"
-            flat
-            dense
-            round
-            icon="sym_o_send"
-            color="primary"
-            :disable="!askQuestion.trim() || asker.isAsking.value" />
-        </template>
-      </q-input>
-    </div>
-
-    <!-- Rule-from-this-email panel -->
-    <div class="rule-panel q-px-md q-pb-sm q-pt-sm">
-      <div class="text-overline text-grey-7 q-mb-xs">Правило для схожих листів</div>
-      <div class="q-gutter-sm">
-        <q-input v-model="patternFrom" label="Від (email)" dense outlined clearable clear-icon="sym_o_close" />
-        <q-input
-          v-model="patternSubject"
-          label="Тема містить"
-          dense
-          outlined
-          :clearable="!isSuggesting"
-          clear-icon="sym_o_close">
-          <template v-if="isSuggesting" #append>
-            <q-icon @click="cancelSuggestion" name="sym_o_close" class="cursor-pointer" />
-          </template>
-        </q-input>
-        <div class="text-caption text-grey-7">
-          Фільтр: <code>{{ patternQuery || '—' }}</code
-          ><br />
-          Видалення (лише за відправником): <code>{{ deleteQuery || '—' }}</code>
-        </div>
-      </div>
-
-      <q-banner
-        v-if="auth.trashQueryErrorKind.value || auth.filterErrorKind.value"
-        class="bg-red-1 text-red-9 q-mt-sm"
-        rounded
-        dense>
-        {{ errorMessage(auth.trashQueryErrorKind.value || auth.filterErrorKind.value) }}
-      </q-banner>
-      <q-banner v-else-if="auth.filterCreated.value" class="bg-green-1 text-green-9 q-mt-sm" rounded dense>
-        Фільтр створено — нові такі листи йтимуть у кошик.
-      </q-banner>
-
-      <div class="row justify-end q-gutter-sm q-mt-sm">
-        <q-btn
-          @click="auth.createFilter({ from: patternFrom, subject: patternSubject })"
-          flat
-          no-caps
-          color="primary"
-          icon="sym_o_filter_alt"
-          label="Створити фільтр"
-          :disable="!patternQuery"
-          :loading="auth.isCreatingFilter.value" />
-        <q-btn
-          @click="trashByQueryAndNotify"
-          flat
-          no-caps
-          color="negative"
-          icon="sym_o_delete_sweep"
-          label="Видалити всі такі"
-          :disable="!deleteQuery"
-          :loading="auth.isTrashingQuery.value" />
-      </div>
-    </div>
-  </div>
-
-  <!-- Template editor dialog -->
-  <q-dialog v-model="showEditor">
-    <q-card style="min-width: 420px; max-width: 90vw">
-      <q-card-section class="text-h6">
-        {{ editTemplate.id === activeTemplate?.id ? 'Редагувати шаблон' : 'Новий шаблон' }}
-      </q-card-section>
-      <q-card-section class="q-gutter-md">
-        <TemplateEditorFields
-          v-model="editTemplate"
-          subject-hint="Напр.: скаїтатаju rādījumus"
-          prompt-hint="Що витягти з листа (назви статей, посилання, розділи тощо)" />
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn v-close-popup flat no-caps label="Скасувати" />
-        <q-btn
-          @click="onSaveTemplate"
-          flat
-          no-caps
-          color="primary"
-          label="Зберегти"
-          :disable="
-            (!editTemplate.from_pattern && !editTemplate.subject_pattern) ||
-            (editTemplate.type === 'newsletter' && !editTemplate.prompt)
-          " />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>
 
 <style scoped>
 .article-item {

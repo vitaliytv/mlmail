@@ -99,11 +99,7 @@ describe('Login.vue inbox count', () => {
   })
 
   it('shows skeleton before count loads', async () => {
-    let resolveCount
-    // oxlint-disable-next-line promise/avoid-new
-    const pending = new Promise(resolve => {
-      resolveCount = resolve
-    })
+    const { promise: pending, resolve: resolveCount } = Promise.withResolvers()
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')

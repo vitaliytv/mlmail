@@ -1,123 +1,3 @@
-<script setup>
-import { invoke } from '@tauri-apps/api/core'
-import { getVersion } from '@tauri-apps/api/app'
-import { AgentDialog } from '@7n/tauri-components/components'
-import { errorMessage } from '../i18n/auth-errors.js'
-import { useAuthStore } from '../services/auth-store.js'
-import { useAgent } from '../composables/use-agent.js'
-import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
-import NewsletterView from '../components/NewsletterView.vue'
-import TemplatesManager from '../components/TemplatesManager.vue'
-import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'
-
-const auth = useAuthStore()
-const agent = useAgent()
-const newsletterViewRef = ref(null)
-
-const appVersion = ref('')
-onMounted(async () => {
-  appVersion.value = await getVersion()
-})
-
-watchEffect(() => {
-  const email = auth.email.value
-  const count = auth.inboxCount.value
-  const version = appVersion.value
-  const appName = version ? `mlmail v${version}` : 'mlmail'
-  let title
-  if (email && count !== null) {
-    title = `${appName} - ${email} - ${count}`
-  } else if (email) {
-    title = `${appName} - ${email}`
-  } else {
-    title = appName
-  }
-  document.title = title
-  invoke('app_set_title', { title })
-})
-const agentOpen = ref(false)
-const auditOpen = ref(false)
-onMounted(() => {
-  auth.initialize()
-  window.addEventListener('message', e => {
-    if (['open-url'].includes(e.data?.type) && e.data.url) {
-      invoke('app_open_url', { url: e.data.url })
-    }
-  })
-})
-
-// Built with '<' + tag concatenation, not a literal `<script>`/`<style>` tag
-// pair, so the named-template pre-transform's HTML-naive tokenizer (which
-// runs on the raw file text, before real SFC parsing) can't mistake these
-// injected-HTML tags for the surrounding <script setup> block's own tags.
-// The concatenation is the point, so no-useless-concat is a false positive here.
-const LINK_INTERCEPT_SCRIPT = `
-${
-  // oxlint-disable-next-line no-useless-concat
-  '<' + 'script>'
-}
-document.addEventListener('click', function(e) {
-  var a = e.target.closest('a');
-  if (a && a.href && !a.href.startsWith('javascript')) {
-    e.preventDefault();
-    window.parent.postMessage({ type: 'open-url', url: a.href }, '*');
-  }
-});
-${
-  // oxlint-disable-next-line no-useless-concat
-  '<' + '/script>'
-}`
-
-const LIGHT_BG_STYLE = `${
-  // oxlint-disable-next-line no-useless-concat
-  '<' + 'style>'
-}
-:root { color-scheme: light !important; }
-html, body { background: #ffffff !important; color: #000000 !important; }
-${
-  // oxlint-disable-next-line no-useless-concat
-  '<' + '/style>'
-}`
-
-// Built from parts so the raw source has no bare closing-head-tag substring —
-// the named-template pre-transform tokenizes the whole file HTML-naively and
-// mistakes that substring as a literal for a real closing tag.
-// oxlint-disable-next-line no-useless-concat
-const HEAD_CLOSE_TAG = '</' + 'head>'
-
-const htmlBodyWithInterceptor = computed(() => {
-  const html = auth.currentMessage.value?.html_body
-  if (!html) return null
-  const inject = LIGHT_BG_STYLE + LINK_INTERCEPT_SCRIPT
-  return html.includes(HEAD_CLOSE_TAG) ? html.replace(HEAD_CLOSE_TAG, inject + HEAD_CLOSE_TAG) : inject + html
-})
-
-/**
- * Formats a byte count as a human-readable Ukrainian size label (Б/КБ/МБ/ГБ).
- * @param {number} bytes - size in bytes
- * @returns {string} formatted size, e.g. "1.2 МБ"
- */
-function formatFileSize(bytes) {
-  if (!bytes) return '0 Б'
-  const units = ['Б', 'КБ', 'МБ', 'ГБ']
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
-  const value = bytes / 1024 ** i
-  return `${i === 0 ? value : value.toFixed(1)} ${units[i]}`
-}
-
-const showActionLog = ref(false)
-const showTemplates = ref(false)
-const showFilters = ref(false)
-
-/**
- * @param {boolean} value whether to request only newsletters
- */
-function toggleOnlyNewsletters(value) {
-  auth.setOnlyNewsletters(value)
-  auth.loadRandomMessage()
-}
-</script>
-
 <template>
   <q-page class="column items-center q-pa-md" :class="{ 'has-bar': auth.isAuthenticated.value }">
     <template v-if="auth.isAuthenticated.value">
@@ -323,6 +203,126 @@ function toggleOnlyNewsletters(value) {
     <AuditAnalysisDialog v-model="auditOpen" :agent="agent" />
   </q-page>
 </template>
+
+<script setup>
+import { invoke } from '@tauri-apps/api/core'
+import { getVersion } from '@tauri-apps/api/app'
+import { AgentDialog } from '@7n/tauri-components/components'
+import { errorMessage } from '../i18n/auth-errors.js'
+import { useAuthStore } from '../services/auth-store.js'
+import { useAgent } from '../composables/use-agent.js'
+import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
+import NewsletterView from '../components/NewsletterView.vue'
+import TemplatesManager from '../components/TemplatesManager.vue'
+import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'
+
+const auth = useAuthStore()
+const agent = useAgent()
+const newsletterViewRef = ref(null)
+
+const appVersion = ref('')
+onMounted(async () => {
+  appVersion.value = await getVersion()
+})
+
+watchEffect(() => {
+  const email = auth.email.value
+  const count = auth.inboxCount.value
+  const version = appVersion.value
+  const appName = version ? `mlmail v${version}` : 'mlmail'
+  let title
+  if (email && count !== null) {
+    title = `${appName} - ${email} - ${count}`
+  } else if (email) {
+    title = `${appName} - ${email}`
+  } else {
+    title = appName
+  }
+  document.title = title
+  invoke('app_set_title', { title })
+})
+const agentOpen = ref(false)
+const auditOpen = ref(false)
+onMounted(() => {
+  auth.initialize()
+  window.addEventListener('message', e => {
+    if (['open-url'].includes(e.data?.type) && e.data.url) {
+      invoke('app_open_url', { url: e.data.url })
+    }
+  })
+})
+
+// Built with '<' + tag concatenation, not a literal `<script>`/`<style>` tag
+// pair, so the named-template pre-transform's HTML-naive tokenizer (which
+// runs on the raw file text, before real SFC parsing) can't mistake these
+// injected-HTML tags for the surrounding <script setup> block's own tags.
+// The concatenation is the point, so no-useless-concat is a false positive here.
+const LINK_INTERCEPT_SCRIPT = `
+${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + 'script>'
+}
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a');
+  if (a && a.href && !a.href.startsWith('javascript')) {
+    e.preventDefault();
+    window.parent.postMessage({ type: 'open-url', url: a.href }, '*');
+  }
+});
+${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + '/script>'
+}`
+
+const LIGHT_BG_STYLE = `${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + 'style>'
+}
+:root { color-scheme: light !important; }
+html, body { background: #ffffff !important; color: #000000 !important; }
+${
+  // oxlint-disable-next-line no-useless-concat
+  '<' + '/style>'
+}`
+
+// Built from parts so the raw source has no bare closing-head-tag substring —
+// the named-template pre-transform tokenizes the whole file HTML-naively and
+// mistakes that substring as a literal for a real closing tag.
+// oxlint-disable-next-line no-useless-concat
+const HEAD_CLOSE_TAG = '</' + 'head>'
+
+const htmlBodyWithInterceptor = computed(() => {
+  const html = auth.currentMessage.value?.html_body
+  if (!html) return null
+  const inject = LIGHT_BG_STYLE + LINK_INTERCEPT_SCRIPT
+  return html.includes(HEAD_CLOSE_TAG) ? html.replace(HEAD_CLOSE_TAG, () => inject + HEAD_CLOSE_TAG) : inject + html
+})
+
+/**
+ * Formats a byte count as a human-readable Ukrainian size label (Б/КБ/МБ/ГБ).
+ * @param {number} bytes - size in bytes
+ * @returns {string} formatted size, e.g. "1.2 МБ"
+ */
+function formatFileSize(bytes) {
+  if (!bytes) return '0 Б'
+  const units = ['Б', 'КБ', 'МБ', 'ГБ']
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** i
+  return `${i === 0 ? value : value.toFixed(1)} ${units[i]}`
+}
+
+const showActionLog = ref(false)
+const showTemplates = ref(false)
+const showFilters = ref(false)
+
+/**
+ * @param {boolean} value whether to request only newsletters
+ */
+function toggleOnlyNewsletters(value) {
+  auth.setOnlyNewsletters(value)
+  auth.loadRandomMessage()
+}
+</script>
 
 <style scoped>
 .reader {

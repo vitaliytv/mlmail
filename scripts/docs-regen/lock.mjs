@@ -20,9 +20,11 @@ export async function acquireLock(path) {
   return {
     acquired: true,
     release: async () => {
-      await unlink(path).catch(error => {
+      try {
+        await unlink(path)
+      } catch (error) {
         if (error.code !== 'ENOENT') throw error
-      })
+      }
     }
   }
 }
