@@ -62,7 +62,7 @@ describe('sanitizeSubjectSuggestion', () => {
 
   it('falls back when the suggestion is empty or not a string', () => {
     expect(sanitizeSubjectSuggestion('', 'fallback')).toBe('fallback')
-    expect(sanitizeSubjectSuggestion('   ', 'fallback')).toBe('fallback')
+    expect(sanitizeSubjectSuggestion(' '.repeat(3), 'fallback')).toBe('fallback')
     expect(sanitizeSubjectSuggestion(null, 'fallback')).toBe('fallback')
     expect(sanitizeSubjectSuggestion(42, 'fallback')).toBe('fallback')
   })

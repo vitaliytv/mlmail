@@ -1,3 +1,70 @@
+<template>
+  <q-dialog v-model="show" maximized>
+    <q-card>
+      <q-bar>
+        <span class="text-weight-medium">Шаблони</span>
+        <q-space />
+        <q-btn v-close-popup flat round dense icon="sym_o_close" />
+      </q-bar>
+
+      <q-card-section class="row justify-end q-pb-none">
+        <q-btn @click="openNew" color="primary" icon="sym_o_add" label="Новий шаблон" no-caps />
+      </q-card-section>
+
+      <q-card-section>
+        <div v-if="!templates.length" class="text-grey-6">Шаблонів ще немає.</div>
+        <q-list v-else bordered separator rounded>
+          <q-item v-for="t in templates" :key="t.id">
+            <q-item-section>
+              <q-item-label class="row items-center q-gutter-xs">
+                <span>{{ t.name }}</span>
+                <q-badge :color="typeColor(t)" :label="typeLabel(t)" />
+                <q-badge v-if="t.builtin" color="grey-6" label="Системний" />
+                <q-badge v-else color="teal" label="Власний" />
+              </q-item-label>
+              <q-item-label caption>
+                <span v-if="t.from_pattern">від: {{ t.from_pattern }}</span>
+                <span v-if="t.from_pattern && t.subject_pattern"> · </span>
+                <span v-if="t.subject_pattern">тема: {{ t.subject_pattern }}</span>
+              </q-item-label>
+              <q-item-label v-if="t.type === 'task' && t.task_label" caption class="text-orange">
+                {{ t.task_label }}
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <div class="row q-gutter-xs">
+                <q-btn @click="openEdit(t)" flat dense round icon="sym_o_edit" color="grey-7" />
+                <q-btn @click="onDelete(t)" flat dense round icon="sym_o_delete" color="negative" :disable="t.builtin">
+                  <q-tooltip v-if="t.builtin">Системний шаблон не можна видалити</q-tooltip>
+                </q-btn>
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+    </q-card>
+  </q-dialog>
+
+  <!-- Editor dialog -->
+  <q-dialog v-model="showEditor">
+    <q-card style="min-width: 440px; max-width: 92vw">
+      <q-card-section class="text-h6">
+        {{ editTemplate.id ? 'Редагувати шаблон' : 'Новий шаблон' }}
+      </q-card-section>
+      <q-card-section class="q-gutter-md">
+        <TemplateEditorFields v-model="editTemplate" />
+      </q-card-section>
+      <q-card-section v-if="isDev" class="q-pt-none">
+        <q-toggle v-model="saveAsBuiltin" label="Зберегти як системний (dev)" color="orange" dense />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn v-close-popup flat no-caps label="Скасувати" />
+        <q-btn @click="onSave" flat no-caps color="primary" label="Зберегти" :disable="!canSave" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+</template>
+
 <script setup>
 import { useQuasar } from 'quasar'
 import TemplateEditorFields from './TemplateEditorFields.vue'
@@ -73,7 +140,11 @@ async function onSave() {
       return
     }
     // Remove user-level override so the new builtin is not shadowed; ok if there was none.
-    await deleteTemplate(editTemplate.value.id).catch(error => console.warn('deleteTemplate failed:', error))
+    try {
+      await deleteTemplate(editTemplate.value.id)
+    } catch (error) {
+      console.warn('deleteTemplate failed:', error)
+    }
   } else {
     await saveTemplate(editTemplate.value)
   }
@@ -98,70 +169,3 @@ const canSave = computed(
     (editTemplate.value.type === 'task' || editTemplate.value.prompt)
 )
 </script>
-
-<template>
-  <q-dialog v-model="show" maximized>
-    <q-card>
-      <q-bar>
-        <span class="text-weight-medium">Шаблони</span>
-        <q-space />
-        <q-btn v-close-popup flat round dense icon="sym_o_close" />
-      </q-bar>
-
-      <q-card-section class="row justify-end q-pb-none">
-        <q-btn @click="openNew" color="primary" icon="sym_o_add" label="Новий шаблон" no-caps />
-      </q-card-section>
-
-      <q-card-section>
-        <div v-if="!templates.length" class="text-grey-6">Шаблонів ще немає.</div>
-        <q-list v-else bordered separator rounded>
-          <q-item v-for="t in templates" :key="t.id">
-            <q-item-section>
-              <q-item-label class="row items-center q-gutter-xs">
-                <span>{{ t.name }}</span>
-                <q-badge :color="typeColor(t)" :label="typeLabel(t)" />
-                <q-badge v-if="t.builtin" color="grey-6" label="Системний" />
-                <q-badge v-else color="teal" label="Власний" />
-              </q-item-label>
-              <q-item-label caption>
-                <span v-if="t.from_pattern">від: {{ t.from_pattern }}</span>
-                <span v-if="t.from_pattern && t.subject_pattern"> · </span>
-                <span v-if="t.subject_pattern">тема: {{ t.subject_pattern }}</span>
-              </q-item-label>
-              <q-item-label v-if="t.type === 'task' && t.task_label" caption class="text-orange">
-                {{ t.task_label }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <div class="row q-gutter-xs">
-                <q-btn @click="openEdit(t)" flat dense round icon="sym_o_edit" color="grey-7" />
-                <q-btn @click="onDelete(t)" flat dense round icon="sym_o_delete" color="negative" :disable="t.builtin">
-                  <q-tooltip v-if="t.builtin">Системний шаблон не можна видалити</q-tooltip>
-                </q-btn>
-              </div>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
-
-  <!-- Editor dialog -->
-  <q-dialog v-model="showEditor">
-    <q-card style="min-width: 440px; max-width: 92vw">
-      <q-card-section class="text-h6">
-        {{ editTemplate.id ? 'Редагувати шаблон' : 'Новий шаблон' }}
-      </q-card-section>
-      <q-card-section class="q-gutter-md">
-        <TemplateEditorFields v-model="editTemplate" />
-      </q-card-section>
-      <q-card-section v-if="isDev" class="q-pt-none">
-        <q-toggle v-model="saveAsBuiltin" label="Зберегти як системний (dev)" color="orange" dense />
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn v-close-popup flat no-caps label="Скасувати" />
-        <q-btn @click="onSave" flat no-caps color="primary" label="Зберегти" :disable="!canSave" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-</template>

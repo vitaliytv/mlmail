@@ -1,25 +1,3 @@
-<script setup>
-defineProps({
-  tasks: { type: Array, required: true },
-  isScanning: { type: Boolean, default: false },
-  scannedCount: { type: Number, default: 0 },
-  totalCount: { type: Number, default: 0 }
-})
-
-const emit = defineEmits(['complete-task', 'open-task'])
-
-const show = ref(false)
-
-/**
- * Open a task's message and close the panel.
- * @param {string} id Gmail message id
- */
-function openTask(id) {
-  emit('open-task', id)
-  show.value = false
-}
-</script>
-
 <template>
   <!-- Floating button with badge -->
   <q-page-sticky position="bottom-right" :offset="[24, 80]">
@@ -78,3 +56,25 @@ function openTask(id) {
     </q-card>
   </q-dialog>
 </template>
+
+<script setup>
+defineProps({
+  tasks: { type: Array, required: true },
+  isScanning: { type: Boolean, default: false },
+  scannedCount: { type: Number, default: 0 },
+  totalCount: { type: Number, default: 0 }
+})
+
+const emit = defineEmits(['complete-task', 'open-task'])
+
+const show = ref(false)
+
+/**
+ * Open a task's message and close the panel.
+ * @param {string} id Gmail message id
+ */
+function openTask(id) {
+  emit('open-task', id)
+  show.value = false
+}
+</script>

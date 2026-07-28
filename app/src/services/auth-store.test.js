@@ -35,7 +35,7 @@ describe('useAuthStore.initialize', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(store.isAuthenticated.value).toBe(false)
-    expect(store.email.value).toBe(null)
+    expect(store.email.value).toBeNull()
     expect(invokeMock).not.toHaveBeenCalledWith('auth_current_email')
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_inbox_count')
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_random_message')
@@ -61,7 +61,7 @@ describe('useAuthStore.login', () => {
     await store.login()
     expect(store.email.value).toBe('new@example.com')
     expect(store.isAuthenticated.value).toBe(true)
-    expect(store.errorKind.value).toBe(null)
+    expect(store.errorKind.value).toBeNull()
   })
 
   it('captures error.kind when login throws structured error', async () => {
@@ -108,7 +108,7 @@ describe('useAuthStore.logout', () => {
     await store.login()
     invokeMock.mockResolvedValueOnce()
     await store.logout()
-    expect(store.email.value).toBe(null)
+    expect(store.email.value).toBeNull()
     expect(store.isAuthenticated.value).toBe(false)
   })
 
@@ -175,7 +175,7 @@ describe('useAuthStore inbox count', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(store.inboxCount.value).toBe(348)
-    expect(store.inboxErrorKind.value).toBe(null)
+    expect(store.inboxErrorKind.value).toBeNull()
   })
 
   it('login also refreshes inbox count', async () => {
@@ -198,7 +198,7 @@ describe('useAuthStore inbox count', () => {
     })
     const store = useAuthStore()
     await store.initialize()
-    expect(store.inboxCount.value).toBe(null)
+    expect(store.inboxCount.value).toBeNull()
     expect(store.inboxErrorKind.value).toBe('Http')
   })
 
@@ -225,8 +225,8 @@ describe('useAuthStore inbox count', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(store.isAuthenticated.value).toBe(false)
-    expect(store.email.value).toBe(null)
-    expect(store.inboxCount.value).toBe(null)
+    expect(store.email.value).toBeNull()
+    expect(store.inboxCount.value).toBeNull()
   })
 
   it('logout clears inboxCount and inboxErrorKind', async () => {
@@ -241,8 +241,8 @@ describe('useAuthStore inbox count', () => {
     await store.initialize()
     expect(store.inboxCount.value).toBe(9)
     await store.logout()
-    expect(store.inboxCount.value).toBe(null)
-    expect(store.inboxErrorKind.value).toBe(null)
+    expect(store.inboxCount.value).toBeNull()
+    expect(store.inboxErrorKind.value).toBeNull()
   })
 
   it('does not call gmail_inbox_count when not authenticated', async () => {
@@ -253,7 +253,7 @@ describe('useAuthStore inbox count', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_inbox_count')
-    expect(store.inboxCount.value).toBe(null)
+    expect(store.inboxCount.value).toBeNull()
   })
 })
 
@@ -285,7 +285,7 @@ describe('useAuthStore network retry', () => {
     await pendingInitialize
     expect(calls).toBe(3)
     expect(store.inboxCount.value).toBe(42)
-    expect(store.inboxErrorKind.value).toBe(null)
+    expect(store.inboxErrorKind.value).toBeNull()
   })
 
   it('does not retry non-Network errors', async () => {
@@ -315,7 +315,7 @@ describe('useAuthStore random message', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(store.currentMessage.value).toEqual(sampleMessage)
-    expect(store.messageErrorKind.value).toBe(null)
+    expect(store.messageErrorKind.value).toBeNull()
     expect(store.isMessageLoading.value).toBe(false)
   })
 
@@ -360,7 +360,7 @@ describe('useAuthStore random message', () => {
     })
     const store = useAuthStore()
     await store.initialize()
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.currentMessage.value).toBeNull()
     expect(store.messageErrorKind.value).toBe('Empty')
   })
 
@@ -376,8 +376,8 @@ describe('useAuthStore random message', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(store.isAuthenticated.value).toBe(false)
-    expect(store.email.value).toBe(null)
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.email.value).toBeNull()
+    expect(store.currentMessage.value).toBeNull()
   })
 
   it('logout clears currentMessage and messageErrorKind', async () => {
@@ -393,8 +393,8 @@ describe('useAuthStore random message', () => {
     await store.initialize()
     expect(store.currentMessage.value).toEqual(sampleMessage)
     await store.logout()
-    expect(store.currentMessage.value).toBe(null)
-    expect(store.messageErrorKind.value).toBe(null)
+    expect(store.currentMessage.value).toBeNull()
+    expect(store.messageErrorKind.value).toBeNull()
     expect(store.isMessageLoading.value).toBe(false)
   })
 
@@ -406,7 +406,7 @@ describe('useAuthStore random message', () => {
     const store = useAuthStore()
     await store.initialize()
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_random_message')
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.currentMessage.value).toBeNull()
   })
 })
 
@@ -437,8 +437,8 @@ describe('useAuthStore.openAttachment', () => {
       attachmentId: 'att1',
       filename: 'invoice.pdf'
     })
-    expect(store.openAttachmentErrorKind.value).toBe(null)
-    expect(store.openingAttachmentId.value).toBe(null)
+    expect(store.openAttachmentErrorKind.value).toBeNull()
+    expect(store.openingAttachmentId.value).toBeNull()
   })
 
   it('does nothing without a current message', async () => {
@@ -466,7 +466,7 @@ describe('useAuthStore.openAttachment', () => {
     await store.initialize()
     await store.openAttachment(sampleMessage.attachments[0])
     expect(store.openAttachmentErrorKind.value).toBe('Platform')
-    expect(store.openingAttachmentId.value).toBe(null)
+    expect(store.openingAttachmentId.value).toBeNull()
   })
 })
 
@@ -499,7 +499,7 @@ describe('useAuthStore.loadMessageById', () => {
     await store.initialize()
     await store.loadMessageById('m2')
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_read', expect.anything())
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.currentMessage.value).toBeNull()
   })
 
   it('does nothing when id is empty', async () => {
@@ -531,8 +531,8 @@ describe('useAuthStore.loadMessageById', () => {
     await store.initialize()
     await store.loadMessageById('m2')
     expect(store.isAuthenticated.value).toBe(false)
-    expect(store.email.value).toBe(null)
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.email.value).toBeNull()
+    expect(store.currentMessage.value).toBeNull()
   })
 })
 
@@ -634,7 +634,7 @@ describe('useAuthStore.refreshInboxCount direct call', () => {
     const store = useAuthStore()
     await store.refreshInboxCount()
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_inbox_count')
-    expect(store.inboxCount.value).toBe(null)
+    expect(store.inboxCount.value).toBeNull()
   })
 
   it('sets inboxCount directly when called on authenticated store', async () => {
@@ -669,7 +669,7 @@ describe('useAuthStore.refreshInboxCount direct call', () => {
     })
     await store.refreshInboxCount()
     expect(store.inboxErrorKind.value).toBe('Unknown')
-    expect(store.inboxCount.value).toBe(null)
+    expect(store.inboxCount.value).toBeNull()
   })
 
   it('stores error.kind when error is a structured object', async () => {
@@ -696,7 +696,7 @@ describe('useAuthStore.loadRandomMessage direct call', () => {
     await store.loadRandomMessage()
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_random_message')
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_random_newsletter')
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.currentMessage.value).toBeNull()
   })
 
   it('sets isMessageLoading=true during the invoke', async () => {
@@ -736,7 +736,7 @@ describe('useAuthStore.loadRandomMessage direct call', () => {
     })
     await store.loadRandomMessage()
     expect(store.messageErrorKind.value).toBe('Unknown')
-    expect(store.currentMessage.value).toBe(null)
+    expect(store.currentMessage.value).toBeNull()
   })
 
   it('stores error.kind when error is a structured object', async () => {
@@ -839,7 +839,7 @@ describe('useAuthStore.unsubscribeFromCurrent additional', () => {
     await store.initialize()
     await store.unsubscribeFromCurrent()
     expect(store.isAuthenticated.value).toBe(false)
-    expect(store.email.value).toBe(null)
+    expect(store.email.value).toBeNull()
   })
 })
 
@@ -924,7 +924,7 @@ describe('useAuthStore.trashCurrent', () => {
     await store.trashCurrent()
     expect(invokeMock).toHaveBeenCalledWith('gmail_trash', { id: 'm1' })
     expect(invokeMock).toHaveBeenCalledWith('gmail_search', { q: 'label:"Задача" -in:trash' })
-    expect(store.trashErrorKind.value).toBe(null)
+    expect(store.trashErrorKind.value).toBeNull()
   })
 
   it('is a no-op without a current message', async () => {
@@ -953,12 +953,12 @@ describe('useAuthStore.trashByQuery', () => {
     await store.trashByQuery('from:npm subject:"Successfully published"')
     expect(invokeMock).toHaveBeenCalledWith('gmail_trash_query', { q: 'from:npm subject:"Successfully published"' })
     expect(store.lastTrashedCount.value).toBe(7)
-    expect(store.trashQueryErrorKind.value).toBe(null)
+    expect(store.trashQueryErrorKind.value).toBeNull()
   })
 
   it('is a no-op for an empty query', async () => {
     const store = useAuthStore()
-    await store.trashByQuery('   ')
+    await store.trashByQuery(' '.repeat(3))
     expect(invokeMock).not.toHaveBeenCalledWith('gmail_trash_query', expect.anything())
   })
 
@@ -974,7 +974,7 @@ describe('useAuthStore.trashByQuery', () => {
     await store.initialize()
     await store.trashByQuery('from:npm')
     expect(store.trashQueryErrorKind.value).toBe('Http')
-    expect(store.lastTrashedCount.value).toBe(null)
+    expect(store.lastTrashedCount.value).toBeNull()
   })
 
   it('forces logout state on ReauthRequired', async () => {
@@ -990,7 +990,7 @@ describe('useAuthStore.trashByQuery', () => {
     await store.initialize()
     await store.trashByQuery('from:npm')
     expect(store.isAuthenticated.value).toBe(false)
-    expect(store.email.value).toBe(null)
+    expect(store.email.value).toBeNull()
   })
 
   it('refreshes the task list on success', async () => {
@@ -1026,7 +1026,7 @@ describe('useAuthStore.createFilter', () => {
       subject: 'Successfully published'
     })
     expect(store.filterCreated.value).toBe(true)
-    expect(store.filterErrorKind.value).toBe(null)
+    expect(store.filterErrorKind.value).toBeNull()
   })
 
   it('maps a scope 403 (ReauthRequired) to logout state', async () => {
@@ -1060,9 +1060,9 @@ describe('useAuthStore.createFilter', () => {
     expect(store.filterCreated.value).toBe(true)
     store.clearPatternFeedback()
     expect(store.filterCreated.value).toBe(false)
-    expect(store.filterErrorKind.value).toBe(null)
-    expect(store.lastTrashedCount.value).toBe(null)
-    expect(store.trashQueryErrorKind.value).toBe(null)
+    expect(store.filterErrorKind.value).toBeNull()
+    expect(store.lastTrashedCount.value).toBeNull()
+    expect(store.trashQueryErrorKind.value).toBeNull()
   })
 })
 
@@ -1080,7 +1080,7 @@ describe('useAuthStore.listFilters/deleteFilter', () => {
     await store.listFilters()
     expect(invokeMock).toHaveBeenCalledWith('gmail_list_filters')
     expect(store.filters.value).toEqual([{ id: 'f1', criteria: { from: 'a@b.com' } }])
-    expect(store.filtersErrorKind.value).toBe(null)
+    expect(store.filtersErrorKind.value).toBeNull()
   })
 
   it('maps a scope 403 (ReauthRequired) to logout state on list', async () => {
@@ -1121,7 +1121,7 @@ describe('useAuthStore.listFilters/deleteFilter', () => {
     expect(invokeMock).toHaveBeenCalledWith('gmail_delete_filter', { id: 'f1' })
     expect(listCallCount).toBe(2)
     expect(store.filters.value).toEqual([])
-    expect(store.deleteFilterErrorKind.value).toBe(null)
+    expect(store.deleteFilterErrorKind.value).toBeNull()
   })
 
   it('maps a scope 403 (ReauthRequired) to logout state on delete', async () => {

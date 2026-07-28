@@ -126,7 +126,12 @@ async function run(args, logger) {
   const projectionResults = {}
   for (const name of projectionsToRun) {
     const currentPath = join(ROOT_DIR, 'docs/ci4', `${name}.md`)
-    const currentContent = await readFile(currentPath, 'utf8').catch(() => '')
+    let currentContent
+    try {
+      currentContent = await readFile(currentPath, 'utf8')
+    } catch {
+      currentContent = ''
+    }
     logger.info(`Generating ${name}.md ...`)
     const result = await regenerateProjection({
       name,
@@ -247,7 +252,12 @@ async function isInMergeOrRebase() {
  * @returns {Promise<string>} Hash of the file content.
  */
 async function fileHash(rootDir, relPath) {
-  const content = await readFile(join(rootDir, relPath), 'utf8').catch(() => '')
+  let content
+  try {
+    content = await readFile(join(rootDir, relPath), 'utf8')
+  } catch {
+    content = ''
+  }
   return sha256(content)
 }
 

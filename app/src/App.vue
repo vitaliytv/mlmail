@@ -1,3 +1,20 @@
+<template>
+  <q-layout view="hHh lpR fFf">
+    <q-page-container>
+      <LoginView />
+    </q-page-container>
+
+    <TasksPanel
+      v-if="auth.isAuthenticated.value"
+      @complete-task="taskScan.unflagMessage"
+      @open-task="auth.loadMessageById"
+      :tasks="taskScan.tasks.value"
+      :is-scanning="taskScan.isScanning.value"
+      :scanned-count="taskScan.scannedCount.value"
+      :total-count="taskScan.totalCount.value" />
+  </q-layout>
+</template>
+
 <script setup>
 import LoginView from './views/Login.vue'
 import TasksPanel from './components/TasksPanel.vue'
@@ -20,20 +37,3 @@ watch(
   }
 )
 </script>
-
-<template>
-  <q-layout view="hHh lpR fFf">
-    <q-page-container>
-      <LoginView />
-    </q-page-container>
-
-    <TasksPanel
-      v-if="auth.isAuthenticated.value"
-      @complete-task="taskScan.unflagMessage"
-      @open-task="auth.loadMessageById"
-      :tasks="taskScan.tasks.value"
-      :is-scanning="taskScan.isScanning.value"
-      :scanned-count="taskScan.scannedCount.value"
-      :total-count="taskScan.totalCount.value" />
-  </q-layout>
-</template>

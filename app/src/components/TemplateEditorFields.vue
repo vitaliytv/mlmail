@@ -1,11 +1,3 @@
-<script setup>
-const model = defineModel({ type: Object, required: true })
-defineProps({
-  subjectHint: { type: String, default: '' },
-  promptHint: { type: String, default: '' }
-})
-</script>
-
 <template>
   <q-input v-model="model.name" label="Назва" dense outlined />
   <q-btn-toggle
@@ -49,3 +41,11 @@ defineProps({
     outlined
     :hint="promptHint" />
 </template>
+
+<script setup>
+const model = defineModel({ type: Object, required: true })
+defineProps({
+  subjectHint: { type: String, default: '' },
+  promptHint: { type: String, default: '' }
+})
+</script>

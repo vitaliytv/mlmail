@@ -45,7 +45,7 @@ const QUOTE_CHARS = new Set(['"', "'", '`'])
  */
 export function sanitizeSubjectSuggestion(raw, fallback) {
   if (typeof raw !== 'string') return fallback
-  const firstLine = raw.split('\n')[0].trim()
+  const firstLine = raw.split('\n', 1)[0].trim()
   let start = 0
   let end = firstLine.length
   while (start < end && QUOTE_CHARS.has(firstLine[start])) start++
