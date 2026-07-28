@@ -9,7 +9,8 @@ import { invoke } from '@tauri-apps/api/core'
  * @returns {Promise<NewsletterTemplate[]>} all saved newsletter templates
  */
 export async function listTemplates() {
-  return /** @type {NewsletterTemplate[]} */ (await invoke('newsletter_template_list'))
+  const templates = /** @type {NewsletterTemplate[]} */ (await invoke('newsletter_template_list'))
+  return templates ?? []
 }
 
 /**

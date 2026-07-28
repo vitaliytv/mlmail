@@ -19,7 +19,8 @@
     "lint-style": "npx stylelint '**/*.{css,scss,vue}' --fix",
     "lint-text": "n-cursor lint-text",
     "docs:regen": "bun run scripts/docs-regen.mjs",
-    "coverage": "n-cursor coverage"
+    "test": "bun --cwd=app run --bun vitest run",
+    "coverage": "npx @7n/rules lint test --no-fix"
   },
   "devDependencies": {
     "@7n/rules": "^1.52.2",

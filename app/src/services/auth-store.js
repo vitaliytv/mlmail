@@ -43,6 +43,7 @@ const _inboxErrorKind = ref(null)
 const _currentMessage = ref(null)
 const _messageErrorKind = ref(null)
 const _isMessageLoading = ref(false)
+const _onlyNewsletters = ref(false)
 const _isUnsubscribing = ref(false)
 const _unsubscribeErrorKind = ref(null)
 const _isSaving = ref(false)
@@ -113,7 +114,8 @@ export function useAuthStore() {
     if (!_isAuthenticated.value) return
     _isMessageLoading.value = true
     _messageErrorKind.value = null
-    const result = await dispatchWithRetry('random_message')
+    const tool = _onlyNewsletters.value ? 'random_newsletter' : 'random_message'
+    const result = await dispatchWithRetry(tool)
     if (result.ok) {
       _currentMessage.value = result.output
     } else {
@@ -126,6 +128,13 @@ export function useAuthStore() {
       }
     }
     _isMessageLoading.value = false
+  }
+
+  /**
+   * @param {boolean} value whether to request only newsletters
+   */
+  function setOnlyNewsletters(value) {
+    _onlyNewsletters.value = Boolean(value)
   }
 
   /**
@@ -398,6 +407,7 @@ export function useAuthStore() {
     _currentMessage.value = null
     _messageErrorKind.value = null
     _isMessageLoading.value = false
+    _onlyNewsletters.value = false
     _isUnsubscribing.value = false
     _unsubscribeErrorKind.value = null
     _isSaving.value = false
@@ -430,6 +440,7 @@ export function useAuthStore() {
     currentMessage: readonly(_currentMessage),
     messageErrorKind: readonly(_messageErrorKind),
     isMessageLoading: readonly(_isMessageLoading),
+    onlyNewsletters: readonly(_onlyNewsletters),
     isUnsubscribing: readonly(_isUnsubscribing),
     unsubscribeErrorKind: readonly(_unsubscribeErrorKind),
     isSaving: readonly(_isSaving),
@@ -458,6 +469,7 @@ export function useAuthStore() {
     refreshInboxCount,
     loadRandomMessage,
     loadMessageById,
+    setOnlyNewsletters,
     unsubscribeFromCurrent,
     saveCurrent,
     trashCurrent,
@@ -484,6 +496,7 @@ export function _resetForTest() {
   _currentMessage.value = null
   _messageErrorKind.value = null
   _isMessageLoading.value = false
+  _onlyNewsletters.value = false
   _isUnsubscribing.value = false
   _unsubscribeErrorKind.value = null
   _isTrashing.value = false

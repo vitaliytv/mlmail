@@ -64,3 +64,6 @@ reports/stryker/incremental.json
 .worktrees/
 # @7n/rules (adr) — локальні артефакти Stop-hook, не коміти
 .claude/scheduled_tasks.lock
+
+# Tauri — Rust build artifacts (tauri.mdc)
+app/src-tauri/target/
