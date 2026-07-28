@@ -108,6 +108,14 @@ function formatFileSize(bytes) {
 const showActionLog = ref(false)
 const showTemplates = ref(false)
 const showFilters = ref(false)
+
+/**
+ * @param {boolean} value whether to request only newsletters
+ */
+function toggleOnlyNewsletters(value) {
+  auth.setOnlyNewsletters(value)
+  auth.loadRandomMessage()
+}
 </script>
 
 <template>
@@ -253,6 +261,10 @@ const showFilters = ref(false)
           icon="sym_o_skip_next"
           label="Показати інший"
           :loading="auth.isMessageLoading.value" />
+        <q-toggle
+          @update:model-value="toggleOnlyNewsletters"
+          :model-value="auth.onlyNewsletters.value"
+          label="Тільки розсилки" />
         <q-btn
           @click="showActionLog = true"
           flat

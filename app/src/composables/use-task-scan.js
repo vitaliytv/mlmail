@@ -31,7 +31,7 @@ export function useTaskScan() {
   /** Reload the flat list of every message currently under the "Задача" label. */
   async function refresh() {
     try {
-      tasks.value = await invoke('gmail_search', { q: TASK_LABEL_QUERY })
+      tasks.value = (await invoke('gmail_search', { q: TASK_LABEL_QUERY })) ?? []
     } catch {
       tasks.value = []
     }
