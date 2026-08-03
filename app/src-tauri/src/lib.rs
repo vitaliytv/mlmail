@@ -108,6 +108,7 @@ pub fn run() {
                     newsletter_template::newsletter_template_delete,
                     omlx::omlx_config,
                     plugins::plugin_a2ui_sample_sidebar,
+                    plugins::plugin_sidebar_create_draft,
                     app_open_url,
                     app_set_title,
                 ]
@@ -143,6 +144,7 @@ pub fn run() {
                     call_analysis::analyze_call_with_pi,
                     omlx::omlx_config,
                     plugins::plugin_a2ui_sample_sidebar,
+                    plugins::plugin_sidebar_create_draft,
                     app_open_url,
                     app_set_title,
                 ]

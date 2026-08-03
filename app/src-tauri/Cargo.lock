@@ -2833,6 +2833,7 @@ dependencies = [
 name = "mlmail-plugin-host"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "mockito",
  "plugin-a2ui",
  "plugin-mail",
@@ -3645,7 +3646,7 @@ dependencies = [
 [[package]]
 name = "plugin-a2ui"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components?branch=feat%2Fwasm-plugin-m5-draft-audit#23573d0fd5cb6c02730f080a8964c6f1a25c917e"
 dependencies = [
  "hex",
  "serde",
@@ -3657,7 +3658,7 @@ dependencies = [
 [[package]]
 name = "plugin-mail"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components?branch=feat%2Fwasm-plugin-m5-draft-audit#23573d0fd5cb6c02730f080a8964c6f1a25c917e"
 dependencies = [
  "plugin-permissions",
  "serde",
@@ -3668,7 +3669,7 @@ dependencies = [
 [[package]]
 name = "plugin-permissions"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components?branch=feat%2Fwasm-plugin-m5-draft-audit#23573d0fd5cb6c02730f080a8964c6f1a25c917e"
 dependencies = [
  "hex",
  "serde",
@@ -3679,7 +3680,7 @@ dependencies = [
 [[package]]
 name = "plugin-runtime"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components?branch=feat%2Fwasm-plugin-m5-draft-audit#23573d0fd5cb6c02730f080a8964c6f1a25c917e"
 dependencies = [
  "plugin-mail",
  "serde",

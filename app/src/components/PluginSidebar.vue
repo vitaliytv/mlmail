@@ -44,8 +44,24 @@ async function reload() {
 }
 
 function onAction(payload) {
-  // M5 will route actions to Wasm handle-action; M4 only surfaces the event.
-  lastAction = payload?.action?.event?.name || 'action'
+  const name = payload?.action?.event?.name || 'action'
+  lastAction = name
+  if (name === 'createDraft') {
+    runCreateDraft()
+  }
+}
+
+async function runCreateDraft() {
+  loading = true
+  loadError = ''
+  try {
+    const r = await invoke('plugin_sidebar_create_draft')
+    lastAction = `createDraft → ${r.draftId} (${r.auditResult})`
+  } catch (e) {
+    loadError = e?.message || String(e)
+  } finally {
+    loading = false
+  }
 }
 
 function onRenderError(msg) {

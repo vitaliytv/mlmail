@@ -3,9 +3,9 @@ type: Module
 title: PluginSidebar.vue
 resource: app/src/components/PluginSidebar.vue
 docgen:
-  crc: e18640d1
+  crc: 5b50cc3a
 ---
 
 ## Огляд
 
-UI-слот sidebar: invoke Rust-валідованої sample A2UI surface і рендер через A2uiSurface.
+Sidebar A2UI: createDraft → invoke plugin_sidebar_create_draft.
