@@ -124,8 +124,8 @@ async function refresh() {
 
 /**
  * Reload the journal list when the dialog opens.
- * omlx analysis loads its own config via app-local useOmlx (agent gateway no
- * longer exposes loadOmlxEnv after @7n/tauri-components@0.11.0).
+ * Local-LLM analysis loads its own config via app-local useLlm (agent
+ * gateway no longer exposes loadOmlxEnv after @7n/tauri-components@0.11.0).
  */
 async function onShow() {
   await refresh()

@@ -1,5 +1,4 @@
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat, useOmlx } from '../omlx.js'
+import { useLlm } from '../llm.js'
 import { buildSummaryPrompt } from '../services/summary.js'
 
 const ASK_SYSTEM = [
@@ -12,7 +11,7 @@ const ASK_SYSTEM = [
  * @returns {{ ask: (message: object, question: string) => Promise<string|null>, isAsking: import('vue').Ref<boolean> }} the ask composable
  */
 export function useAsk() {
-  const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
+  const { loadEnv, chat } = useLlm({ storagePrefix: 'mlmail' })
   const isAsking = ref(false)
 
   /**
@@ -25,19 +24,10 @@ export function useAsk() {
     isAsking.value = true
     try {
       await loadEnv()
-      const chat = createOpenAiChat({
-        baseUrl: baseUrl.value,
-        model: model.value,
-        apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch
-      })
       const emailContext = buildSummaryPrompt(message)
       const reply = await chat({
-        messages: [
-          { role: 'system', content: ASK_SYSTEM },
-          { role: 'user', content: `Лист:\n${emailContext}\n\nЗапитання: ${question}` }
-        ],
-        tools: []
+        system: ASK_SYSTEM,
+        user: `Лист:\n${emailContext}\n\nЗапитання: ${question}`
       })
       return (reply?.content ?? '').trim() || null
     } catch {

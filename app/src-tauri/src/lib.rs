@@ -3,8 +3,8 @@ pub mod auth;
 pub mod call_analysis;
 pub mod endpoints;
 pub mod gmail;
+pub mod llm;
 pub mod newsletter_template;
-pub mod omlx;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -103,7 +103,9 @@ pub fn run() {
                     newsletter_template::newsletter_template_list,
                     newsletter_template::newsletter_template_save,
                     newsletter_template::newsletter_template_delete,
-                    omlx::omlx_config,
+                    llm::llm_providers,
+                    llm::llm_list_models,
+                    llm::llm_chat,
                     app_open_url,
                     app_set_title,
                 ]
@@ -137,7 +139,9 @@ pub fn run() {
                     newsletter_template::newsletter_template_delete,
                     newsletter_template::newsletter_template_save_builtin,
                     call_analysis::analyze_call_with_pi,
-                    omlx::omlx_config,
+                    llm::llm_providers,
+                    llm::llm_list_models,
+                    llm::llm_chat,
                     app_open_url,
                     app_set_title,
                 ]
