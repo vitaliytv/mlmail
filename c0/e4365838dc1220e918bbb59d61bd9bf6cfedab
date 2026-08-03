@@ -1,0 +1,29 @@
+app/src/components/PluginSidebar.vue
+  s_2d4dd99cab3e9c::t_647e5952451806 2,23-24,29-32,35-36,38-41,43,49,56-57,60-62,64,69
+app/src-tauri/mlmail-plugin-host/src/lib.rs
+  s_2d4dd99cab3e9c::t_ccb59d81b00735 155-157,607-610
+app/src-tauri/mlmail-plugin-host/src/docs/lib.md
+  s_2d4dd99cab3e9c::t_ccb59d81b00735 6
+app/src-tauri/mlmail-plugin-host/Cargo.toml
+  s_2d4dd99cab3e9c::t_dde3a63e92accd 10-13
+app/src/components/docs/PluginSidebar.md
+  s_2d4dd99cab3e9c::t_ccb59d81b00735 6
+app/src-tauri/Cargo.lock
+  s_2d4dd99cab3e9c::t_596ee5f3548ee6 705,1173,1401,3649,3661,3672,3683,3953,4299,4357,5512,5515,6710
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "c0e4365838dc1220e918bbb59d61bd9bf6cfedab",
+  "prompts": {},
+  "sessions": {
+    "s_2d4dd99cab3e9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8aef7dcb-1cdc-4808-ab6c-dd14ead4ee44",
+        "model": "grok-4.5"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
