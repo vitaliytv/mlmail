@@ -6,6 +6,8 @@ pub mod gmail;
 pub mod newsletter_template;
 pub mod omlx;
 
+pub use mlmail_plugin_host as plugin_host;
+
 use std::sync::Mutex;
 use tauri::Manager;
 use tauri_plugin_opener::OpenerExt;
