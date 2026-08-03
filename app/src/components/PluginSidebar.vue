@@ -1,5 +1,5 @@
 <template>
-  <!-- Plugin A2UI sidebar (M4): validated nitra.core surface -->
+  <!-- Plugin A2UI sidebar (M4–M5): validated nitra.core surface + draft action -->
   <q-card flat bordered class="plugin-sidebar column">
     <q-card-section class="row items-center q-pb-none">
       <div class="text-subtitle2">Плагін · sidebar</div>
@@ -20,52 +20,53 @@
 <script setup>
 /**
  * Host slot for A2UI sidebar: loads a Rust-validated sample surface
- * (`plugin_a2ui_sample_sidebar`) and renders via A2uiSurface (nitra.core).
+ * (`plugin_a2ui_sample_sidebar`) and routes createDraft via
+ * `plugin_sidebar_create_draft` (Wasm handle_action + audit).
  */
 import { invoke } from '@tauri-apps/api/core'
 import A2uiSurface from './A2uiSurface.vue'
 
-const loading = $ref(false)
-const loadError = $ref('')
-const surface = $ref(null)
-const lastAction = $ref('')
+const loading = ref(false)
+const loadError = ref('')
+const surface = ref(null)
+const lastAction = ref('')
 
 async function reload() {
-  loading = true
-  loadError = ''
+  loading.value = true
+  loadError.value = ''
   try {
-    surface = await invoke('plugin_a2ui_sample_sidebar')
-  } catch (e) {
-    surface = null
-    loadError = e?.message || String(e)
+    surface.value = await invoke('plugin_a2ui_sample_sidebar')
+  } catch (error) {
+    surface.value = null
+    loadError.value = error?.message || String(error)
   } finally {
-    loading = false
+    loading.value = false
   }
 }
 
 function onAction(payload) {
   const name = payload?.action?.event?.name || 'action'
-  lastAction = name
+  lastAction.value = name
   if (name === 'createDraft') {
     runCreateDraft()
   }
 }
 
 async function runCreateDraft() {
-  loading = true
-  loadError = ''
+  loading.value = true
+  loadError.value = ''
   try {
     const r = await invoke('plugin_sidebar_create_draft')
-    lastAction = `createDraft → ${r.draftId} (${r.auditResult})`
-  } catch (e) {
-    loadError = e?.message || String(e)
+    lastAction.value = `createDraft → ${r.draftId} (${r.auditResult})`
+  } catch (error) {
+    loadError.value = error?.message || String(error)
   } finally {
-    loading = false
+    loading.value = false
   }
 }
 
 function onRenderError(msg) {
-  loadError = msg
+  loadError.value = msg
 }
 
 onMounted(() => {

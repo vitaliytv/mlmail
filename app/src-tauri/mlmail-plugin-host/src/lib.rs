@@ -152,7 +152,9 @@ fn host_to_mail(e: HostError) -> MailError {
     match e {
         HostError::Http { status: 401, .. } => MailError::Unavailable("reauth required".into()),
         HostError::Http { status: 404, body } => MailError::NotFound(body),
-        HostError::Http { status, body } => MailError::Unavailable(format!("http {status}: {body}")),
+        HostError::Http { status, body } => {
+            MailError::Unavailable(format!("http {status}: {body}"))
+        }
         HostError::Network(m) | HostError::Parse(m) => MailError::Unavailable(m),
         HostError::Mail(m) => m,
         other => MailError::Other(other.to_string()),
@@ -602,7 +604,10 @@ mod tests {
         let err = session
             .create_draft_via_sample(&handle, mock, "corr-2")
             .unwrap_err();
-        assert!(err.to_string().to_lowercase().contains("denied") || matches!(err, HostError::Runtime(_)));
+        assert!(
+            err.to_string().to_lowercase().contains("denied")
+                || matches!(err, HostError::Runtime(_))
+        );
         let audit = session.audit.lock().unwrap();
         assert_eq!(audit.list().len(), 1);
         assert!(audit.list()[0].result.starts_with("denied"));

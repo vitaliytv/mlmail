@@ -3,7 +3,7 @@ type: Module
 title: PluginSidebar.vue
 resource: app/src/components/PluginSidebar.vue
 docgen:
-  crc: 5b50cc3a
+  crc: 239c62c2
 ---
 
 ## Огляд

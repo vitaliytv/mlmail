@@ -7,10 +7,10 @@ license = "MIT"
 publish = false
 
 [dependencies]
-plugin-mail = { git = "https://github.com/nitra/tauri-components", branch = "feat/wasm-plugin-m5-draft-audit" }
-plugin-permissions = { git = "https://github.com/nitra/tauri-components", branch = "feat/wasm-plugin-m5-draft-audit" }
-plugin-runtime = { git = "https://github.com/nitra/tauri-components", branch = "feat/wasm-plugin-m5-draft-audit" }
-plugin-a2ui = { git = "https://github.com/nitra/tauri-components", branch = "feat/wasm-plugin-m5-draft-audit" }
+plugin-mail = { git = "https://github.com/nitra/tauri-components" }
+plugin-permissions = { git = "https://github.com/nitra/tauri-components" }
+plugin-runtime = { git = "https://github.com/nitra/tauri-components" }
+plugin-a2ui = { git = "https://github.com/nitra/tauri-components" }
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "rustls", "query"] }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
