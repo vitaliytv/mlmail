@@ -1,0 +1,64 @@
+app/src/components/A2uiSurface.vue
+  s_2d4dd99cab3e9c::t_82d4ea7c4d95b0 1-95
+app/src-tauri/src/docs/plugins.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-11
+app/src/components/PluginSidebar.vue
+  s_2d4dd99cab3e9c::t_de1efe6283645b 8,13,15
+  s_2d4dd99cab3e9c::t_34271e42b14a0f 1-7,9-12,14,16-65
+app/src/a2ui/catalog.js
+  s_2d4dd99cab3e9c::t_82d4ea7c4d95b0 1-46
+app/src/a2ui/validate.js
+  s_2d4dd99cab3e9c::t_82d4ea7c4d95b0 1-160
+app/src/views/Login.vue
+  s_2d4dd99cab3e9c::t_232621f545c2b7 54
+  s_2d4dd99cab3e9c::t_8d31129ba668df 217
+app/.changes/260803-2156.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-5
+app/src/a2ui/docs/catalog.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-11
+app/src/components/docs/A2uiNode.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-11
+app/src-tauri/mlmail-plugin-host/src/lib.rs
+  s_2d4dd99cab3e9c::t_a5cb7e2441176b 16-18
+  s_2d4dd99cab3e9c::t_8ca029b3d136ff 190-197
+  s_2d4dd99cab3e9c::t_7beceb0dc2c600 374-382
+  s_2d4dd99cab3e9c::t_3c6b03233637b3 31-32
+app/src/components/docs/A2uiSurface.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-11
+app/src/components/docs/PluginSidebar.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-5,7-11
+  s_2d4dd99cab3e9c::t_de1efe6283645b 6
+app/src-tauri/mlmail-plugin-host/src/docs/lib.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 2,6,11
+app/src/components/A2uiNode.vue
+  s_2d4dd99cab3e9c::t_82d4ea7c4d95b0 1-200
+app/src/a2ui/docs/validate.md
+  s_2d4dd99cab3e9c::t_d202c2064177bb 1-11
+app/src-tauri/src/plugins.rs
+  s_2d4dd99cab3e9c::t_a65cb7d220ab72 1-27
+app/src-tauri/mlmail-plugin-host/Cargo.toml
+  s_2d4dd99cab3e9c::t_a3f78e4898fdef 13
+app/src-tauri/src/lib.rs
+  s_2d4dd99cab3e9c::t_df270288b90ca3 110,145
+  s_2d4dd99cab3e9c::t_35353e079fbdf9 8
+app/src-tauri/Cargo.lock
+  s_2d4dd99cab3e9c::t_195df262143af8 2837,3645-3656,3660,3671,3682,5231
+app/src/a2ui/validate.test.js
+  s_2d4dd99cab3e9c::t_76a25a44877757 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "dfba7b6bfb88e46fe8ff40c0e9c7659792105ff3",
+  "prompts": {},
+  "sessions": {
+    "s_2d4dd99cab3e9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8aef7dcb-1cdc-4808-ab6c-dd14ead4ee44",
+        "model": "grok-4.5"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
