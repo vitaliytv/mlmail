@@ -10,6 +10,7 @@ publish = false
 plugin-mail = { git = "https://github.com/nitra/tauri-components" }
 plugin-permissions = { git = "https://github.com/nitra/tauri-components" }
 plugin-runtime = { git = "https://github.com/nitra/tauri-components" }
+plugin-a2ui = { git = "https://github.com/nitra/tauri-components" }
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "rustls", "query"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

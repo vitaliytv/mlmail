@@ -5,6 +5,7 @@ pub mod endpoints;
 pub mod gmail;
 pub mod newsletter_template;
 pub mod omlx;
+pub mod plugins;
 
 pub use mlmail_plugin_host as plugin_host;
 
@@ -106,6 +107,7 @@ pub fn run() {
                     newsletter_template::newsletter_template_save,
                     newsletter_template::newsletter_template_delete,
                     omlx::omlx_config,
+                    plugins::plugin_a2ui_sample_sidebar,
                     app_open_url,
                     app_set_title,
                 ]
@@ -140,6 +142,7 @@ pub fn run() {
                     newsletter_template::newsletter_template_save_builtin,
                     call_analysis::analyze_call_with_pi,
                     omlx::omlx_config,
+                    plugins::plugin_a2ui_sample_sidebar,
                     app_open_url,
                     app_set_title,
                 ]
