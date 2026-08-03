@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.0] - 2026-08-03
+
+### Added
+
+- M4: A2UI sidebar — validated sample surface + PluginSidebar у читачі листа
+
 ## [0.12.0] - 2026-08-03
 
 ### Added
