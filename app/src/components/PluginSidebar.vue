@@ -10,7 +10,7 @@
     <q-separator />
     <q-card-section class="col">
       <div v-if="loadError" class="text-negative text-caption">{{ loadError }}</div>
-      <A2uiSurface v-else-if="surface" :surface="surface" @action="onAction" @error="onRenderError" />
+      <A2uiSurface v-else-if="surface" @action="onAction" @error="onRenderError" :surface="surface" />
       <div v-else class="text-grey-6 text-caption">Немає поверхні плагіна.</div>
       <div v-if="lastAction" class="text-caption text-grey-6 q-mt-sm">Остання дія: {{ lastAction }}</div>
     </q-card-section>
@@ -31,6 +31,7 @@ const loadError = ref('')
 const surface = ref(null)
 const lastAction = ref('')
 
+/** Load (or reload) the sample sidebar surface from the Rust plugin host. */
 async function reload() {
   loading.value = true
   loadError.value = ''
@@ -44,6 +45,11 @@ async function reload() {
   }
 }
 
+/**
+ * Surface the last A2UI action for display — M5 will route actions to Wasm
+ * handle-action; M4 only surfaces the event.
+ * @param {object} payload the emitted action event
+ */
 function onAction(payload) {
   const name = payload?.action?.event?.name || 'action'
   lastAction.value = name
@@ -52,6 +58,7 @@ function onAction(payload) {
   }
 }
 
+/** Invoke the Rust plugin host's createDraft handler and surface its audit result. */
 async function runCreateDraft() {
   loading.value = true
   loadError.value = ''
@@ -65,6 +72,9 @@ async function runCreateDraft() {
   }
 }
 
+/**
+ * @param {string} msg the render error to display
+ */
 function onRenderError(msg) {
   loadError.value = msg
 }

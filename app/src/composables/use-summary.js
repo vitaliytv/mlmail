@@ -1,35 +1,25 @@
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat, useOmlx } from '../omlx.js'
+import { useLlm } from '../llm.js'
 import { buildSummaryPrompt, translateHtmlEmail, SUMMARY_SYSTEM, TRANSLATE_BATCH_SYSTEM } from '../services/summary.js'
 
 // Local-LLM helper for the two-column reader: summarize the current email in
-// Ukrainian via the on-device omlx model. One-shot, no tools. Best-effort —
-// returns null on any failure (omlx down, network) so the UI can show a notice
-// instead of crashing, and '' for an empty body.
+// Ukrainian via the on-device model. One-shot, no tools. Best-effort —
+// returns null on any failure (backend down, network) so the UI can show a
+// notice instead of crashing, and '' for an empty body.
 
-// omlx can stall indefinitely on a large batch instead of erroring (observed:
-// an 80-string batch received no data for 120s+), so every call gets its own
-// abort timeout — otherwise a stuck request leaves the UI spinning forever.
+// The local server can stall indefinitely on a large batch instead of
+// erroring (observed on omlx: an 80-string batch received no data for
+// 120s+), so every call gets its own timeout — otherwise a stuck request
+// leaves the UI spinning forever.
 const LLM_TIMEOUT_MS = 60_000
 
 const CODE_FENCE_OPEN_RE = /^```[^\n]*\n?/
 const CODE_FENCE_CLOSE_RE = /\n?```$/
 
 /**
- * @param {typeof fetch} fetchFn fetch implementation to wrap
- * @param {number} timeoutMs abort the request after this many milliseconds
- * @returns {typeof fetch} fetch wrapped with a default abort timeout
- */
-function withTimeout(fetchFn, timeoutMs) {
-  return (url, init) => fetchFn(url, { ...init, signal: init?.signal ?? AbortSignal.timeout(timeoutMs) })
-}
-
-/**
  * @returns {{ summarize: (message: object) => Promise<string|null>, translateHtml: (message: object) => Promise<{html: string}|null>, translateProgress: import('vue').Ref<{done: number, total: number}> }} summary helper
  */
 export function useSummary() {
-  const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
-  const timedFetch = withTimeout(tauriFetch, LLM_TIMEOUT_MS)
+  const { loadEnv, chat } = useLlm({ storagePrefix: 'mlmail' })
   // Chunk progress for the current translateHtml() call, e.g. { done: 3, total: 16 }.
   // total is 0 outside a translate call so the UI can hide the progress bar.
   const translateProgress = ref({ done: 0, total: 0 })
@@ -43,19 +33,7 @@ export function useSummary() {
     if (!(message?.body ?? '').trim()) return ''
     try {
       await loadEnv()
-      const chat = createOpenAiChat({
-        baseUrl: baseUrl.value,
-        model: model.value,
-        apiKey: apiKey.value || undefined,
-        fetchFn: timedFetch
-      })
-      const reply = await chat({
-        messages: [
-          { role: 'system', content: SUMMARY_SYSTEM },
-          { role: 'user', content: buildSummaryPrompt(message) }
-        ],
-        tools: []
-      })
+      const reply = await chat({ system: SUMMARY_SYSTEM, user: buildSummaryPrompt(message), timeoutMs: LLM_TIMEOUT_MS })
       return (reply?.content ?? '').trim() || null
     } catch {
       return null
@@ -74,12 +52,6 @@ export function useSummary() {
     translateProgress.value = { done: 0, total: 0 }
     try {
       await loadEnv()
-      const chat = createOpenAiChat({
-        baseUrl: baseUrl.value,
-        model: model.value,
-        apiKey: apiKey.value || undefined,
-        fetchFn: timedFetch
-      })
 
       /**
        * @param {string[]} texts strings to translate, in order
@@ -102,11 +74,9 @@ export function useSummary() {
           for (let attempt = 0; attempt < 2; attempt++) {
             try {
               const reply = await chat({
-                messages: [
-                  { role: 'system', content: TRANSLATE_BATCH_SYSTEM },
-                  { role: 'user', content: JSON.stringify(chunk) }
-                ],
-                tools: []
+                system: TRANSLATE_BATCH_SYSTEM,
+                user: JSON.stringify(chunk),
+                timeoutMs: LLM_TIMEOUT_MS
               })
               const raw = (reply?.content ?? '').trim()
               // Strip potential markdown code fences
