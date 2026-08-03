@@ -2820,6 +2820,7 @@ dependencies = [
 name = "mlmail-plugin-host"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "mockito",
  "plugin-a2ui",
  "plugin-mail",
@@ -3625,7 +3626,7 @@ dependencies = [
 [[package]]
 name = "plugin-a2ui"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components#d9a394ef377d86184f00dd2a9a4dfff7c1070c97"
 dependencies = [
  "hex",
  "serde",
@@ -3637,7 +3638,7 @@ dependencies = [
 [[package]]
 name = "plugin-mail"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components#d9a394ef377d86184f00dd2a9a4dfff7c1070c97"
 dependencies = [
  "plugin-permissions",
  "serde",
@@ -3648,7 +3649,7 @@ dependencies = [
 [[package]]
 name = "plugin-permissions"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components#d9a394ef377d86184f00dd2a9a4dfff7c1070c97"
 dependencies = [
  "hex",
  "serde",
@@ -3659,7 +3660,7 @@ dependencies = [
 [[package]]
 name = "plugin-runtime"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components#d9a394ef377d86184f00dd2a9a4dfff7c1070c97"
 dependencies = [
  "plugin-mail",
  "serde",
@@ -5230,7 +5231,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-agent"
 version = "0.1.0"
-source = "git+https://github.com/nitra/tauri-components#c0fa58b4c3aa7ddc8707de05a82797b4fc30eef3"
+source = "git+https://github.com/nitra/tauri-components#d9a394ef377d86184f00dd2a9a4dfff7c1070c97"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-rmcp",

@@ -1,5 +1,5 @@
 <template>
-  <!-- Plugin A2UI sidebar (M4): validated nitra.core surface -->
+  <!-- Plugin A2UI sidebar (M4–M5): validated nitra.core surface + draft action -->
   <q-card flat bordered class="plugin-sidebar column">
     <q-card-section class="row items-center q-pb-none">
       <div class="text-subtitle2">Плагін · sidebar</div>
@@ -20,7 +20,8 @@
 <script setup>
 /**
  * Host slot for A2UI sidebar: loads a Rust-validated sample surface
- * (`plugin_a2ui_sample_sidebar`) and renders via A2uiSurface (nitra.core).
+ * (`plugin_a2ui_sample_sidebar`) and routes createDraft via
+ * `plugin_sidebar_create_draft` (Wasm handle_action + audit).
  */
 import { invoke } from '@tauri-apps/api/core'
 import A2uiSurface from './A2uiSurface.vue'
@@ -50,7 +51,25 @@ async function reload() {
  * @param {object} payload the emitted action event
  */
 function onAction(payload) {
-  lastAction.value = payload?.action?.event?.name || 'action'
+  const name = payload?.action?.event?.name || 'action'
+  lastAction.value = name
+  if (name === 'createDraft') {
+    runCreateDraft()
+  }
+}
+
+/** Invoke the Rust plugin host's createDraft handler and surface its audit result. */
+async function runCreateDraft() {
+  loading.value = true
+  loadError.value = ''
+  try {
+    const r = await invoke('plugin_sidebar_create_draft')
+    lastAction.value = `createDraft → ${r.draftId} (${r.auditResult})`
+  } catch (error) {
+    loadError.value = error?.message || String(error)
+  } finally {
+    loading.value = false
+  }
 }
 
 /**

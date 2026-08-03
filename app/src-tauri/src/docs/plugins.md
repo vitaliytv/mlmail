@@ -3,9 +3,9 @@ type: Module
 title: plugins.rs
 resource: app/src-tauri/src/plugins.rs
 docgen:
-  crc: 6d008482
+  crc: 7d54af9c
 ---
 
 ## Огляд
 
-Tauri-команда `plugin_a2ui_sample_sidebar` — валідована A2UI surface для Vue sidebar.
+Tauri: sample A2UI sidebar + plugin_sidebar_create_draft (mock + audit).

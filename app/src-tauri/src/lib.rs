@@ -110,6 +110,7 @@ pub fn run() {
                     llm::llm_list_models,
                     llm::llm_chat,
                     plugins::plugin_a2ui_sample_sidebar,
+                    plugins::plugin_sidebar_create_draft,
                     app_open_url,
                     app_set_title,
                 ]
@@ -147,6 +148,7 @@ pub fn run() {
                     llm::llm_list_models,
                     llm::llm_chat,
                     plugins::plugin_a2ui_sample_sidebar,
+                    plugins::plugin_sidebar_create_draft,
                     app_open_url,
                     app_set_title,
                 ]
