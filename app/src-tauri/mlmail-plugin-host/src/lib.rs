@@ -13,6 +13,9 @@ use plugin_permissions::{Grant, GrantStore};
 use plugin_runtime::{PluginHandle, PluginRuntime, RuntimeError};
 use serde_json::Value;
 
+pub use plugin_a2ui::{
+    sample_sidebar_stream, validate_stream, SurfaceState, CATALOG_NITRA_CORE, PROTOCOL, SCHEMA_REV,
+};
 pub use plugin_mail::{MockMailHost, CAP_MAIL_METADATA_READ};
 pub use plugin_runtime::{ResourceLimits, MAIL_READER_WAT};
 
@@ -25,6 +28,8 @@ pub enum HostError {
     Runtime(#[from] RuntimeError),
     #[error(transparent)]
     Permissions(#[from] plugin_permissions::PermissionsError),
+    #[error(transparent)]
+    A2ui(#[from] plugin_a2ui::A2uiError),
     #[error("gmail http {status}: {body}")]
     Http { status: u16, body: String },
     #[error("network: {0}")]
@@ -180,6 +185,14 @@ impl MailPluginSession {
         ));
         Ok(self.runtime.read_meta_via_plugin(handle, gated)?)
     }
+}
+
+/// Validate the sample sidebar A2UI stream and return the surface for Vue.
+pub fn sample_sidebar_surface() -> Result<SurfaceState, HostError> {
+    let reg = validate_stream(&sample_sidebar_stream())?;
+    reg.get("sidebar.draft-helper")
+        .cloned()
+        .ok_or_else(|| HostError::Parse("sidebar.draft-helper missing after validate".into()))
 }
 
 /// Thin adapter so `GrantGatedMailHost` can wrap `Arc<dyn MailHost>`.
@@ -357,5 +370,14 @@ mod tests {
                 || matches!(err, HostError::Runtime(_)),
             "expected denied, got {err}"
         );
+    }
+
+    #[test]
+    fn sample_sidebar_a2ui_validates() {
+        let surface = sample_sidebar_surface().unwrap();
+        assert_eq!(surface.surface_id, "sidebar.draft-helper");
+        assert_eq!(surface.catalog_id, CATALOG_NITRA_CORE);
+        assert!(surface.root().is_some());
+        assert!(surface.components.contains_key("title"));
     }
 }
