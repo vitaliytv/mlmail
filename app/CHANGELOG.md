@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.14.0] - 2026-08-03
+
+### Added
+
+- M5: draft.create через Wasm handle_action + audit (30d) у PluginSidebar
+
 ## [0.13.1] - 2026-08-03
 
 ### Fixed
