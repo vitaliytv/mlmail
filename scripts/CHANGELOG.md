@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.4] - 2026-08-03
+
+### Changed
+
+- fix: resolve pre-existing eslint errors across app and scripts (#16)
+
 ## [0.1.3] - 2026-07-23
 
 ### Fixed

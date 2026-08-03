@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.0] - 2026-08-03
+
+### Added
+
+- Крейт mlmail-plugin-host: Gmail metadata host і grant-gated sample Wasm read_meta (M3)
+
 ## [0.11.5] - 2026-07-27
 
 ### Changed
