@@ -1,6 +1,6 @@
 import '@quasar/extras/material-symbols-outlined/material-symbols-outlined.css'
 import { Quasar, Dialog, Notify } from 'quasar'
-import 'quasar/src/css/index.sass'
+import './app.scss'
 import App from './App.vue'
 
 createApp(App)
