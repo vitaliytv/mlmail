@@ -10,7 +10,7 @@
     <q-separator />
     <q-card-section class="col">
       <div v-if="loadError" class="text-negative text-caption">{{ loadError }}</div>
-      <A2uiSurface v-else-if="surface" :surface="surface" @action="onAction" @error="onRenderError" />
+      <A2uiSurface v-else-if="surface" @action="onAction" @error="onRenderError" :surface="surface" />
       <div v-else class="text-grey-6 text-caption">Немає поверхні плагіна.</div>
       <div v-if="lastAction" class="text-caption text-grey-6 q-mt-sm">Остання дія: {{ lastAction }}</div>
     </q-card-section>
@@ -25,31 +25,39 @@
 import { invoke } from '@tauri-apps/api/core'
 import A2uiSurface from './A2uiSurface.vue'
 
-const loading = $ref(false)
-const loadError = $ref('')
-const surface = $ref(null)
-const lastAction = $ref('')
+const loading = ref(false)
+const loadError = ref('')
+const surface = ref(null)
+const lastAction = ref('')
 
+/** Load (or reload) the sample sidebar surface from the Rust plugin host. */
 async function reload() {
-  loading = true
-  loadError = ''
+  loading.value = true
+  loadError.value = ''
   try {
-    surface = await invoke('plugin_a2ui_sample_sidebar')
-  } catch (e) {
-    surface = null
-    loadError = e?.message || String(e)
+    surface.value = await invoke('plugin_a2ui_sample_sidebar')
+  } catch (error) {
+    surface.value = null
+    loadError.value = error?.message || String(error)
   } finally {
-    loading = false
+    loading.value = false
   }
 }
 
+/**
+ * Surface the last A2UI action for display — M5 will route actions to Wasm
+ * handle-action; M4 only surfaces the event.
+ * @param {object} payload the emitted action event
+ */
 function onAction(payload) {
-  // M5 will route actions to Wasm handle-action; M4 only surfaces the event.
-  lastAction = payload?.action?.event?.name || 'action'
+  lastAction.value = payload?.action?.event?.name || 'action'
 }
 
+/**
+ * @param {string} msg the render error to display
+ */
 function onRenderError(msg) {
-  loadError = msg
+  loadError.value = msg
 }
 
 onMounted(() => {
