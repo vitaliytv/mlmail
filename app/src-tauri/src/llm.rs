@@ -3,10 +3,12 @@
 //! `dispatch` pattern (see `docs/adr/n-tool-surface-llm-доступний-бекенд.md`)
 //! — the desktop/mobile split lives here, not in the frontend.
 //!
-//! Desktop: local OpenAI-compatible HTTP servers (omlx, litellm,
-//! turbofieldfare, ...) via the `llm-lib` crate's `LocalCloud`, the Rust
-//! mirror of `@7n/llm-lib`'s `local-providers.mjs` env-var convention
-//! (`N_<PREFIX>_BASE_URL`/`N_<PREFIX>_API_KEY`).
+//! Desktop: local OpenAI-compatible HTTP servers via the `llm-lib` crate's
+//! `LocalCloud`, the Rust mirror of `@7n/llm-lib`'s `local-providers.mjs`
+//! env-var convention (`N_<PREFIX>_BASE_URL`/`N_<PREFIX>_API_KEY`) — `omlx`
+//! plus a generic `local-openai` slot covering any other custom
+//! OpenAI-compatible server (litellm-proxy, TurboFieldfareServer, ...), one
+//! shared env pair instead of one per server (nitra/7n-rules#374).
 //!
 //! Android: LiteRT-LM on-device (Gemma 3n) via a JNI bridge — not yet
 //! implemented (see ADR "Наступні кроки"), so these commands return a clear
@@ -63,10 +65,16 @@ fn omlx_from_settings() -> (Option<String>, Option<String>) {
 
 /// Registered local providers, keyed by the prefix used in `"provider/model-id"`
 /// specs — the same env-var names and defaults as `@7n/llm-lib`'s
-/// `defaultLocalProviders()`, so a developer's existing `N_OMLX_*`/`N_LITELLM_*`
-/// env stays valid whether the call goes through Node tooling or this app.
-/// `omlx`'s default additionally falls back to `~/.omlx/settings.json`
-/// (the omlx server's own config), read before the env override is applied.
+/// `defaultLocalProviders()`, so a developer's existing `N_OMLX_*`/
+/// `N_LOCAL_OPENAI_*` env stays valid whether the call goes through Node
+/// tooling or this app. `omlx`'s default additionally falls back to
+/// `~/.omlx/settings.json` (the omlx server's own config), read before the
+/// env override is applied.
+///
+/// **Deliberately not `openai`**: that prefix is what `LocalCloud` (and
+/// genai) resolve to the real cloud OpenAI API when it's absent from this
+/// map — registering it here would silently hijack real cloud calls to a
+/// local baseUrl (nitra/7n-rules#374).
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn build_local_providers() -> HashMap<String, LocalProvider> {
     use std::env;
@@ -87,21 +95,15 @@ fn build_local_providers() -> HashMap<String, LocalProvider> {
         },
     );
     providers.insert(
-        "litellm".to_string(),
+        "local-openai".to_string(),
         LocalProvider {
-            base_url: env::var("N_LITELLM_BASE_URL")
-                .unwrap_or_else(|_| "https://llm.7n.ai/v1/".to_string()),
-            api_key: env::var("N_LITELLM_API_KEY")
-                .ok()
-                .or_else(|| env::var("LITELLM_API_KEY").ok()),
-        },
-    );
-    providers.insert(
-        "turbofieldfare".to_string(),
-        LocalProvider {
-            base_url: env::var("N_TURBOFIELDFARE_BASE_URL")
+            // mlmail's motivating local-openai server is TurboFieldfareServer
+            // (Swift, port 8080) — unlike llm-lib's Node-tooling default
+            // (https://llm.7n.ai/v1/, an established litellm gateway), mlmail
+            // has no prior consumer to stay compatible with.
+            base_url: env::var("N_LOCAL_OPENAI_BASE_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:8080/v1/".to_string()),
-            api_key: env::var("N_TURBOFIELDFARE_API_KEY").ok(),
+            api_key: env::var("N_LOCAL_OPENAI_API_KEY").ok(),
         },
     );
     providers
@@ -172,7 +174,7 @@ pub async fn llm_list_models(provider: String) -> Result<Vec<String>, String> {
 /// call-analysis composables (always system+single-user, never tools —
 /// `LocalCloud::one_shot_with_spec` fits exactly, no genai `ChatRequest`
 /// plumbing needed in Vue). `model_spec` is `"provider/model-id"`, e.g.
-/// `"omlx/gemma-4-e4b"` or `"turbofieldfare/gemma-4-26b-a4b-it"`.
+/// `"omlx/gemma-4-e4b"` or `"local-openai/gemma-4-26b-a4b-it"`.
 #[tauri::command]
 pub async fn llm_chat(model_spec: String, system: Option<String>, user: String) -> Result<String, String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
