@@ -5,6 +5,9 @@ pub mod endpoints;
 pub mod gmail;
 pub mod llm;
 pub mod newsletter_template;
+pub mod plugins;
+
+pub use mlmail_plugin_host as plugin_host;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -106,6 +109,7 @@ pub fn run() {
                     llm::llm_providers,
                     llm::llm_list_models,
                     llm::llm_chat,
+                    plugins::plugin_a2ui_sample_sidebar,
                     app_open_url,
                     app_set_title,
                 ]
@@ -142,6 +146,7 @@ pub fn run() {
                     llm::llm_providers,
                     llm::llm_list_models,
                     llm::llm_chat,
+                    plugins::plugin_a2ui_sample_sidebar,
                     app_open_url,
                     app_set_title,
                 ]

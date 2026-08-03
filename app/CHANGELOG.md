@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.13.1] - 2026-08-03
+
+### Fixed
+
+- Case-insensitive пошук closing </head> для injected style/link-interceptor у Login.vue (раніше exact-match пропускав HTML з </HEAD> в іншому регістрі)
+
+## [0.13.0] - 2026-08-03
+
+### Added
+
+- M4: A2UI sidebar — validated sample surface + PluginSidebar у читачі листа
+
+## [0.12.0] - 2026-08-03
+
+### Added
+
+- Крейт mlmail-plugin-host: Gmail metadata host і grant-gated sample Wasm read_meta (M3)
+
 ## [0.11.5] - 2026-07-27
 
 ### Changed

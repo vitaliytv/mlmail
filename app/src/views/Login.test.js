@@ -4,6 +4,8 @@ import { mountWithQuasar } from '../test-utils/quasar.js'
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
+vi.mock('@tauri-apps/api/app', () => ({ getVersion: () => Promise.resolve('test') }))
+vi.mock('../composables/use-agent.js', () => ({ useAgent: () => ({}) }))
 
 const { _resetForTest } = await import('../services/auth-store.js')
 const loginModule = await import('./Login.vue')
@@ -150,6 +152,26 @@ describe('Login.vue random message', () => {
     expect(w.text()).toContain('Greetings')
     expect(w.text()).toContain('Mon, 15 May 2026 10:00:00 +0300')
     expect(w.text()).toContain('hello body')
+  })
+
+  it('injects the link interceptor before a case-insensitive closing head tag', async () => {
+    const htmlBody = '<html><head><title>Mail</title></HEAD><body>hello</body></html>'
+    invokeMock.mockImplementation(cmd => {
+      if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
+      if (cmd === 'auth_current_email') return Promise.resolve('u@e')
+      if (cmd === 'gmail_inbox_count') return Promise.resolve(1)
+      if (cmd === 'gmail_random_message') return Promise.resolve({ ...sampleMessage, html_body: htmlBody })
+      if (cmd === 'newsletter_template_list') return Promise.resolve([])
+      return Promise.resolve(null)
+    })
+    const w = mountWithQuasar(Login, { global: { stubs: { iframe: true } } })
+    await flushPromises()
+    const srcdoc = w.find('iframe').attributes('srcdoc')
+    expect(srcdoc).toContain('<style>')
+    expect(srcdoc).toContain('<script>')
+    expect(srcdoc).toContain('</HEAD>')
+    expect(srcdoc.indexOf('<style>')).toBeLessThan(srcdoc.indexOf('</HEAD>'))
+    w.unmount()
   })
 
   it('shows "Скринька порожня." when Gmail returns Empty', async () => {

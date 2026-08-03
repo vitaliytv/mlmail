@@ -46,6 +46,7 @@ The primary development rules are stored in the Cursor rules directory:
 Generated from the root `package.json` on each `npx @7n/rules` sync. Prefer `bun run <script>` for project scripts.
 
 - **Залежності**: `bun i`
+- **test**: `bun run test`
 - **lint**: `bun run lint`
 - **lint-js**: `bun run lint-js`
 - **lint-text**: `bun run lint-text`
@@ -62,6 +63,10 @@ Generated from the root `package.json` on each `npx @7n/rules` sync. Prefer `bun
 ## Instructions for all agents
 
 Before making changes, read the relevant rule files for the area you are working on.
+
+## RTK
+
+Якщо `rtk` встановлено, використовуй підтримувані rtk wrappers, щоб скорочувати вивід для LLM: `rtk git status`, `rtk rg pattern`, `rtk vitest run`, `rtk npm run build`. Для команд без wrapper-а виконуй оригінальну команду.
 
 ## Інваріант після змін
 

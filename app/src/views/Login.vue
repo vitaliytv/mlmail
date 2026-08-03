@@ -51,6 +51,7 @@
             <q-card flat bordered class="fit column">
               <NewsletterView ref="newsletterViewRef" :message="auth.currentMessage.value" />
             </q-card>
+            <PluginSidebar class="q-mt-md" />
           </div>
         </div>
       </template>
@@ -213,6 +214,7 @@ import { useAuthStore } from '../services/auth-store.js'
 import { useAgent } from '../composables/use-agent.js'
 import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
 import NewsletterView from '../components/NewsletterView.vue'
+import PluginSidebar from '../components/PluginSidebar.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
 import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'
 
@@ -288,14 +290,15 @@ ${
 // Built from parts so the raw source has no bare closing-head-tag substring —
 // the named-template pre-transform tokenizes the whole file HTML-naively and
 // mistakes that substring as a literal for a real closing tag.
-// oxlint-disable-next-line no-useless-concat
-const HEAD_CLOSE_TAG = '</' + 'head>'
+// The escaped slash also keeps this match safe from that tokenizer, while the
+// case-insensitive flag handles HTML emitted by different email clients.
+const HEAD_CLOSE_RE = /<\/head>/i
 
 const htmlBodyWithInterceptor = computed(() => {
   const html = auth.currentMessage.value?.html_body
   if (!html) return null
   const inject = LIGHT_BG_STYLE + LINK_INTERCEPT_SCRIPT
-  return html.includes(HEAD_CLOSE_TAG) ? html.replace(HEAD_CLOSE_TAG, () => inject + HEAD_CLOSE_TAG) : inject + html
+  return HEAD_CLOSE_RE.test(html) ? html.replace(HEAD_CLOSE_RE, m => inject + m) : inject + html
 })
 
 /**
