@@ -1,0 +1,59 @@
+app/src-tauri/mlmail-plugin-host/src/lib.rs
+  s_67af10796c029b::t_97af2b660af1aa 328-329,333-338,570-577
+  s_67af10796c029b::t_bba3905012f8c8 330-332
+  s_67af10796c029b::t_77513ae354cb67 578-579
+app/src-tauri/src/docs/plugins.md
+  s_67af10796c029b::t_511f462493f5a8 6,11,15
+app/src/views/Login.vue
+  s_67af10796c029b::t_4ed45e5ca2fb1e 54,221
+app/src-tauri/capabilities/default.json
+  s_67af10796c029b::t_0e893ffa21e74f 5-7,11,18-23
+app/src-tauri/src/plugins.rs
+  s_67af10796c029b::t_97af2b660af1aa 47-59
+app/src/components/PluginManagerPanel.vue
+  s_67af10796c029b::t_4ed45e5ca2fb1e 20,24-26,74,77,154-155,159-163
+app/src/components/PluginDetailPanel.vue
+  s_67af10796c029b::t_4ed45e5ca2fb1e 1-90
+app/src/components/docs/PluginDetailPanel.md
+  s_67af10796c029b::t_511f462493f5a8 1-11
+app/src-tauri/src/lib.rs
+  s_67af10796c029b::t_0e893ffa21e74f 34,114,159
+app/src/views/docs/Login.md
+  s_67af10796c029b::t_511f462493f5a8 6,18
+  s_67af10796c029b::t_d9b8aa7b8a8eb4 19
+app/src/components/docs/PluginManagerPanel.md
+  s_67af10796c029b::t_511f462493f5a8 6,11,15
+app/.changes/260804-1806.md
+  s_67af10796c029b::t_ee3fb90552947d 1-5
+app/src-tauri/mlmail-plugin-host/fixtures/detail_sample.json
+  s_67af10796c029b::t_0e893ffa21e74f 1-46
+app/package.json
+  s_67af10796c029b::t_ca1a94cded4293 23
+app/src-tauri/mlmail-plugin-host/src/docs/lib.md
+  s_67af10796c029b::t_511f462493f5a8 6,11
+app/src-tauri/src/docs/lib.md
+  s_67af10796c029b::t_511f462493f5a8 6
+  s_67af10796c029b::t_75ebd106010bfe 11
+app/src-tauri/Cargo.toml
+  s_67af10796c029b::t_0e893ffa21e74f 28
+app/src-tauri/Cargo.lock
+  s_67af10796c029b::t_bb6167cefe1dcb 2888,4352-4375,5449-5466
+bun.lock
+  s_67af10796c029b::t_c293d20e40150e 22,27,50,859-860
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "03064015c00b9cdeae383cea56943f0812c27cc7",
+  "prompts": {},
+  "sessions": {
+    "s_67af10796c029b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7c2c7dd7-062e-4c4c-bdd1-0c7ffe3b30df",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
