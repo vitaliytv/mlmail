@@ -24,7 +24,7 @@
 | Catalog | Дозволений набір Vue-компонентів і їх props/events у host |
 | Grant | Збережена згода user на capability+scope для plugin identity |
 | Invocation | Один запуск Wasm instance (render або handle-action) |
-| `.nitra-plugin` | Підписаний архів плагіна |
+| `.n-plugin` | Підписаний архів плагіна |
 
 ---
 
@@ -36,7 +36,7 @@
 
 ### 1.1. Goals (MVP)
 
-- Local install підписаного `.nitra-plugin`
+- Local install підписаного `.n-plugin`
 - Scoped capabilities з explicit user consent
 - On-demand A2UI panels (sidebar / detail / modal) без guest HTML/JS/webview
 - Mutating actions з audit log
@@ -62,7 +62,7 @@
 | A | Runtime | `Wasmtime` embedded у Rust. Кожен плагін — WebAssembly Component; API — WIT. | MVP |
 | Б | Межа репозиторіїв | Platform core у `tauri-components`. Кожен продукт — власний domain host adapter і catalog extensions. | MVP |
 | В | UI плагінів | Плагін повертає декларативні A2UI повідомлення. Vue host рендерить зі свого catalog; без HTML/JS/webview у плагіні. | MVP |
-| Г | Розповсюдження | Єдиний пакет `.nitra-plugin` для local install і майбутнього marketplace. | MVP local / Post market |
+| Г | Розповсюдження | Єдиний пакет `.n-plugin` для local install і майбутнього marketplace. | MVP local / Post market |
 | Ґ | Permissions | Manifest декларує capabilities; доступ дає user у host UI. Немає прямого Tauri API, FS, мережі, secrets. | MVP |
 | Д | A2UI | **v1.0 Candidate** + жорсткий schema pin у `plugin-a2ui` і поле `a2ui` у manifest. Contract tests обовʼязкові. | MVP |
 | Е | Trust (local) | Ed25519 підпис обовʼязковий; TOFU ключа publisher; debug-only `--dev-unsigned` у non-release builds. | MVP |
@@ -95,7 +95,7 @@
 | Malicious plugin | Навмисний ексфільтратор / confuse-deputy |
 | Compromised publisher key | Підписаний зловмисний update |
 | Curious user | Over-broad grants |
-| Supply-chain tamper | Змінений `.nitra-plugin` у transit |
+| Supply-chain tamper | Змінений `.n-plugin` у transit |
 
 ### 3.3. Controls (MVP)
 
@@ -127,7 +127,7 @@
 plugin-runtime/       Wasmtime Engine, component loading, WIT bindings, invocation lifecycle
 plugin-manifest/      parse/validate plugin.toml, SemVer compatibility, package metadata
 plugin-permissions/   capability grant, scope validation, consent model, audit decisions
-plugin-package/       .nitra-plugin archive, checksum, signature verification, install/rollback
+plugin-package/       .n-plugin archive, checksum, signature verification, install/rollback
 plugin-a2ui/          A2UI v1.0 adapter (pinned schema revision), surface state, action validation
 plugin-dev-cli/       build, validate, package, sign та local install для authors
 ```
@@ -176,7 +176,7 @@ Latency SLO (ціль, уточнити spike-ом у M2): render p95 cold < 150
 
 ### 4.3. Manifest і пакет
 
-Формат archive: `.nitra-plugin`.
+Формат archive: `.n-plugin`.
 
 ```text
 plugin.toml
