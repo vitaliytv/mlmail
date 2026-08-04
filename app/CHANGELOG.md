@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.17.0] - 2026-08-04
+
+### Added
+
+- Plugin Manager: native .n-plugin picker; detail A2UI panel у читачі
+
 ## [0.16.0] - 2026-08-04
 
 ### Changed
