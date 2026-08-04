@@ -9,17 +9,22 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use plugin_manifest::{CapabilityDecl, PluginManifest};
+use std::io::Read;
+use std::sync::Arc;
+
+use plugin_mail::{DraftCreateResult, MailHost};
 use plugin_package::{
-    install_package, list_installed, pack_directory, uninstall_plugin, InstallOptions,
-    InstalledPlugin,
+    generate_keypair, install_package, list_installed, pack_directory, signing_key_from_bytes,
+    uninstall_plugin, write_public_key_file, InstallOptions, InstalledPlugin,
+    DEFAULT_PACKAGE_FILENAME, PACKAGE_EXTENSION,
 };
 use plugin_permissions::{
-    audit_store_path, fingerprint_preview, grant_store_path, trust_store_path, AuditStore, Grant,
-    GrantStore, Scope, TrustStore,
+    audit_store_path, fingerprint_preview, grant_store_path, trust_store_path, AuditEntry,
+    AuditStore, Grant, GrantStore, Scope, TrustStore,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::HostError;
+use crate::{HostError, MailPluginSession, MockMailHost, ResourceLimits, DRAFT_HELPER_WAT};
 
 /// Capability grant request accepted from the consent UI.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -183,6 +188,59 @@ fn read_changelog(install_dir: &Path) -> String {
     fs::read_to_string(install_dir.join("changelog.md")).unwrap_or_default()
 }
 
+/// Companion public key path: `{package_filename}.pub` (same as `write_public_key_file`).
+fn companion_public_key_path(package_path: &Path) -> PathBuf {
+    package_path.with_file_name(format!(
+        "{}.pub",
+        package_path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or(DEFAULT_PACKAGE_FILENAME)
+    ))
+}
+
+fn read_companion_public_key(package_path: &Path) -> Option<String> {
+    let path = companion_public_key_path(package_path);
+    fs::read_to_string(path)
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+fn peek_manifest(package_path: &Path) -> Result<PluginManifest, HostError> {
+    let file = fs::File::open(package_path).map_err(|e| HostError::Parse(e.to_string()))?;
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| HostError::Parse(e.to_string()))?;
+    let mut entry = archive
+        .by_name("plugin.toml")
+        .map_err(|e| HostError::Parse(e.to_string()))?;
+    let mut toml = String::new();
+    entry
+        .read_to_string(&mut toml)
+        .map_err(|e| HostError::Parse(e.to_string()))?;
+    PluginManifest::parse(&toml).map_err(|e| HostError::Parse(e.to_string()))
+}
+
+/// Resolve verifying key: explicit → companion `.pub` → trust store by publisher_key_id.
+fn resolve_public_key_hex(
+    app_data: &Path,
+    package_path: &Path,
+    public_key_hex: Option<&str>,
+) -> Result<Option<String>, HostError> {
+    if let Some(k) = public_key_hex {
+        return Ok(Some(k.to_string()));
+    }
+    if let Some(k) = read_companion_public_key(package_path) {
+        return Ok(Some(k));
+    }
+    if let Ok(manifest) = peek_manifest(package_path) {
+        let trust = TrustStore::open(trust_store_path(app_data))?;
+        if let Some(trusted) = trust.get(&manifest.publisher_key_id) {
+            return Ok(Some(trusted.public_key_hex.clone()));
+        }
+    }
+    Ok(None)
+}
+
 /// List managed plugins (registry + grants + disabled state).
 pub fn list_managed(app_data: &Path, user_id: &str) -> Result<Vec<ManagedPlugin>, HostError> {
     let registry = registry_root(app_data);
@@ -232,15 +290,15 @@ pub fn list_managed(app_data: &Path, user_id: &str) -> Result<Vec<ManagedPlugin>
     Ok(out)
 }
 
-/// Preview install/update consent for a local `.nitra-plugin` path.
+/// Preview install/update consent for a local `.n-plugin` path.
 pub fn preview_install(
     app_data: &Path,
     package_path: &Path,
     allow_unsigned: bool,
 ) -> Result<InstallPreview, HostError> {
-    let verified = plugin_package::verify_package(package_path, None, allow_unsigned)
+    let key = resolve_public_key_hex(app_data, package_path, None)?;
+    let verified = plugin_package::verify_package(package_path, key.as_deref(), allow_unsigned)
         .map_err(|e| HostError::Parse(e.to_string()))?;
-    let trust = TrustStore::open(trust_store_path(app_data))?;
     let existing = installed_for_id(&registry_root(app_data), &verified.manifest.id)?;
     let previous_caps = existing
         .as_ref()
@@ -254,8 +312,6 @@ pub fn preview_install(
             .unwrap_or(false),
         _ => false,
     };
-    // Also treat untrusted new key as requiring TOFU consent (UI shows fingerprint)
-    let _ = trust;
     let diff = diff_capabilities(&previous_caps, &verified.manifest.capabilities, key_changed);
     Ok(InstallPreview {
         fingerprint: verified.public_key_hex.as_deref().map(fingerprint_preview),
@@ -273,6 +329,7 @@ pub fn install_with_consent(
     grants: &[ConsentGrant],
     tofu_accept: bool,
     allow_unsigned: bool,
+    public_key_hex: Option<&str>,
 ) -> Result<ManagedPlugin, HostError> {
     let mut trust = TrustStore::open(trust_store_path(app_data))?;
     let opts = InstallOptions {
@@ -280,11 +337,12 @@ pub fn install_with_consent(
         tofu_accept,
         ..InstallOptions::default()
     };
+    let key = resolve_public_key_hex(app_data, package_path, public_key_hex)?;
     let installed = install_package(
         package_path,
         &registry_root(app_data),
         &mut trust,
-        None,
+        key.as_deref(),
         &opts,
     )
     .map_err(|e| HostError::Parse(e.to_string()))?;
@@ -378,7 +436,7 @@ pub fn uninstall_purge(app_data: &Path, plugin_id: &str) -> Result<(), HostError
     Ok(())
 }
 
-/// Pack + install the sample Draft Helper (unsigned, debug path) with default grants.
+/// Pack + install the signed sample Draft Helper with default grants.
 pub fn install_sample_draft_helper(
     app_data: &Path,
     user_id: &str,
@@ -413,8 +471,8 @@ kind = "sidebar"
 "#,
     )
     .map_err(|e| HostError::Parse(e.to_string()))?;
-    fs::write(staging.join("component.wasm"), b"\0asm\x01\x00\x00\x00")
-        .map_err(|e| HostError::Parse(e.to_string()))?;
+    let wasm = wat::parse_str(DRAFT_HELPER_WAT).map_err(|e| HostError::Parse(e.to_string()))?;
+    fs::write(staging.join("component.wasm"), wasm).map_err(|e| HostError::Parse(e.to_string()))?;
     fs::write(staging.join("settings.schema.json"), b"{}")
         .map_err(|e| HostError::Parse(e.to_string()))?;
     fs::write(
@@ -423,11 +481,27 @@ kind = "sidebar"
     )
     .map_err(|e| HostError::Parse(e.to_string()))?;
 
-    let pkg = app_data
-        .join("plugins")
-        .join("_staging")
-        .join("sample.nitra-plugin");
-    pack_directory(&staging, &pkg, None).map_err(|e| HostError::Parse(e.to_string()))?;
+    let staging_root = app_data.join("plugins").join("_staging");
+    let pkg = staging_root.join(format!("sample.{PACKAGE_EXTENSION}"));
+    let sk_path = staging_root.join("sample.ed25519");
+    let pub_cache = staging_root.join("sample.pubhex");
+    let (sk, pub_hex) = if sk_path.exists() && pub_cache.exists() {
+        let bytes = fs::read(&sk_path).map_err(|e| HostError::Parse(e.to_string()))?;
+        let sk = signing_key_from_bytes(&bytes).map_err(|e| HostError::Parse(e.to_string()))?;
+        let pub_hex = fs::read_to_string(&pub_cache)
+            .map_err(|e| HostError::Parse(e.to_string()))?
+            .trim()
+            .to_string();
+        (sk, pub_hex)
+    } else {
+        let (sk, pub_hex) = generate_keypair();
+        fs::create_dir_all(&staging_root).map_err(|e| HostError::Parse(e.to_string()))?;
+        fs::write(&sk_path, sk.to_bytes()).map_err(|e| HostError::Parse(e.to_string()))?;
+        fs::write(&pub_cache, &pub_hex).map_err(|e| HostError::Parse(e.to_string()))?;
+        (sk, pub_hex)
+    };
+    pack_directory(&staging, &pkg, Some(&sk)).map_err(|e| HostError::Parse(e.to_string()))?;
+    write_public_key_file(&pkg, &pub_hex).map_err(|e| HostError::Parse(e.to_string()))?;
 
     let grants = vec![
         ConsentGrant {
@@ -441,7 +515,55 @@ kind = "sidebar"
             resource_id: Some("acct_1".into()),
         },
     ];
-    install_with_consent(app_data, &pkg, user_id, &grants, true, true)
+    install_with_consent(
+        app_data,
+        &pkg,
+        user_id,
+        &grants,
+        true,
+        false,
+        Some(&pub_hex),
+    )
+}
+
+/// Invoke installed plugin Wasm (`component.wasm`) for draft.create via MockMailHost.
+pub fn create_draft_from_installed(
+    app_data: &Path,
+    user_id: &str,
+    plugin_id: &str,
+) -> Result<(DraftCreateResult, AuditEntry), HostError> {
+    ensure_invocable(app_data, plugin_id)?;
+    let installed = installed_for_id(&registry_root(app_data), plugin_id)?
+        .ok_or_else(|| HostError::Parse(format!("plugin not installed: {plugin_id}")))?;
+    let wasm_path = installed.install_dir.join("component.wasm");
+    let wasm = fs::read(&wasm_path).map_err(|e| HostError::Parse(e.to_string()))?;
+
+    let grants = GrantStore::open(grant_store_path(app_data))?;
+    let audit = AuditStore::open(audit_store_path(app_data))?;
+    let session = MailPluginSession::new(
+        installed.manifest.id.clone(),
+        installed.manifest.version.clone(),
+        user_id,
+        grants,
+        audit,
+        ResourceLimits {
+            wall_clock: std::time::Duration::from_secs(5),
+            ..ResourceLimits::default()
+        },
+    )?;
+    let handle = session.runtime.load_wasm(&session.plugin_id, &wasm)?;
+    session.runtime.activate(&handle)?;
+    let mock: Arc<dyn MailHost> = Arc::new(MockMailHost::default());
+    let result = session.create_draft_via_sample(&handle, mock, "ui-sidebar")?;
+    let entry = session
+        .audit
+        .lock()
+        .expect("audit")
+        .list()
+        .last()
+        .cloned()
+        .ok_or_else(|| HostError::Parse("audit entry missing".into()))?;
+    Ok((result, entry))
 }
 
 #[cfg(test)]
@@ -527,5 +649,17 @@ mod tests {
         let caps = sample_caps();
         let diff = diff_capabilities(&caps, &caps, false);
         assert!(diff.added.is_empty());
+    }
+
+    #[test]
+    fn create_draft_from_installed_sample() {
+        let dir = tempdir().unwrap();
+        let app_data = dir.path();
+        install_sample_draft_helper(app_data, "u1").unwrap();
+        let (result, entry) =
+            create_draft_from_installed(app_data, "u1", "com.example.mail-draft-helper").unwrap();
+        assert!(!result.draft_id.is_empty());
+        assert_eq!(entry.action_id, "createDraft");
+        assert!(entry.result == "ok" || entry.result.starts_with("ok"));
     }
 }

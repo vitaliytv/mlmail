@@ -7,15 +7,28 @@
         <q-btn v-close-popup flat round dense icon="sym_o_close" />
       </q-bar>
 
-      <q-card-section class="row q-gutter-sm items-center">
-        <q-btn
-          @click="installSample"
-          color="primary"
-          no-caps
-          icon="sym_o_download"
-          label="Встановити sample"
-          :loading="busy" />
-        <q-btn @click="reload" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="busy" />
+      <q-card-section class="column q-gutter-sm">
+        <div class="row q-gutter-sm items-center">
+          <q-btn
+            @click="installSample"
+            color="primary"
+            no-caps
+            icon="sym_o_download"
+            label="Встановити signed sample"
+            :loading="busy" />
+          <q-btn @click="reload" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="busy" />
+        </div>
+        <div class="row q-gutter-sm items-center">
+          <q-input v-model="packagePath" class="col" dense outlined label="Шлях до .n-plugin" :disable="busy" />
+          <q-btn
+            @click="installFromPath"
+            color="secondary"
+            no-caps
+            icon="sym_o_folder_open"
+            label="Встановити з файлу"
+            :loading="busy"
+            :disable="!packagePath.trim()" />
+        </div>
         <div v-if="error" class="text-negative text-caption">{{ error }}</div>
       </q-card-section>
 
@@ -62,7 +75,7 @@
 
 <script setup>
 /**
- * Plugin Manager: list / install sample / disable / uninstall purge.
+ * Plugin Manager: list / signed sample / path install / disable / uninstall purge.
  */
 import { invoke } from '@tauri-apps/api/core'
 import PluginConsentDialog from './PluginConsentDialog.vue'
@@ -135,11 +148,24 @@ async function uninstall(p) {
   }
 }
 
-/** Optional path-based install with consent (kept for future file picker). */
 async function previewPath(path) {
   pendingPath.value = path
   consentPreview.value = await invoke('plugin_manager_preview_install', { path })
   consentOpen.value = true
+}
+
+async function installFromPath() {
+  const path = packagePath.value.trim()
+  if (!path) return
+  busy.value = true
+  error.value = ''
+  try {
+    await previewPath(path)
+  } catch (err) {
+    error.value = err?.message || String(err)
+  } finally {
+    busy.value = false
+  }
 }
 
 async function confirmInstall() {
@@ -169,9 +195,6 @@ async function confirmInstall() {
     busy.value = false
   }
 }
-
-// keep previewPath reachable for future UI without unused-lint noise
-defineExpose({ previewPath })
 
 watch(
   () => props.modelValue,

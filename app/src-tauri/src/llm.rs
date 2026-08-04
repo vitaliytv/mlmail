@@ -164,7 +164,11 @@ pub async fn llm_list_models(provider: String) -> Result<Vec<String>, String> {
 /// plumbing needed in Vue). `model_spec` is `"provider/model-id"`, e.g.
 /// `"local-openai/gemma-4-26b-a4b-it"`.
 #[tauri::command]
-pub async fn llm_chat(model_spec: String, system: Option<String>, user: String) -> Result<String, String> {
+pub async fn llm_chat(
+    model_spec: String,
+    system: Option<String>,
+    user: String,
+) -> Result<String, String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         let cascade = llm_lib::LocalCloud::new(build_local_providers());

@@ -50,13 +50,16 @@ pub fn plugin_a2ui_sample_sidebar() -> Result<A2uiSurfaceDto, String> {
 pub fn plugin_sidebar_create_draft(app: AppHandle) -> Result<PluginDraftActionDto, String> {
     let dir = app_data(&app)?;
     let sample_id = "com.example.mail-draft-helper";
-    if let Ok(list) = mlmail_plugin_host::list_managed(&dir, "demo-user") {
-        if list.iter().any(|p| p.id == sample_id) {
-            mlmail_plugin_host::ensure_invocable(&dir, sample_id).map_err(|e| e.to_string())?;
-        }
+    let list = mlmail_plugin_host::list_managed(&dir, "demo-user").map_err(|e| e.to_string())?;
+    if !list.iter().any(|p| p.id == sample_id) {
+        return Err(
+            "Плагін com.example.mail-draft-helper не встановлено. Встановіть signed sample через Plugin Manager."
+                .into(),
+        );
     }
     let (result, entry) =
-        mlmail_plugin_host::demo_create_draft_with_audit(&dir).map_err(|e| e.to_string())?;
+        mlmail_plugin_host::create_draft_from_installed(&dir, "demo-user", sample_id)
+            .map_err(|e| e.to_string())?;
     Ok(PluginDraftActionDto {
         draft_id: result.draft_id,
         audit_result: entry.result,
@@ -79,7 +82,7 @@ pub fn plugin_manager_preview_install(
     path: String,
 ) -> Result<InstallPreview, String> {
     let dir = app_data(&app)?;
-    mlmail_plugin_host::preview_install(&dir, std::path::Path::new(&path), true)
+    mlmail_plugin_host::preview_install(&dir, std::path::Path::new(&path), false)
         .map_err(|e| e.to_string())
 }
 
@@ -98,7 +101,8 @@ pub fn plugin_manager_install(
         "demo-user",
         &grants,
         tofu_accept,
-        true,
+        false,
+        None,
     )
     .map_err(|e| e.to_string())
 }
