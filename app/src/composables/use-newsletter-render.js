@@ -1,5 +1,4 @@
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat, useOmlx } from '../omlx.js'
+import { useLlm } from '../llm.js'
 import { SYSTEM_PROMPT } from '../services/newsletter-template.js'
 
 const CODE_FENCE_OPEN_RE = /^```(?:json)?\n?/
@@ -11,7 +10,7 @@ const CODE_FENCE_CLOSE_RE = /\n?```$/
  * @returns {{ render: (message: object, prompt: string) => Promise<import('../services/newsletter-template.js').NewsletterArticle[] | null> }} the render composable
  */
 export function useNewsletterRender() {
-  const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
+  const { loadEnv, chat } = useLlm({ storagePrefix: 'mlmail' })
 
   /**
    * @param {object} message the source message to render a newsletter from
@@ -23,20 +22,8 @@ export function useNewsletterRender() {
     if (!body) return []
     try {
       await loadEnv()
-      const chat = createOpenAiChat({
-        baseUrl: baseUrl.value,
-        model: model.value,
-        apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch
-      })
       const userContent = `${prompt}\n\n---\n${body}`
-      const reply = await chat({
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userContent }
-        ],
-        tools: []
-      })
+      const reply = await chat({ system: SYSTEM_PROMPT, user: userContent })
       const text = (reply?.content ?? '').trim()
       // Strip markdown code fences if the model wrapped the JSON
       const json = text.replace(CODE_FENCE_OPEN_RE, '').replace(CODE_FENCE_CLOSE_RE, '').trim()

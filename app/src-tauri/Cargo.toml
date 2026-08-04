@@ -50,6 +50,14 @@ jni = "0.21"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-window-state = "2"
 tauri-plugin-updater = "2"
+# Pinned to the same tag `tauri-plugin-agent` (below) already pulls in
+# transitively — an unpinned git dep here resolves to a SEPARATE llm-lib
+# crate instance (different source id), doubling compile time for no
+# benefit. Only the generic local_cloud::{LocalCloud, LocalProvider}
+# primitives are used (app/src-tauri/src/llm.rs), unaffected by
+# nitra/7n-rules#374's provider-map generalization — no need to bump this
+# tag once that PR ships a new release.
+llm-lib = { git = "https://github.com/nitra/7n-rules.git", tag = "llm-lib-v0.2.3", package = "llm-lib" }
 
 [dev-dependencies]
 mockito = "1"

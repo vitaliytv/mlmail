@@ -1,5 +1,4 @@
-import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
-import { createOpenAiChat, useOmlx } from '../omlx.js'
+import { useLlm } from '../llm.js'
 import { sanitizeSubjectSuggestion } from '../services/pattern.js'
 
 // Local-LLM helper for the "rule from this email" panel: given a concrete
@@ -22,7 +21,7 @@ const SYSTEM = [
  * @returns {{ suggestSubjectPattern: (subject: string) => Promise<string> }} pattern helpers
  */
 export function usePattern() {
-  const { baseUrl, model, apiKey, loadEnv } = useOmlx({ storagePrefix: 'mlmail' })
+  const { loadEnv, chat } = useLlm({ storagePrefix: 'mlmail' })
 
   /**
    * Suggest a stable subject pattern for `subject` via the local LLM.
@@ -34,19 +33,7 @@ export function usePattern() {
     if (!fallback) return ''
     try {
       await loadEnv()
-      const chat = createOpenAiChat({
-        baseUrl: baseUrl.value,
-        model: model.value,
-        apiKey: apiKey.value || undefined,
-        fetchFn: tauriFetch
-      })
-      const reply = await chat({
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: fallback }
-        ],
-        tools: []
-      })
+      const reply = await chat({ system: SYSTEM, user: fallback })
       return sanitizeSubjectSuggestion(reply?.content, fallback)
     } catch {
       return fallback
