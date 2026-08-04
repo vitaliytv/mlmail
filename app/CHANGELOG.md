@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.15.0] - 2026-08-04
+
+### Added
+
+- M6: Plugin Manager — consent, disable, uninstall purge
+
 ## [0.14.0] - 2026-08-03
 
 ### Added
