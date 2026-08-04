@@ -3,7 +3,7 @@ type: Module
 title: lib.rs
 resource: app/src-tauri/mlmail-plugin-host/src/lib.rs
 docgen:
-  crc: a905ddb5
+  crc: eb82a632
 ---
 
 ## Огляд

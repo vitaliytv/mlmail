@@ -3,7 +3,7 @@ type: Vue Component
 title: Login.vue
 resource: app/src/views/Login.vue
 docgen:
-  crc: 3f54d5ac
+  crc: 13339da9
   model: openai-codex/gpt-5.4-mini
   tier: cloud-min
   score: 100
