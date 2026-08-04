@@ -1,0 +1,43 @@
+app/.changes/260804-0832.md
+  s_770595307cb876::t_2f07bbc6e0f7ad 1-5
+app/src-tauri/mlmail-plugin-host/src/manager.rs
+  s_770595307cb876::t_445d8a957d7945 536-537
+  s_770595307cb876::t_08658afe913e0b 12-15,22-23,27,191-243,293,299-300,332,340,345,439,474-475,503-504,518-535,538-566,653-664
+  s_770595307cb876::t_46df04c84b2122 17-19,484-502
+app/src-tauri/mlmail-plugin-host/src/docs/manager.md
+  s_770595307cb876::t_41dd98c24714ae 6,11,15-19
+app/src-tauri/mlmail-plugin-host/Cargo.toml
+  s_770595307cb876::t_f0b293a30512fc 21-22
+app/src-tauri/src/plugins.rs
+  s_770595307cb876::t_445d8a957d7945 61-62
+  s_770595307cb876::t_46df04c84b2122 53-58,85,104-105
+app/src/components/docs/PluginManagerPanel.md
+  s_770595307cb876::t_41dd98c24714ae 6,11,15
+docs/specs/2026-08-02-wasm-a2ui-plugin-platform.md
+  s_770595307cb876::t_f0b293a30512fc 27,39,65,98,130,179
+app/src/components/PluginManagerPanel.vue
+  s_770595307cb876::t_46df04c84b2122 10-21,23-31,78,157-170
+  s_770595307cb876::t_2f07bbc6e0f7ad 22
+app/src-tauri/src/llm.rs
+  s_770595307cb876::t_445d8a957d7945 167-171
+app/src-tauri/src/docs/plugins.md
+  s_770595307cb876::t_41dd98c24714ae 6,11-18
+app/src-tauri/Cargo.lock
+  s_770595307cb876::t_9d6092904ddacd 2916-2917,3723,3735,3746,3758,3777,3788,5408
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "d1c71d612855efd1e4f61d76e63eb0e86619172c",
+  "prompts": {},
+  "sessions": {
+    "s_770595307cb876": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7dc2ee29-a6dc-4722-a83b-a0ed0d970652",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
