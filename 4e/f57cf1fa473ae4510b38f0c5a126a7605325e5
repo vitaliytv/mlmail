@@ -1,0 +1,65 @@
+app/src/views/Login.vue
+  s_2d4dd99cab3e9c::t_ed0a84c14be797 220
+  s_2d4dd99cab3e9c::t_ae720e87761449 157
+  s_2d4dd99cab3e9c::t_8db45f7ac204e6 180
+  s_2d4dd99cab3e9c::t_29be14d35cc4dd 323
+app/src/components/PluginConsentDialog.vue
+  s_2d4dd99cab3e9c::t_d2aa29c7399d5a 1-60
+app/src-tauri/mlmail-plugin-host/Cargo.toml
+  s_2d4dd99cab3e9c::t_2babc01f7ebd11 14-15
+app/src-tauri/src/plugins.rs
+  s_2d4dd99cab3e9c::t_d6deaab57c468d 1,3,28-33,48,51-57,67-129
+app/.changes/260804-0718.md
+  s_ef836ffdcaca12::t_a83656b1640e8e 1-5
+app/src/components/docs/PluginConsentDialog.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 1-15
+app/src/components/docs/PluginManagerPanel.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 1-15
+app/src-tauri/mlmail-plugin-host/src/docs/manager.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 1-18
+app/src-tauri/mlmail-plugin-host/src/docs/lib.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 6
+app/src-tauri/mlmail-plugin-host/src/lib.rs
+  s_2d4dd99cab3e9c::t_65dd910513c267 25-27
+app/src/views/docs/Login.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 6
+app/src-tauri/src/docs/plugins.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 6
+app/src-tauri/mlmail-plugin-host/src/manager.rs
+  s_2d4dd99cab3e9c::t_e823ce5754f18a 1-170,175-222,224-260,262-329,333-342,346-392,394-413,415-419,425-531
+  s_2d4dd99cab3e9c::t_3cf8244c97db86 393,414,420-424
+  s_ef836ffdcaca12::t_89e69b2151c9c2 171-174,223,261,330-332,343-345
+app/src-tauri/src/docs/lib.md
+  s_ef836ffdcaca12::t_ad45a03aa6dfd4 1-11
+app/src/components/PluginManagerPanel.vue
+  s_2d4dd99cab3e9c::t_df06950e5c0cb8 1-42,44-57,59-182
+  s_ef836ffdcaca12::t_9a9ae376e3106a 43,58
+app/src-tauri/src/lib.rs
+  s_2d4dd99cab3e9c::t_3588a6807d7475 112-117,154-159
+app/src-tauri/Cargo.lock
+  s_ef836ffdcaca12::t_fad84b610528c5 404-409,711,733-738,1056-1082,1140-1149,1222,1352-1376,1475,1531-1536,2920-2921,3709-3718,3741,3753,3761-3791,3795,3806,4076,4100-4110,4117,4132-4141,4152-4160,4452,4510,4910-4918,5026-5035,5404,5559,5684,5687,6882,7678-7694,7713-7724
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.20",
+  "base_commit_sha": "4ef57cf1fa473ae4510b38f0c5a126a7605325e5",
+  "prompts": {},
+  "sessions": {
+    "s_2d4dd99cab3e9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8aef7dcb-1cdc-4808-ab6c-dd14ead4ee44",
+        "model": "grok-4.5"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    },
+    "s_ef836ffdcaca12": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "afd7e2cd-35a3-4cbb-9268-6cc190e7a800",
+        "model": "cursor-grok-4.5-high"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
