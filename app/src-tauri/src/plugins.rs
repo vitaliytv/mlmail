@@ -44,6 +44,19 @@ pub fn plugin_a2ui_sample_sidebar() -> Result<A2uiSurfaceDto, String> {
     })
 }
 
+/// Return the sample detail surface after Rust `plugin-a2ui` validation.
+#[tauri::command]
+pub fn plugin_a2ui_sample_detail() -> Result<A2uiSurfaceDto, String> {
+    let surface = mlmail_plugin_host::sample_detail_surface().map_err(|e| e.to_string())?;
+    let components = serde_json::to_value(&surface.components).map_err(|e| e.to_string())?;
+    Ok(A2uiSurfaceDto {
+        surface_id: surface.surface_id,
+        catalog_id: surface.catalog_id,
+        components,
+        data_model: surface.data_model,
+    })
+}
+
 /// Run sample Wasm `handle_action` → mock draft create + append audit (M5).
 /// If the sample plugin is installed and disabled, refuse.
 #[tauri::command]

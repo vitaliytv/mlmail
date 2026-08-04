@@ -3,13 +3,13 @@ type: Vue Component
 title: PluginManagerPanel.vue
 resource: app/src/components/PluginManagerPanel.vue
 docgen:
-  crc: 295cb99b
+  crc: 832ce1ac
 ---
 
 ## Огляд
 
-Панель Plugin Manager: список, signed sample, install з абсолютного шляху до `.n-plugin`, disable/uninstall, consent-діалог.
+Панель Plugin Manager: список, signed sample, native picker `.n-plugin` (`@tauri-apps/plugin-dialog`), disable/uninstall, consent-діалог.
 
 ## Поведінка
 
-«Встановити signed sample» → `plugin_manager_install_sample`. «Встановити з файлу» → previewPath/confirmInstall з `allow_unsigned: false` і companion `.pub`.
+«Встановити signed sample» → `plugin_manager_install_sample`. «Обрати .n-plugin» → `open()` + previewPath/confirmInstall з `allow_unsigned: false` і companion `.pub`.

@@ -31,6 +31,7 @@ fn app_set_title(app: tauri::AppHandle, title: String) {
 pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_agent::init());
 
@@ -110,6 +111,7 @@ pub fn run() {
                     llm::llm_list_models,
                     llm::llm_chat,
                     plugins::plugin_a2ui_sample_sidebar,
+                    plugins::plugin_a2ui_sample_detail,
                     plugins::plugin_sidebar_create_draft,
                     plugins::plugin_manager_list,
                     plugins::plugin_manager_preview_install,
@@ -154,6 +156,7 @@ pub fn run() {
                     llm::llm_list_models,
                     llm::llm_chat,
                     plugins::plugin_a2ui_sample_sidebar,
+                    plugins::plugin_a2ui_sample_detail,
                     plugins::plugin_sidebar_create_draft,
                     plugins::plugin_manager_list,
                     plugins::plugin_manager_preview_install,

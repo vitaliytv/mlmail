@@ -16,18 +16,14 @@
             icon="sym_o_download"
             label="Встановити signed sample"
             :loading="busy" />
-          <q-btn @click="reload" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="busy" />
-        </div>
-        <div class="row q-gutter-sm items-center">
-          <q-input v-model="packagePath" class="col" dense outlined label="Шлях до .n-plugin" :disable="busy" />
           <q-btn
-            @click="installFromPath"
+            @click="pickAndPreview"
             color="secondary"
             no-caps
             icon="sym_o_folder_open"
-            label="Встановити з файлу"
-            :loading="busy"
-            :disable="!packagePath.trim()" />
+            label="Обрати .n-plugin"
+            :loading="busy" />
+          <q-btn @click="reload" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="busy" />
         </div>
         <div v-if="error" class="text-negative text-caption">{{ error }}</div>
       </q-card-section>
@@ -75,9 +71,10 @@
 
 <script setup>
 /**
- * Plugin Manager: list / signed sample / path install / disable / uninstall purge.
+ * Plugin Manager: list / signed sample / native .n-plugin picker / disable / uninstall purge.
  */
 import { invoke } from '@tauri-apps/api/core'
+import { open } from '@tauri-apps/plugin-dialog'
 import PluginConsentDialog from './PluginConsentDialog.vue'
 
 const props = defineProps({
@@ -154,13 +151,16 @@ async function previewPath(path) {
   consentOpen.value = true
 }
 
-async function installFromPath() {
-  const path = packagePath.value.trim()
-  if (!path) return
+/** Native OS file picker for a single `.n-plugin` package. */
+async function pickAndPreview() {
   busy.value = true
   error.value = ''
   try {
-    await previewPath(path)
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: 'Nitra plugin', extensions: ['n-plugin'] }]
+    })
+    if (selected) await previewPath(selected)
   } catch (err) {
     error.value = err?.message || String(err)
   } finally {

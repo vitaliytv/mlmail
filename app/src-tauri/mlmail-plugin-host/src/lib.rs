@@ -325,6 +325,17 @@ pub fn sample_sidebar_surface() -> Result<SurfaceState, HostError> {
         .ok_or_else(|| HostError::Parse("sidebar.draft-helper missing after validate".into()))
 }
 
+/// Validate the mlmail-only detail A2UI fixture and return surface `detail.draft-helper`.
+pub fn sample_detail_surface() -> Result<SurfaceState, HostError> {
+    let messages: Vec<serde_json::Value> =
+        serde_json::from_str(include_str!("../fixtures/detail_sample.json"))
+            .map_err(|e| HostError::Parse(e.to_string()))?;
+    let reg = validate_stream(&messages)?;
+    reg.get("detail.draft-helper")
+        .cloned()
+        .ok_or_else(|| HostError::Parse("detail.draft-helper missing after validate".into()))
+}
+
 /// Demo path for Tauri UI: mock draft + audit without a live Gmail token.
 pub fn demo_create_draft_with_audit(
     app_data: &std::path::Path,
@@ -554,6 +565,16 @@ mod tests {
         assert_eq!(surface.catalog_id, CATALOG_NITRA_CORE);
         assert!(surface.root().is_some());
         assert!(surface.components.contains_key("title"));
+    }
+
+    #[test]
+    fn sample_detail_a2ui_validates() {
+        let surface = sample_detail_surface().unwrap();
+        assert_eq!(surface.surface_id, "detail.draft-helper");
+        assert_eq!(surface.catalog_id, CATALOG_NITRA_CORE);
+        assert!(surface.root().is_some());
+        assert!(surface.components.contains_key("title"));
+        assert!(surface.components.contains_key("draft_btn"));
     }
 
     #[test]
