@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.16.0] - 2026-08-04
+
+### Changed
+
+- MVP gaps: .n-plugin, signed sample install, draft via installed wasm
+
 ## [0.15.0] - 2026-08-04
 
 ### Added
