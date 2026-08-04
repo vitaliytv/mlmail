@@ -3,7 +3,7 @@ type: Vue Component
 title: Login.vue
 resource: app/src/views/Login.vue
 docgen:
-  crc: 13339da9
+  crc: 06dbb57b
   model: openai-codex/gpt-5.4-mini
   tier: cloud-min
   score: 100
@@ -14,6 +14,8 @@ docgen:
 ## Огляд
 
 Після входу через Google цей екран показує лист, його вкладення та текст, а до авторизації залишає лише кнопку входу. Він також відображає стан завантаження, помилки й порожню скриньку, щоб користувач бачив, чи готові дані для перегляду.
+
+Поряд із NewsletterView показує A2UI-панелі PluginDetailPanel і PluginSidebar.
 
 Це головний інтерфейс для перегляду й керування листами в одному місці, без переходу між окремими екранами для базових станів.
 

@@ -25,6 +25,7 @@ dotenvy = "0.15"
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
 tauri-plugin-http = { version = "2", features = ["unsafe-headers"] }
 tauri-plugin-agent = { git = "https://github.com/nitra/tauri-components" }
 mlmail-plugin-host = { path = "mlmail-plugin-host" }
