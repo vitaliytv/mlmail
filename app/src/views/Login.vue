@@ -154,6 +154,7 @@
           label="Журнал"
           :color="auth.actionLog.value.length ? 'primary' : undefined" />
         <q-btn @click="showTemplates = true" flat no-caps icon="sym_o_layers" label="Шаблони" />
+        <q-btn @click="showPlugins = true" flat no-caps icon="sym_o_extension" label="Плагіни" />
         <q-btn @click="agentOpen = true" flat no-caps icon="sym_o_smart_toy" label="Агент" color="primary" />
         <q-btn @click="auditOpen = true" flat no-caps icon="sym_o_manage_search" title="Журнал запитів" />
         <q-btn flat no-caps round icon="sym_o_more_vert">
@@ -176,6 +177,7 @@
     </q-page-sticky>
 
     <TemplatesManager v-model="showTemplates" />
+    <PluginManagerPanel v-model="showPlugins" />
     <GmailFiltersDialog v-model="showFilters" />
 
     <q-dialog v-model="showActionLog">
@@ -215,6 +217,7 @@ import { useAgent } from '../composables/use-agent.js'
 import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
 import NewsletterView from '../components/NewsletterView.vue'
 import PluginSidebar from '../components/PluginSidebar.vue'
+import PluginManagerPanel from '../components/PluginManagerPanel.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
 import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'
 
@@ -317,6 +320,7 @@ function formatFileSize(bytes) {
 const showActionLog = ref(false)
 const showTemplates = ref(false)
 const showFilters = ref(false)
+const showPlugins = ref(false)
 
 /**
  * @param {boolean} value whether to request only newsletters

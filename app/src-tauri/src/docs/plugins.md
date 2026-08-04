@@ -3,7 +3,7 @@ type: Module
 title: plugins.rs
 resource: app/src-tauri/src/plugins.rs
 docgen:
-  crc: 7d54af9c
+  crc: 94a5b57f
 ---
 
 ## Огляд

@@ -22,6 +22,9 @@ pub use plugin_mail::{MockMailHost, CAP_MAIL_DRAFT_CREATE, CAP_MAIL_METADATA_REA
 pub use plugin_permissions::{audit_store_path, AUDIT_RETENTION_SECS};
 pub use plugin_runtime::{ResourceLimits, DRAFT_HELPER_WAT, MAIL_READER_WAT};
 
+mod manager;
+pub use manager::*;
+
 /// Errors from the mlmail plugin host façade.
 #[derive(Debug, thiserror::Error)]
 pub enum HostError {
