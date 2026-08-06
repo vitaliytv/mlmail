@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.0] - 2026-08-06
+
+### Changed
+
+- A2UI з @7n/tauri-components замість vendored копії; bump пакета до ^0.17.0
+
 ## [0.17.0] - 2026-08-04
 
 ### Added
