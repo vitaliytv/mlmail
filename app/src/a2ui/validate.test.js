@@ -1,7 +1,7 @@
+import { SAMPLE_SIDEBAR_STREAM, validateA2uiStream } from '@7n/tauri-components/a2ui'
 import { describe, expect, it } from 'vitest'
-import { validateA2uiStream, SAMPLE_SIDEBAR_STREAM } from './validate.js'
 
-describe('a2ui validate (mlmail host mirror)', () => {
+describe('a2ui validate (from @7n/tauri-components)', () => {
   it('accepts sample sidebar stream', () => {
     const r = validateA2uiStream(SAMPLE_SIDEBAR_STREAM)
     expect(r.ok).toBe(true)

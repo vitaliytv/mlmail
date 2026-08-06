@@ -1,12 +1,10 @@
-import { CODEX_ACP_AGENT_PRESET } from '@7n/tauri-components'
 import { useAcpAgent } from '@7n/tauri-components/vue'
 import { homeDir } from '@tauri-apps/api/path'
 import { TOOLS } from '../tool/catalog.js'
 
-// In-app ACP agent gateway for mlmail — replaces the removed omlx/runAgent
-// useAgent() (see CHANGELOG @7n/tauri-components@0.11.0). Domain catalog +
-// spawn presets stay here; systemPrompt is gone — ACP agents read AGENTS.md /
-// CLAUDE.md from cwd (see @7n/tauri-components SPEC §3.2–3.3).
+// In-app ACP agent gateway for mlmail. Domain catalog stays here; agent kinds
+// and model tiers come from the backend (`acp_list_tiers` via useAcpAgent) —
+// no frontend spawn presets (removed in @7n/tauri-components@0.15+).
 //
 // cwd is homeDir() as a sane default for spawned CLIs (packaged app has no
 // checkout of this repo). Falls back to "." outside Tauri so a missing home
@@ -24,24 +22,6 @@ try {
 export function useAgent() {
   return useAcpAgent({
     catalog: TOOLS,
-    cwd,
-    agents: {
-      codex: CODEX_ACP_AGENT_PRESET,
-      cursor: {
-        command: 'cursor',
-        args: ['agent', 'acp'],
-        tiers: {
-          MIN: { label: 'GPT-5 Mini', args: ['--model', 'gpt-5-mini'] },
-          AVG: { label: 'Grok 4.5', args: ['--model', 'cursor-grok-4.5-high'] },
-          MAX: { label: 'Auto', args: ['--model', 'auto'] }
-        }
-      },
-      pi: {
-        // pi-acp hardcodes its own spawn args and has no model passthrough —
-        // model comes from ~/.pi/agent/settings.json.
-        command: 'npx',
-        args: ['-y', 'pi-acp']
-      }
-    }
+    cwd
   })
 }
