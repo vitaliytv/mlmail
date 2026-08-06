@@ -23,8 +23,8 @@
  * (`plugin_a2ui_sample_sidebar`) and routes createDraft via
  * `plugin_sidebar_create_draft` (Wasm handle_action + audit).
  */
+import { A2uiSurface } from '@7n/tauri-components/components'
 import { invoke } from '@tauri-apps/api/core'
-import A2uiSurface from './A2uiSurface.vue'
 
 const loading = ref(false)
 const loadError = ref('')
