@@ -1,0 +1,37 @@
+app/src/components/PluginSidebar.vue
+  s_2d4dd99cab3e9c::t_7f9c405c7e9796 26
+app/package.json
+  s_2d4dd99cab3e9c::t_e74a6d3ec7efe7 20
+app/src/components/docs/PluginDetailPanel.md
+  s_2d4dd99cab3e9c::t_191bfa212f242d 6,11
+app/src/components/PluginDetailPanel.vue
+  s_2d4dd99cab3e9c::t_97ea988ce50cb3 26
+app/.changes/260806-1426.md
+  s_2d4dd99cab3e9c::t_cf005fca071b13 2-3,5
+app/src/composables/docs/use-agent.md
+  s_2d4dd99cab3e9c::t_cced260713d4c6 6,11,15-17,21-22
+app/src/composables/use-agent.js
+  s_2d4dd99cab3e9c::t_ac8a6ee9b6568f 5-7,25
+app/src/a2ui/validate.test.js
+  s_2d4dd99cab3e9c::t_f2a9a4e90599f6 1,4
+app/src/components/docs/PluginSidebar.md
+  s_2d4dd99cab3e9c::t_a4dfb99cc4a6c4 6,11
+bun.lock
+  s_2d4dd99cab3e9c::t_69264b7f4dcd50 22,24,77,1873,2595-2596
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "ad0b460e30bc6034679fa6b9dcb96ed71b2f3b25",
+  "prompts": {},
+  "sessions": {
+    "s_2d4dd99cab3e9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8aef7dcb-1cdc-4808-ab6c-dd14ead4ee44",
+        "model": "grok-4.5"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
