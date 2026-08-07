@@ -1,7 +1,7 @@
 # Domain-agnostic plugin runtime через Dynamic WIT registry
 
-**Дата:** 2026-08-07  
-**Статус:** погоджено — готово до реалізації  
+**Дата:** 2026-08-07
+**Статус:** погоджено концептуально — M0 Component Model spike перед реалізацією
 **Зв'язані документи:** `docs/specs/2026-08-02-wasm-a2ui-plugin-platform.md`
 
 ## 1. Проблема / Мета
@@ -11,6 +11,11 @@
 Tauri-застосунку вимагає зміни shared platform repository. Це змішує generic
 platform concerns із продуктово-специфічною логікою та не масштабується на
 `mlmail`, `nitra/task` і майбутні host-застосунки.
+
+Фактичний runtime наразі завантажує core-Wasm modules через `wasmtime::Module`,
+використовує core `Linker` і ручний pointer/length + JSON/string ABI. Нова
+архітектура робить breaking migration на WebAssembly Component Model без
+сумісності з legacy ABI.
 
 Потрібна plugin platform, де новий Tauri-застосунок підключає власний versioned
 WIT domain API без зміни `nitra/tauri-components`. Плагіни мають зберігати
@@ -33,6 +38,7 @@ packages, grants, isolation limits, disable/uninstall, audit і A2UI.
 | Е | Multi-domain plugins | Package може вимагати кілька domain packages. Host запускає його лише коли всі required WIT packages зареєстровані й сумісні; product policy може додатково заборонити поєднання domains. |
 | Є | Demo | У `tauri-components` зберігається окремий neutral `Platform Info` demo plugin, який використовує тільки platform-level API та не залежить від `mail` або `task`. |
 | Ж | LLM integration | Разом із demo постачається інструкція для LLM/розробника: підключення platform core, registration domain adapter, schemas/capabilities, package verification і test flow. |
+| И | Runtime ABI | Підтримується лише WebAssembly Component Model: `wasmtime::component::Component`, component `Linker`, generated WIT bindings і Canonical ABI. Legacy core-Wasm modules та ручний JSON/string ABI не підтримуються. |
 
 ## 3. Архітектура
 
@@ -68,6 +74,14 @@ Platform core надає public extension contract для domain crates. Йог�
 Registry відхиляє duplicate package identity та несумісні WIT versions
 детермінованою помилкою. Відсутній required domain package також є install/load
 error, а не fallback до неtyped виклику.
+
+Runtime компілює package artifact як `wasmtime::component::Component`, реєструє
+host imports через `wasmtime::component::Linker` і використовує generated
+bindings для product-owned WIT packages. Після успішного link/type-check runtime
+кешує `InstancePre`, щоб не повторювати import resolution для кожного invoke.
+
+Core-Wasm `Module`, ручні guest-memory pointer operations, JSON buffers і
+integer ABI error codes не входять до public або internal Component Model path.
 
 ### 3.2. WIT version compatibility
 
@@ -185,42 +199,56 @@ Guide має явно забороняти передачу credentials у guest
 
 ## 8. Міграція
 
-1. Виділити mail-specific WIT, `MailHost` bridge і sample plugin з platform core
-   у `mlmail` domain crate.
-2. У platform core ввести Dynamic WIT registry і neutral platform WIT API.
-3. Додати compatibility adapter для поточного `Draft Helper` або одночасно
-   перепакувати його під product-owned `nitra:mail` contract.
-4. Перевести `mlmail` на registry registration та перевірити весь existing draft
+1. Провести M0 spike: neutral typed component, один host import/export,
+   resource limits, `InstancePre` та Tauri acceptance test.
+2. Виділити mail-specific WIT і `MailHost` bridge з platform core у `mlmail`
+   domain crate.
+3. У platform core ввести Dynamic WIT registry і neutral platform WIT API.
+4. Перепакувати `Draft Helper` як справжній WebAssembly Component під
+   product-owned `nitra:mail` contract.
+5. Перевести `mlmail` на registry registration та перевірити весь existing draft
    flow без регресії.
-5. Додати `mail:search` і `Booking Finder` sample plugin як першу доказову
+6. Додати `mail:search` і `Booking Finder` sample plugin як першу доказову
    product feature.
-6. Перевести `nitra:task` окремо; його міграція не блокує `mlmail`.
-7. Після міграції видалити deprecated mail-specific exports з platform core.
+7. Перевести `nitra:task` окремо; його міграція не блокує `mlmail`.
+8. Видалити core-Wasm loader, mail-specific ABI bridge, JSON buffer state і
+   deprecated mail exports з platform core.
 
-Міграція проходить за feature flag, доки `mlmail` не підтвердить registry path у
-debug та integration tests. Release build не містить development bridge або
-debug-only bypass capability checks.
+Compatibility mode не створюється: немає `legacy-core-v0` manifest value,
+dual loader або fallback до core-Wasm. Installed demo packages попереднього
+формату перевстановлюються у Component Model format. `.n-plugin` лишається
+container format, але `component.wasm` обов'язково має бути Component.
+
+Міграція проходить у development branch, доки `mlmail` не підтвердить registry
+path у debug та integration tests. Release build не містить development bridge,
+legacy loader або debug-only bypass capability checks.
 
 ## 9. План реалізації
 
-1. Спроєктувати і протестувати public Rust extension contract для registry у
+1. Виконати M0 Component Model spike й зафіксувати supported Wasmtime LTS,
+   component build toolchain, cold/warm budgets і generated binding contract.
+2. Спроєктувати і протестувати public Rust extension contract для registry у
    `tauri-components`, включно з duplicate/unsupported-domain errors.
-2. Винести generic runtime, grants, audit та A2UI в domain-agnostic layers;
+3. Винести generic runtime, grants, audit та A2UI в domain-agnostic layers;
    прибрати mail types з public core API.
-3. Додати platform-level WIT package та `Platform Info` demo-components package.
-4. Написати integration guide і test fixture Tauri host, який реєструє test domain.
-5. Створити в `mlmail` crate `nitra:mail`: WIT, generated bindings, capability
+4. Додати platform-level WIT package та `Platform Info` demo-components package.
+5. Написати integration guide і test fixture Tauri host, який реєструє test domain.
+6. Створити в `mlmail` crate `nitra:mail`: WIT, generated bindings, capability
    policy, Gmail adapter і contract tests.
-6. Мігрувати `Draft Helper` та додати `mail:search` / `Booking Finder`.
-7. Перевірити consent, denied grant, disabled plugin, incompatible domain,
+7. Мігрувати `Draft Helper` та додати `mail:search` / `Booking Finder`.
+8. Видалити legacy core-Wasm runtime та ручний JSON/string ABI після зелених
+   Component Model integration tests.
+9. Перевірити consent, denied grant, disabled plugin, incompatible domain,
    result limits, audit redaction і uninstall purge через unit, integration та
    Tauri MCP tests.
-8. Додати `nitra:task` як незалежну product integration після стабілізації
+10. Додати `nitra:task` як незалежну product integration після стабілізації
    registry contract.
 
 ## 10. Критерії приймання
 
 - Новий Tauri host реєструє test domain без зміни `tauri-components` source.
+- Installer відхиляє core-Wasm module у `component.wasm` і приймає валідний
+  WebAssembly Component із сумісними typed WIT imports/exports.
 - Plugin із typed import у зареєстрований domain успішно виконує handler.
 - Plugin із відсутнім або несумісним domain package не запускається з
   детермінованою помилкою.
@@ -232,6 +260,8 @@ debug-only bypass capability checks.
   `denied`; audit не містить query або content листа.
 - Жоден тест або runtime path не передає OAuth token, raw HTTP або filesystem
   capability у guest Wasm.
+- Production runtime не містить legacy core-Wasm loader, manual pointer/JSON ABI
+  або fallback path.
 
 ## Відкриті питання
 
