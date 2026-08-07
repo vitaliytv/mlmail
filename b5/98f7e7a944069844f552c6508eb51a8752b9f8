@@ -1,0 +1,30 @@
+app/src-tauri/Cargo.toml
+  s_6ba7cc57e797b2::t_4e93085aa6bd21 54-56
+  s_6ba7cc57e797b2::t_9634c634be1269 57
+app/src-tauri/Cargo.lock
+  s_0287eb07cb0df4::t_b547edf142858a 711,1221,1474,2286,2756-2769,2847-2856,2899,2998,4074,4295,4484,4542,5018,5287,5463,5566,5756,5759,6168,6214,6258-6263,6861,6885,6910,6941,6953,6975,7020,7405
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "b598f7e7a944069844f552c6508eb51a8752b9f8",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "unknown"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    },
+    "s_6ba7cc57e797b2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda1e-f585-7672-8da5-a7f421ca91da",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
