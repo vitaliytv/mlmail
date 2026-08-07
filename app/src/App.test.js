@@ -4,6 +4,7 @@ import { mountQuasar } from './test-utils/quasar.js'
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }))
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...args) => invokeMock(...args) }))
+vi.mock('@tauri-apps/api/app', () => ({ getVersion: () => Promise.resolve('test') }))
 
 const { _resetForTest } = await import('./services/auth-store.js')
 const AppModule = await import('./App.vue')
@@ -19,7 +20,6 @@ describe('App.vue', () => {
     invokeMock.mockResolvedValue(false)
     const w = mountQuasar(App)
     await flushPromises()
-    expect(w.text()).toContain('MLMaiL')
     expect(w.text()).toContain('Увійти через Google')
   })
 
@@ -31,6 +31,7 @@ describe('App.vue', () => {
     })
     const w = mountQuasar(App)
     await flushPromises()
-    expect(w.text()).toContain('Ви увійшли як me@example.com')
+    expect(w.text()).toContain('Скринька порожня.')
+    expect(w.text()).toContain('Плагіни')
   })
 })

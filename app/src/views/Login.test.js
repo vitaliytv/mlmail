@@ -24,7 +24,7 @@ describe('Login.vue', () => {
     expect(w.text()).toContain('Увійти через Google')
   })
 
-  it('renders "Ви увійшли як ..." and a menu with "Вийти" when authenticated', async () => {
+  it('renders the authenticated inbox controls and a menu with "Вийти"', async () => {
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('me@example.com')
@@ -32,7 +32,7 @@ describe('Login.vue', () => {
     })
     const w = mountWithQuasar(Login)
     await flushPromises()
-    expect(w.text()).toContain('Ви увійшли як me@example.com')
+    expect(w.text()).toContain('Скринька порожня.')
     const menuBtn = w.findAll('button').find(b => b.html().includes('more_vert'))
     await menuBtn.trigger('click')
     await flushPromises()
@@ -88,7 +88,7 @@ describe('Login.vue', () => {
 })
 
 describe('Login.vue inbox count', () => {
-  it('renders "Листів у скриньці: 348" after successful initialize', async () => {
+  it('includes the inbox count in the window title after successful initialize', async () => {
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
       if (cmd === 'auth_current_email') return Promise.resolve('u@e')
@@ -97,10 +97,11 @@ describe('Login.vue inbox count', () => {
     })
     const w = mountWithQuasar(Login)
     await flushPromises()
-    expect(w.text()).toContain('Листів у скриньці: 348')
+    expect(document.title).toBe('mlmail vtest - u@e - 348')
+    w.unmount()
   })
 
-  it('shows skeleton before count loads', async () => {
+  it('keeps the inbox view responsive while the count is loading', async () => {
     const { promise: pending, resolve: resolveCount } = Promise.withResolvers()
     invokeMock.mockImplementation(cmd => {
       if (cmd === 'auth_is_authenticated') return Promise.resolve(true)
@@ -110,10 +111,11 @@ describe('Login.vue inbox count', () => {
     })
     const w = mountWithQuasar(Login)
     await flushPromises()
-    expect(w.find('.q-skeleton').exists()).toBe(true)
+    expect(w.text()).toContain('Скринька порожня.')
     resolveCount(7)
     await flushPromises()
-    expect(w.text()).toContain('Листів у скриньці: 7')
+    expect(document.title).toBe('mlmail vtest - u@e - 7')
+    w.unmount()
   })
 
   it('shows Ukrainian error when Gmail returns Http error', async () => {
