@@ -1,0 +1,24 @@
+app/package.json
+  s_1567d39a578504::t_09710bd89c41b0 12
+app/src/views/Login.test.js
+  s_1567d39a578504::t_09710bd89c41b0 27,35,91,100-101,104,114,117-118
+app/src/App.test.js
+  s_1567d39a578504::t_09710bd89c41b0 34-35
+  s_1567d39a578504::t_00974c873fdfaa 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "9789a72b969763d4f81897681f06b60a9765d066",
+  "prompts": {},
+  "sessions": {
+    "s_1567d39a578504": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc12b-35a7-7af0-ba5c-f7b9948c0f72",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
