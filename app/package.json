@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "android": "tauri android dev",
-    "test": "vitest run",
+    "test": "bun run --bun vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
