@@ -1,465 +1,739 @@
 # Domain-agnostic plugin runtime через Dynamic WIT registry
 
 **Дата:** 2026-08-07
-**Статус:** погоджено концептуально — M0 Component Model spike перед реалізацією
-**Зв'язані документи:** `docs/specs/2026-08-02-wasm-a2ui-plugin-platform.md`
+**Оновлено:** 2026-08-09
+**Статус:** архітектурні рішення погоджено; наступний крок — M0 Component Model spike
+**Зв'язані документи:** `docs/specs/2026-08-02-wasm-a2ui-plugin-platform.md`,
+`docs/adr/20260808-211238-n-plugin-monorepo.md`
 
-## 1. Проблема / Мета
+## 1. Мета
 
-Поточний plugin runtime містить mail-specific WIT contract і runtime bridge у
-`nitra/tauri-components`. Через це додавання `mail:search` або domain API нового
-Tauri-застосунку вимагає зміни shared platform repository. Це змішує generic
-platform concerns із продуктово-специфічною логікою та не масштабується на
-`mlmail`, `nitra/task` і майбутні host-застосунки.
+Побудувати спільну plugin platform для Vue/Tauri-застосунків, де:
 
-Фактичний runtime наразі завантажує core-Wasm modules через `wasmtime::Module`,
-використовує core `Linker` і ручний pointer/length + JSON/string ABI. Нова
-архітектура робить breaking migration на WebAssembly Component Model без
-сумісності з legacy ABI.
+- новий застосунок або product domain не потребує зміни `nitra/tauri-components`;
+- product repository володіє власними WIT contracts, Rust handlers і capability policy;
+- плагіни є WebAssembly Components із compile-time typed imports та exports;
+- встановлений плагін може залежати від інших встановлених Wasm plugins;
+- `wkg` є єдиним authoritative engine для WIT/package version resolution,
+  fetch, content verification і portable lock, а `n-plugin` активує exact
+  resolved graph без власного version selector;
+- додавання плагіна, який використовує вже зареєстровані interfaces і triggers, не
+  потребує перекомпіляції застосунку;
+- application update перевіряє майбутню сумісність плагінів до встановлення.
 
-Потрібна plugin platform, де новий Tauri-застосунок підключає власний versioned
-WIT domain API без зміни `nitra/tauri-components`. Плагіни мають зберігати
-compile-time typed WIT imports, а platform — єдиний security model: signed
-packages, grants, isolation limits, disable/uninstall, audit і A2UI.
+Це breaking migration. Legacy core-Wasm `Module`, ручний pointer/length ABI,
+JSON/string transport і dual-loader не підтримуються.
 
-Перший product domain — `nitra:mail`; перша нова операція — `mail:search` із
-довільним Gmail query, account-scoped consent і metadata-only результатами.
+## 2. Межі M0
 
-## 2. Ухвалені рішення
+M0 навмисно оптимізований для перевірки Component Model architecture, а не для
+запуску довільного неперевіреного коду.
 
-| # | Питання | Рішення |
-|---|---|---|
-| А | Розміщення domain API | Domain WIT contracts належать product repository або окремому domain crate, яким володіє product team. Вони не живуть у platform core за замовчуванням. |
-| Б | Підключення domain API | `tauri-components` надає Dynamic WIT registry: host реєструє bindings та handlers власних WIT imports у generic runtime під час старту. |
-| В | Межі platform core | Core володіє package lifecycle, signing/trust, Wasm/Wasmtime limits, generic invocation lifecycle, grants storage, audit primitives, A2UI та registry contract. Core не знає `mail:*`, `task:*` або product secrets. |
-| Г | Type safety | Plugin imports domain interfaces напряму через WIT. Domain crate генерує typed guest і host bindings; JSON-RPC transport як заміна WIT не використовується. |
-| Ґ | Permissions | Domain adapter декларує capability names, allowed scope kinds, consent descriptions та audit policy. Platform зберігає grants і викликає domain policy перед handler-ом. |
-| Д | Новий застосунок | Додавання нового host app або domain API не потребує зміни `tauri-components`; app постачає domain crate та реєструє його adapter. |
-| Е | Multi-domain plugins | Package може вимагати кілька domain packages. Host запускає його лише коли всі required WIT packages зареєстровані й сумісні; product policy може додатково заборонити поєднання domains. |
-| Є | Demo | У `tauri-components` зберігається окремий neutral `Platform Info` demo plugin, який використовує тільки platform-level API та не залежить від `mail` або `task`. |
-| Ж | LLM integration | Разом із demo постачається інструкція для LLM/розробника: підключення platform core, registration domain adapter, schemas/capabilities, package verification і test flow. |
-| И | Runtime ABI | Підтримується лише WebAssembly Component Model: `wasmtime::component::Component`, component `Linker`, generated WIT bindings і Canonical ABI. Legacy core-Wasm modules та ручний JSON/string ABI не підтримуються. |
+### 2.1. Входить до M0
 
-## 3. Архітектура
+- Bytecode Alliance WebAssembly runtime 48 LTS після його офіційного stable release;
+- WebAssembly Component Model і Canonical ABI;
+- generated typed host registration;
+- Rust toolchain для авторів плагінів навколо `wkg`;
+- required plugin dependencies різних publishers;
+- native experimental async Component Model features;
+- immutable activation graphs, SQLite metadata і filesystem CAS;
+- capability grants, consent, layered deny policy та structured audit;
+- Vue A2UI integration;
+- application/plugin compatibility preflight.
 
-```text
-Wasm plugin
-  │ typed import: nitra:mail/search@0.1
-  ▼
-Dynamic WIT registry у tauri-components
-  │ resolves domain package + compatibility + invocation lifecycle
-  ▼
-mlmail MailDomain adapter
-  │ validates domain request + checks mail grant + writes audit metadata
-  ▼
-Gmail API через host-owned OAuth token
-```
+### 2.2. Не входить до M0
 
-Для `nitra:task` ланцюжок такий самий, але registry резолвить `nitra:task`, а
-`task` host adapter працює зі сховищем задач. Платформа не отримує залежності на
-Gmail, task storage або інші product services.
+- package signatures, publisher-key verification або package signing frameworks;
+- authenticity чи ownership proof для `publisher_id`;
+- memory, fuel, CPU, deadline, concurrency, task, stream, state або result quotas;
+- optional dependencies;
+- lifecycle WIT;
+- state migrations і rollback snapshots;
+- compatibility з legacy plugin ABI;
+- guest languages, крім Rust authoring toolchain.
 
-### 3.1. Dynamic WIT registry
+`publisher_id` у M0 є декларативною identity, а digest перевіряє content address
+і пошкодження. Configured package sources вважаються trusted. Така конфігурація
+не є безпечною для довільних сторонніх plugins і повинна мати явну позначку
+`experimental/trusted-only`.
 
-Platform core надає public extension contract для domain crates. Його мінімальна
-семантика:
+Tauri application updater може зберігати власну стандартну перевірку update
+artifact. Відкладення plugin package signing не скасовує перевірку самого
+application installer.
 
-1. Domain adapter має stable package identity, наприклад `nitra:mail@0.1.0`.
-2. Adapter реєструє у Wasmtime `ComponentLinker` generated WIT host bindings.
-3. Adapter надає compatibility metadata для перевірки plugin manifest до запуску.
-4. Adapter описує operation-to-capability policy і human-readable consent text.
-5. Core викликає adapter у межах стандартних Wasm memory/fuel/timeout/concurrency
-   limits і не дозволяє обходити plugin lifecycle або grant store.
-
-Registry відхиляє duplicate package identity та несумісні WIT versions
-детермінованою помилкою. Відсутній required domain package також є install/load
-error, а не fallback до неtyped виклику.
-
-Runtime компілює package artifact як `wasmtime::component::Component`, реєструє
-host imports через `wasmtime::component::Linker` і використовує generated
-bindings для product-owned WIT packages. Після успішного link/type-check runtime
-кешує `InstancePre`, щоб не повторювати import resolution для кожного invoke.
-
-Core-Wasm `Module`, ручні guest-memory pointer operations, JSON buffers і
-integer ABI error codes не входять до public або internal Component Model path.
-
-### 3.2. WIT version compatibility
-
-Plugin manifest декларує потрібні domain packages і supported version range.
-Host порівнює цей range з metadata зареєстрованих adapters до першого invoke.
-
-- Backward-compatible additions мають зберігати попередній WIT contract.
-- Breaking зміни отримують нову incompatible domain version.
-- Host повертає `unsupported-domain` із package name та required/supported version,
-  але не розкриває внутрішніх linker details.
-
-### 3.3. Domain isolation
-
-Domain adapter не отримує доступу до runtime state іншого plugin-а. Він знає лише
-контекст поточного invoke: plugin identity/version, user identity, grants і
-correlation ID. Токени, credential bytes, raw filesystem access та прямий network
-access ніколи не передаються у guest Wasm.
-
-## 4. Permissions, consent та audit
-
-### 4.1. Відповідальність domain adapter
-
-Кожен adapter визначає:
-
-- підтримувані capability names;
-- допустимі `resource_kind` і правила `resource_id`;
-- людський текст для consent UI;
-- mutating/read-only classification;
-- audit metadata, retention та redaction rules;
-- rate, result-size та input-size limits.
-
-Core застосовує ці правила через спільний grant store. Відсутній або невідповідний
-grant завершує invoke як `denied` до product service call.
-
-### 4.2. `mail:search`
-
-`mlmail` додає capability:
+## 3. Архітектурні межі
 
 ```text
-name: mail:search
-scope: account
+Wasm Component plugin
+  │ typed WIT imports/exports
+  ▼
+PluginRuntime у nitra/n-plugin
+  │ generic lifecycle, graph, grants, audit, A2UI
+  ▼
+PluginHostInterfaceRegistry у product application
+  │ generated typed registration
+  ▼
+Product-owned Rust handlers
+  │ host-owned credentials і services
+  ▼
+Gmail, task storage або інший product backend
 ```
 
-Grant надає плагіну право виконувати довільні Gmail search queries в обраному
-account. Query не входить до scope і не обмежується allowlist-ом. Обмеження
-безпеки й ресурсу застосовуються незалежно від query: максимальна довжина query,
-maximum page/result count і per-plugin rate limit.
+### 3.1. Відповідальність `nitra/n-plugin`
 
-Операція повертає тільки metadata:
+Platform core знає лише generic concepts:
+
+- package, release, dependency edge та activation graph;
+- Component compilation, composition, instantiation і invocation;
+- grants, deny authorities, audit і plugin state;
+- CAS, SQLite registry, downloads, updates і garbage collection;
+- Vue Plugin Manager, A2UI renderer і dependency slots;
+- public registration contract для interfaces та triggers.
+
+Core не містить `mail:*`, `task:*`, Gmail types, product secrets або product
+handlers. Новий domain не додає `match` branch чи feature flag у platform core.
+
+### 3.2. Product-owned host interfaces
+
+Кожен застосунок має власний `PluginHostInterfaceRegistry`. Лише trusted
+application root може реєструвати interfaces; plugins і dependencies не можуть
+мутувати registry.
+
+Product crate генерує typed runtime bindings і registration code з WIT.
+Застосунок підключає їх через API на кшталт:
+
+```rust
+PluginRuntimeBuilder::<AppTriggerSet>::new()
+    .register_host_interfaces(product_plugin_interfaces())
+    .register_triggers(AppTriggerSet::inventory())
+    .build(app_handle)
+```
+
+Конкретна Rust форма API уточнюється M0 spike, але контракт має лишатися
+generated і typed. Type-erased JSON dispatcher не допускається.
+
+Installing a plugin не потребує rebuild, якщо всі його required interfaces і
+triggers уже входять до application inventory. Новий host interface або trigger
+type потребує rebuild product application, але не зміни plugin platform.
+
+### 3.3. Product-local triggers
+
+Platform core визначає generic `ApplicationTriggerSet`. Product build генерує
+typed Rust enum та inventory для власних triggers. Plugin manifest посилається
+на versioned WIT identity trigger-а, а не на довільний рядок із JSON payload.
+
+### 3.4. Repository boundary
+
+Plugin system розробляється в окремому coordinated platform monorepo
+`nitra/n-plugin`. Він містить Rust runtime crates, Tauri host
+integration, Vue packages, WIT contracts, schemas, `n-plugin-cli`, demos,
+fixtures, conformance tests і документацію. Усі artifacts випускаються одним
+coordinated platform version та утворюють один tested compatibility set.
+
+`nitra/tauri-components` не містить plugin-specific runtime, UI, bindings, demo
+або compatibility facade. Plugin platform може залежати від його public generic
+Vue/Tauri primitives і design tokens, але зворотна залежність заборонена. Product
+application залежить від обох repositories напряму. M0 spike одразу реалізується
+в новому repository, без проміжної реалізації в `tauri-components`.
+
+### 3.5. SDK boundaries і naming
+
+Усі plugin-specific packages послідовно використовують prefix `n-plugin`.
+Coordinated release містить:
 
 ```text
-id, from, subject, date
+n-plugin-interfaces  canonical ABI types без Tauri/runtime dependencies
+n-plugin-guest       generated bindings і macros для Preview 2 guest plugins
+n-plugin-host        generated native host bindings
+n-plugin-runtime     Component linker, registry, graphs і Tauri integration
+n-plugin-cli         authoring/build/publish CLI; executable n-plugin
 ```
 
-Вона не повертає body, attachment bytes, Gmail OAuth token, raw HTTP response
-або credential material. Audit запис містить plugin, capability, account scope,
-result status, correlation ID та кількість результатів; повний query і metadata
-листів не зберігаються в audit log.
+Canonical WIT зберігається тільки в `wit/`. CI забороняє копіювати shared WIT у
+crates; host і guest bindings генеруються з одного source tree. Усі crates, Vue
+packages, WIT profile і CLI випускаються однією platform version.
 
-## 5. Product domains
+## 4. Runtime і ABI
 
-### 5.1. `mlmail`: `nitra:mail`
+### 4.1. Runtime baseline
 
-`mlmail` створює product-owned `nitra:mail` domain crate з WIT definitions,
-generated bindings, manifest capability policy та Gmail adapter.
+- Production baseline — latest stable Bytecode Alliance runtime 48 LTS після
+  офіційного release.
+- До release дозволений лише development spike на prerelease build.
+- Увесь M0 pin-ить точні runtime, `wit-bindgen`, `cargo-component`, `wkg` та
+  adapter toolchain versions.
+- Toolchain/ABI snapshot не змінюється протягом runtime 48 lifecycle без нового
+  platform compatibility profile.
 
-Початкові операції:
+### 4.2. Component Model only
 
-- `mail:metadata.read`;
-- `mail:draft.create`;
-- `mail:search`.
+Runtime використовує:
 
-`mail:search` виконується host-ом через існуючий Gmail search flow, але plugin
-викликає тільки typed WIT import. Adapter передає Gmail OAuth token лише в
-host-owned Gmail client.
+- component `Component` API;
+- component `Linker`;
+- generated WIT bindings;
+- Canonical ABI records, variants, resources, `future` і `stream`;
+- cached compiled artifacts та pre-instantiation data.
 
-### 5.2. `nitra:task`
+Core-Wasm `Module`, guest-memory pointer operations, JSON buffers та integer ABI
+error conventions не входять до runtime path.
 
-`nitra:task` є independent domain crate. Він сам визначає WIT records, operations
-та capabilities, наприклад `task:search`, `task:read`, `task:create` і
-`task:update`. Зміни `nitra:task` не змінюють `nitra:mail` або platform core.
+### 4.3. Experimental async profile
 
-## 6. Neutral demo components
+Погоджено `C1 — unrestricted experimental async`:
 
-`tauri-components` містить `demo-components/platform-info` як signed sample
-package та source для його збирання. Demo використовує тільки platform-level WIT
-API `platform:get-info`.
+- plugins можуть використовувати native `future`, `stream` і concurrency;
+- M0 не вводить restricted async subset;
+- весь graph компонується під одним pinned async ABI snapshot;
+- incompatible snapshot є compatibility failure, а не runtime fallback.
 
-`platform:get-info` повертає виключно безпечну application metadata:
+### 4.4. Instance lifecycle
 
-- application name;
-- application version;
-- platform API version;
-- registered domain package identities та versions.
+- Instance/Store створюється lazy для activation generation.
+- Один root graph має long-lived instance/Store протягом generation.
+- Окремого lifecycle WIT (`init`, `shutdown`, `migrate`) немає.
+- Application shutdown скасовує Store tasks і закриває generation.
 
-Відповідь не містить account identifiers, install paths, secrets, token values,
-filesystem data або product domain records. Demo потрібен для acceptance testing
-platform integration в будь-якому Tauri host і не замінює product-specific samples.
+Trap не повторює поточний call автоматично. Runtime створює нову instance із
+exponential backoff, jitter, token bucket і automatic half-open canary на одному
+реальному наступному виклику. Кількість lifetime restarts не обмежується, але
+backoff state зберігається в SQLite.
 
-## 7. Інструкція для LLM і розробника
+Цей operational retry control не є execution resource limit. M0 свідомо не має
+захисту від нескінченного або надмірного guest execution.
 
-У `tauri-components` додається коротка integration guide з детермінованим
-workflow:
+## 5. Authoring toolchain і package format
 
-1. Підключити platform core до Tauri builder.
-2. Реалізувати product-owned WIT domain crate.
-3. Описати capability policy, consent text, audit redaction і compatibility metadata.
-4. Зареєструвати adapter у Dynamic WIT registry до завантаження plugins.
-5. Перевірити `Platform Info` demo plugin.
-6. Додати product contract та integration tests.
+### 5.1. `n-plugin-cli`
 
-Guide має явно забороняти передачу credentials у guest, bypass grant checks,
-невалідувані dynamic imports і перевірку UI лише скриншотом. Для Tauri verification
-вона використовує DOM accessibility snapshot, direct invoke та console-log checks.
+Authoring toolchain має назву `n-plugin-cli`, executable — `n-plugin`. Він є
+тонким orchestration layer навколо embedded Rust libraries
+`wasm-pkg-core`/`wasm-pkg-client`, а не окремим package resolver. Зовнішній
+executable `wkg` не є runtime dependency.
 
-## 8. Міграція
-
-1. Провести M0 spike: neutral typed component, один host import/export,
-   resource limits, `InstancePre` та Tauri acceptance test.
-2. Виділити mail-specific WIT і `MailHost` bridge з platform core у `mlmail`
-   domain crate.
-3. У platform core ввести Dynamic WIT registry і neutral platform WIT API.
-4. Перепакувати `Draft Helper` як справжній WebAssembly Component під
-   product-owned `nitra:mail` contract.
-5. Перевести `mlmail` на registry registration та перевірити весь existing draft
-   flow без регресії.
-6. Додати `mail:search` і `Booking Finder` sample plugin як першу доказову
-   product feature.
-7. Перевести `nitra:task` окремо; його міграція не блокує `mlmail`.
-8. Видалити core-Wasm loader, mail-specific ABI bridge, JSON buffer state і
-   deprecated mail exports з platform core.
-
-Compatibility mode не створюється: немає `legacy-core-v0` manifest value,
-dual loader або fallback до core-Wasm. Installed demo packages попереднього
-формату перевстановлюються у Component Model format. `.n-plugin` лишається
-container format, але `component.wasm` обов'язково має бути Component.
-
-Міграція проходить у development branch, доки `mlmail` не підтвердить registry
-path у debug та integration tests. Release build не містить development bridge,
-legacy loader або debug-only bypass capability checks.
-
-## 9. План реалізації
-
-1. Виконати M0 Component Model spike й зафіксувати supported Wasmtime LTS,
-   component build toolchain, cold/warm budgets і generated binding contract.
-2. Спроєктувати і протестувати public Rust extension contract для registry у
-   `tauri-components`, включно з duplicate/unsupported-domain errors.
-3. Винести generic runtime, grants, audit та A2UI в domain-agnostic layers;
-   прибрати mail types з public core API.
-4. Додати platform-level WIT package та `Platform Info` demo-components package.
-5. Написати integration guide і test fixture Tauri host, який реєструє test domain.
-6. Створити в `mlmail` crate `nitra:mail`: WIT, generated bindings, capability
-   policy, Gmail adapter і contract tests.
-7. Мігрувати `Draft Helper` та додати `mail:search` / `Booking Finder`.
-8. Видалити legacy core-Wasm runtime та ручний JSON/string ABI після зелених
-   Component Model integration tests.
-9. Перевірити consent, denied grant, disabled plugin, incompatible domain,
-   result limits, audit redaction і uninstall purge через unit, integration та
-   Tauri MCP tests.
-10. Додати `nitra:task` як незалежну product integration після стабілізації
-   registry contract.
-
-## 10. Критерії приймання
-
-- Новий Tauri host реєструє test domain без зміни `tauri-components` source.
-- Installer відхиляє core-Wasm module у `component.wasm` і приймає валідний
-  WebAssembly Component із сумісними typed WIT imports/exports.
-- Plugin із typed import у зареєстрований domain успішно виконує handler.
-- Plugin із відсутнім або несумісним domain package не запускається з
-  детермінованою помилкою.
-- Відсутній grant блокує domain operation до виклику product service.
-- Disabled plugin не може викликати жоден domain adapter.
-- `Platform Info` demo працює у `mlmail`, `task` і мінімальному fixture host без
-  product-specific dependencies.
-- `mail:search` із account grant повертає лише metadata; без grant повертає
-  `denied`; audit не містить query або content листа.
-- Жоден тест або runtime path не передає OAuth token, raw HTTP або filesystem
-  capability у guest Wasm.
-- Production runtime не містить legacy core-Wasm loader, manual pointer/JSON ABI
-  або fallback path.
-
-## Відкриті питання
-
-- Остаточна Rust форма type-erased registration API для generated WIT bindings у
-  Wasmtime `ComponentLinker`.
-- Exact policy для cross-domain plugins: deny-by-default або product-configurable
-  allowlist у першому релізі.
-- Версійна схема domain ranges у plugin manifest і правила compatibility між WIT
-  minor versions.
-- Чи потрібен streaming/pagination protocol для `mail:search` у першій версії,
-  чи достатньо bounded list result.
-
-## 11. Plugin dependencies і plugin-to-plugin calls
-
-### 11.1. Мета та модель
-
-Встановлений Wasm plugin може викликати інший встановлений Wasm plugin лише як
-явно задекларовану dependency. Це не є довільним discovery усіх plugins і не є
-звичайним npm import: platform завжди лишається посередником, який перевіряє
-identity, compatibility, lifecycle і permissions кожного учасника.
-
-Dependency може належати іншому publisher. Кожен package зберігає власні
-signature, publisher key, fingerprint, trust state, manifest, capabilities і
-grants. Root plugin не передає dependency свої permissions, і dependency не
-передає permissions root plugin-у.
+M0 підтримує Rust authoring, але canonical component і manifest formats не
+містять Rust-specific assumptions. Основні flows:
 
 ```text
-Root plugin A
-  │ typed WIT import до dependency B
-  ▼
-Dynamic WIT registry
-  │ verifies declared edge, version and lifecycle
-  ▼
-Dependency plugin B
-  │ виконується як B, з grants B
-  ▼
-Product domain adapter
+n-plugin new
+n-plugin build
+n-plugin lock
+n-plugin test
+n-plugin inspect
+n-plugin publish
+n-plugin fetch
 ```
 
-### 11.2. Manifest contract
+`n-plugin test` запускає фактичний Wasm Component у local Component test host,
+підключає generated WIT mocks, компонує dependencies, перевіряє async streams,
+traps і Vue A2UI snapshots.
 
-Plugin manifest отримує декларативний dependency section. Кожен dependency
-описує:
+Distribution commands зберігають upstream semantics: `n-plugin publish`,
+`n-plugin fetch` і `n-plugin lock` викликають відповідні embedded
+`wasm-pkg-tools` APIs для publish/get/resolution. CLI не запускає зовнішній
+`wkg` subprocess. Власний registry protocol, SemVer selector або portable
+dependency lock format не створюється.
 
-- immutable plugin identifier;
-- supported version range;
-- required або optional status;
-- потрібний exported WIT package/interface та його compatible version range;
-- allowed package source constraints, якщо product policy їх підтримує.
+### 5.2. Authoring files
 
-Plugin може імпортувати лише WIT exports dependencies, які перелічені у власному
-manifest. Runtime не надає API для переліку або виклику довільних installed
-plugins. Це запобігає confused-deputy flows і неявному формуванню нових trust
-relationships після інсталяції.
+- `wkg.toml` — стандартна конфігурація `wkg`;
+- `wkg.lock` — стандартний portable exact WIT/package resolution без
+  plugin-specific extension fields;
+- `.n-plugin.toml` — plugin-specific authoring metadata;
+- compiled `.n-plugin` — raw valid WebAssembly Component.
 
-### 11.3. Resolution: registry-first з lockfile
+`.n-plugin` не є ZIP/TAR container і не містить довільних assets. Versioned
+runtime manifest вбудовується у custom section Component-а. Plugin entrypoints
+у `.n-plugin.toml` явно зіставляються з typed WIT export references; naming
+conventions, export-all і JSON entrypoints заборонені.
 
-Основна модель — registry-first resolver. Root manifest містить version ranges,
-а installer резолвить повний dependency graph із product-approved registry або
-іншого явно дозволеного source. Bundled signed packages у root `.n-plugin`
-допускаються як optional offline/cache source, але не є єдиним способом доставки.
+### 5.3. Identity
 
-Після resolution platform створює lockfile з точними значеннями для кожного
-node:
-
-- plugin ID і resolved version;
-- package checksum;
-- publisher key fingerprint;
-- source identity;
-- WIT package/interface version;
-- dependency edges.
-
-Повторна інсталяція або update використовує lockfile, доки користувач явно не
-погоджується на graph update. Resolver не підміняє package іншим publisher key
-або іншим source лише через однаковий plugin ID.
-
-Перед записом у active registry resolver:
-
-1. будує повний dependency graph;
-2. відхиляє cycle, duplicate incompatible version і недоступний required node;
-3. застосовує graph depth, node-count і package-size limits;
-4. завантажує або бере локальний package лише з дозволеного source;
-5. перевіряє signature, checksum і publisher trust для кожного node;
-6. перевіряє WIT import/export compatibility;
-7. готує один consent/install preview для всього graph.
-
-Installation відбувається через staging transaction. Якщо install, signature,
-manifest, consent або registry activation будь-якого node не пройшли, platform
-робить rollback усього tree й не лишає partial active graph.
-
-### 11.4. Multi-publisher trust і consent
-
-Consent UI показує розгортуваний dependency tree. Для кожного plugin користувач
-бачить name, exact version, publisher, public-key fingerprint, source, required
-WIT interface, requested capabilities і статус required/optional.
-
-New publisher key або key rotation потребує окремого явного acceptance у межах
-одного tree consent flow. Unsigned packages заборонені у release builds, зокрема
-для transitive dependencies.
-
-Grants обробляються per-plugin:
-
-- code-only dependency може не мати capabilities;
-- dependency з capability отримує власний consent і власний grant record;
-- caller не може використати `mail:search` лише тому, що його dependency має цей
-  grant;
-- dependency не може використати grant caller-а.
-
-Product policy може відхилити dependency tree з поєднанням високоризикових
-capabilities або sources, але така policy має бути видимою користувачу як причина
-відмови, а не тихим filter-ом.
-
-### 11.5. Runtime invocation
-
-Plugin-to-plugin calls використовують typed WIT imports/exports через Dynamic
-WIT registry. Перед invocation platform перевіряє:
-
-1. caller має declared dependency edge до callee;
-2. callee installed, enabled і compatible з lockfile;
-3. caller і callee WIT interfaces сумісні;
-4. nested invocation depth не перевищує configured limit;
-5. call chain не містить cycle або re-entrant invoke того самого plugin.
-
-Callee запускається в окремому Wasm invocation context під власними plugin ID,
-version і grants. Він не має доступу до memory caller-а, до його приватних
-settings або до raw input поза typed WIT request. Memory, fuel, timeout,
-concurrency й output-size limits застосовуються до кожного invoke.
-
-Усі помилки мають stable safe codes: `dependency-missing`,
-`dependency-disabled`, `dependency-incompatible`, `dependency-cycle`, `denied`,
-`rate-limited` і `unavailable`. Internal linker, OAuth, filesystem або network
-details не потрапляють у Wasm guest error.
-
-### 11.6. Audit
-
-Platform створює correlation chain для кожного nested invoke, наприклад:
+`publisher_id` є стандартним `wkg` namespace. Canonical package identity
+серіалізується як:
 
 ```text
-root-plugin-A → dependency-B → nitra:mail/search
+namespace:package
 ```
 
-Audit фіксує caller, callee, operation, capability, scope, result status,
-correlation ID і timing metadata. Він не зберігає bodies, OAuth tokens, raw
-request payloads або приватні дані domain operation. Mutating domain actions
-далі підлягають product-specific audit policy.
+Canonical release identity:
 
-### 11.7. Lifecycle і Plugin Manager
+```text
+namespace:package@version + digest
+```
 
-Plugin Manager показує для кожного node:
+Наприклад, `publisher_id = nitra` і `package = booking-finder` утворюють
+`nitra:booking-finder`. Registry URL, OCI reference або local path є лише
+locator. Вони не входять до identity або trust decision. Publisher transfer не
+підтримується. Для нового namespace створюється інша package identity.
 
-- `Depends on` — direct dependencies;
-- `Used by` — direct dependents;
-- health: installed, enabled, compatible, granted або blocked;
-- resolved version, publisher fingerprint і source;
-- optional/required статус.
+## 6. Resolution, installation і updates
 
-Disable dependency блокує всі dependent calls із `dependency-disabled`. Required
-dependency робить root plugin non-invocable; optional dependency дозволяє root
-plugin-у перейти у явно описаний degraded mode.
+### 6.1. Sources
 
-Uninstall dependency, що має active dependents, не виконується мовчки. Manager
-показує dependents і пропонує видалити/оновити їх разом або скасувати дію. Shared
-dependency інсталюється один раз: registry зберігає dependency edges, а не
-небезпечний неявний reference count.
+Ordered resolver перевіряє:
 
-Update root plugin показує diff повного graph: added/removed/changed packages,
-versions, publisher keys, sources, WIT interfaces і capability requests. Після
-підтвердження update активується атомарно; failure повертає попередній lockfile
-та active graph.
+1. local content-addressed store;
+2. explicit local file/import;
+3. configured `wkg` sources.
 
-### 11.8. План реалізації dependencies
+Namespace mapping використовує стандартні `wkg` configuration fields
+`namespace_registries` і `package_registry_overrides`. Registry metadata
+отримується через `/.well-known/wasm-pkg/registry.json` і може спрямувати
+namespace до GHCR або іншого OCI storage. Product policy може дозволяти чи
+забороняти mappings, але не змінює package identity.
 
-1. Розширити package manifest dependency declarations і WIT export metadata.
-2. Реалізувати deterministic graph resolver, source policy, lockfile і cycle /
-   compatibility validation.
-3. Додати staged atomic install, rollback та registry storage dependency edges.
-4. Розширити trust/consent preview для multi-publisher tree.
-5. Додати plugin-to-plugin invocation route до Dynamic WIT registry з isolated
-   callee identity, bounded nesting та correlation chain.
-6. Оновити Plugin Manager: dependency tree, health, `Used by`, uninstall/update
-   protection.
-7. Додати fixtures: same-publisher, multi-publisher, optional dependency,
-   offline bundled package та separately downloaded package.
-8. Додати LLM integration guide: dependency declaration, lockfile review,
-   grants isolation і заборона dynamic plugin discovery.
+Dependency іншого publisher може завантажуватися окремо від root package.
+Registry/OCI coordinates не фіксуються як identity. Стандартний `wkg.lock`
+зберігає package, requirement, exact version, content digest і configured
+registry name; SQLite може додатково зберігати OCI reference та manifest digest
+як provenance evidence для diagnostics.
 
-### 11.9. Критерії приймання dependencies
+Основний install input — `namespace:package@version-or-range`. Explicit import
+може прийняти `oci://` або local file locator. Installer завантажує artifact,
+читає embedded manifest, перевіряє `namespace:package@version`, резолвить mutable
+OCI tag у concrete artifact, обчислює/verifies content digest і лише потім
+створює exact package lock. Artifact без embedded identity або з identity, що не
+відповідає request, відхиляється. Dependencies із невідомими namespace mappings
+блокують installation до налаштування mapping.
 
-- Root plugin з dependency іншого publisher показує повний tree до install і
-  вимагає acceptance кожного нового publisher key.
-- Resolver окремо завантажує signed dependency з approved registry, фіксує exact
-  graph у lockfile та повторно використовує його без silent update.
-- Invalid signature, cycle, incompatible WIT interface або missing required node
-  не залишає partial installation.
-- Plugin не може викликати installed plugin, якого немає у його manifest
-  dependencies.
-- Dependency call використовує callee grants; grants caller-а не успадковуються.
-- Audit відображає complete caller-to-callee chain без body, token або raw query.
-- Disable/uninstall/update dependency коректно показує і захищає dependents.
-- Optional dependency дає documented degraded behavior; required dependency
-  блокує root invocation.
+Canonical release digest дорівнює `wkg` content digest: SHA-256 raw WebAssembly
+Component bytes, які в стандартному OCI artifact є digest першого Component
+layer. OCI manifest digest і OCI reference зберігаються лише як locator та
+provenance evidence і не входять до release identity.
+
+### 6.2. Version resolution
+
+- Author manifest використовує WIT/package SemVer ranges.
+- Embedded `wasm-pkg-core` виконує SemVer selection, fetch, cache lookup і
+  content-digest verification за upstream `wkg` semantics.
+- M0 activation завжди використовує exact locked versions і digests.
+- Side-by-side versions дозволені в різних activation graphs.
+- M0 не реалізує власний global SAT/backtracking solver: exact locks не
+  потребують його, а майбутня range resolution слідує upstream `wkg` semantics.
+- Dependency collector та activation compiler відхиляють plugin cycle, missing
+  required node й incompatible WIT types; `wkg` окремо перевіряє WIT dependency
+  resolution.
+- Optional dependencies не підтримуються: кожна declared dependency required.
+
+### 6.3. `wkg`-owned package resolution
+
+Package resolution і runtime activation є послідовними шарами з одним version
+resolver, а не двома конкуруючими package managers:
+
+```text
+embedded .n-plugin manifests
+  -> n-plugin Dependency Collector
+  -> wasm-pkg-core DependencyResolver
+  -> exact Resolved Package Graph
+  -> n-plugin Activation Compiler
+  -> SQLite activation generation
+```
+
+`Dependency Collector` читає immutable embedded manifests root package і
+required dependencies, зберігає caller-to-callee constraints та передає package
+requirements до `wasm-pkg-core`. Collector може ітеративно відкривати manifests
+щойно завантажених dependencies, але не вибирає version, не порівнює SemVer і не
+підміняє upstream resolver policy.
+
+`wasm-pkg-core` є authoritative для namespace routing, requirement-to-version
+selection, fetch/cache, offline lock lookup, yanked-release handling і content
+digest verification. Resolver invocation scoped до candidate root activation
+graph; інший root graph може отримати іншу exact version того самого package.
+
+`Activation Compiler` відображає exact resolutions назад на declared
+caller-to-callee edges, перевіряє Component imports/exports, WIT resource
+identity, host inventory, edge grants і application compatibility. Він не може
+змінити version або digest, повернуті resolver-ом.
+
+Стандартний `wkg.lock` зберігає portable tuples:
+
+```text
+package + registry evidence + requirement + version + content digest
+```
+
+Lock не розширюється полями edges, grants, consent, enabled state або activation
+generations. Runtime матеріалізує ті самі exact resolutions разом із
+plugin-specific edges у SQLite; це runtime projection, а не альтернативний
+dependency lock format.
+
+### 6.4. Atomic installation
+
+Downloads є resumable і спочатку потрапляють у staging/CAS. Resolver будує
+повний graph, type-check-ить його та лише потім створює нову registry generation.
+Partial download не є installed plugin. Failure не змінює active generation.
+
+Compatible plugin/dependency updates можуть завантажуватися автоматично. Вони
+активуються лише під час наступного application restart. Нові capabilities або
+зміна grants завжди потребують consent. Composition failure залишає попередню
+generation активною.
+
+## 7. Plugin dependencies і calls
+
+### 7.1. Guarded immutable composition
+
+Plugin-to-plugin calls не проходять через dynamic JSON broker. Installer створює
+immutable composed activation graph:
+
+```text
+root plugin
+  │ typed import
+  ▼
+edge guard component
+  │ caller/callee identity + edge grants
+  ▼
+dependency component
+```
+
+Guard generated для конкретного dependency edge та generation. Він перевіряє
+edge identity, enabled state і edge-scoped grants. Root і required dependencies
+працюють як один composed graph/Store. Registry mutations створюють нову
+copy-on-write generation; стара generation draining до завершення активних calls.
+
+### 7.2. Graph ownership
+
+Dependency є видимим graph-owned node, а не автоматично top-level plugin. Plugin
+Manager показує direct `Depends on` і `Used by`. Dependency можна окремо
+promote-нути до root installation, після чого вона отримує власний root graph.
+
+Будь-яка невдала required dependency робить root graph неактивованим. Partial
+або degraded activation не існує, бо optional dependencies відсутні.
+
+### 7.3. Grants
+
+Grants є explicit і edge-scoped. Caller не успадковує grants dependency, а
+dependency не отримує grants caller-а. Dependency без host capability requests
+не створює додатковий consent. Dependency з host capabilities отримує власні
+edge grants у тому самому graph consent flow.
+
+Layered deny authorities застосовуються незалежно від allow grant:
+
+```text
+platform hard deny
+→ product policy deny
+→ local administrator deny
+→ user deny
+→ edge-scoped allow grant
+```
+
+Deny має пріоритет над allow. У M0 ці policies не доводять authenticity package.
+
+## 8. State, registry, CAS та audit
+
+### 8.1. Storage
+
+- SQLite зберігає package metadata, activation graphs, exact resolutions,
+  caller-to-callee edges, grants, desired/effective state, restart state, audit
+  indexes і registry generations. Exact `package + version + digest` походять
+  лише з `wasm-pkg-core`; SQLite не виконує package resolution.
+- Filesystem CAS зберігає Components, downloaded packages і compiled cache.
+- SQLite transaction публікує generation лише після готовності всіх CAS objects.
+
+### 8.2. Plugin state
+
+M0 підтримує лише graph-scoped state. Provider-shared state можна додати пізніше
+як окремий explicit scope. State schema change автоматично очищає state без
+migration, consent або rollback snapshot. Authors повинні вважати state
+disposable; wipe створює audit event.
+
+### 8.3. Garbage collection
+
+CAS використовує mark-and-sweep із quarantine/grace period. Roots: installed
+graphs, active/draining generations, exact locks і незавершені staging
+transactions. LRU застосовується лише до відтворюваного compiled cache.
+
+### 8.4. Audit
+
+Audit є structured SQLite log із correlation chain для nested calls і
+hash-chain checkpoints. Він зберігає identities, operation, capability, scope,
+status, timing і generation, але не payload bodies, OAuth tokens, Gmail query,
+message content або secrets. Hash chain дає tamper evidence локального журналу,
+але без зовнішнього підпису не є незалежним proof authenticity.
+
+## 9. Vue UI та neutral demo
+
+Усі підтримувані Tauri products використовують Vue. Plugin platform постачає:
+
+- стандартний Vue Plugin Manager;
+- A2UI renderer;
+- host-governed dependency slots;
+- consent і dependency graph views;
+- neutral demo components та integration guide для LLM/розробника.
+
+Plugin UI не розміщує dependency UI довільно. Host відображає лише direct
+dependencies у визначених slots. Transitive graph доступний у Plugin Manager.
+
+Neutral `Platform Info` demo не залежить від product domains і повертає лише:
+
+- application ID, name і version;
+- OS, architecture і locale;
+- plugin runtime та WebAssembly engine profile;
+- registry generation;
+- public host interfaces і triggers.
+
+Demo не повертає accounts, install paths, tokens, filesystem content, internal
+services або sensitive product data.
+
+## 10. Gmail search product contract
+
+Gmail integration належить `mlmail`, а не `tauri-components`. Product реєструє
+typed WIT interface `nitra:gmail/search` і capability `mail:search`.
+
+### 10.1. Permission
+
+Grant є account-scoped. Gmail query не входить до scope і не має allowlist чи
+domain restriction. Плагін може використовувати повний query syntax Gmail.
+
+`mlmail` виконує Gmail API через один app-owned OAuth token. Guest ніколи не
+бачить token. OAuth token повинен мати scope, який дозволяє `messages.list`,
+наприклад `gmail.readonly`, `gmail.modify` або повний Gmail scope; metadata-only
+OAuth scope не дозволяє Gmail search query.
+
+### 10.2. Result
+
+WIT response семантично повторює `users.messages.list`, а не створює власну
+mail abstraction:
+
+```text
+search-page {
+  messages: list<message-ref>,
+  next-page-token: option<string>,
+  result-size-estimate: u64,
+}
+
+message-ref {
+  id: string,
+  thread-id: string,
+}
+```
+
+Операція повертає native async `stream<search-page>`. Pages мають ті самі
+значення, що й Gmail response: `messages`, `nextPageToken` і
+`resultSizeEstimate`. Body, headers, attachments і raw OAuth/HTTP data не
+додаються. Query unrestricted; M0 не вводить result або stream quotas.
+
+## 11. Application update compatibility
+
+### 11.1. Release metadata
+
+Кожен application release публікує в updater metadata authoritative
+`plugin-environment/v1`:
+
+```json
+{
+  "schema": "nitra.plugin-environment/v1",
+  "application": { "id": "com.example.app", "version": "2.0.0" },
+  "runtime": {
+    "runtimeLts": 48,
+    "componentModelProfile": "nitra-component-v1",
+    "asyncAbiSnapshot": "exact-toolchain-snapshot"
+  },
+  "pluginManifestVersions": [1],
+  "hostInterfaces": [],
+  "triggers": [],
+  "vueA2uiSchema": 1,
+  "requiredFeatures": [],
+  "fingerprint": "sha256:..."
+}
+```
+
+Host interface і trigger entries містять WIT package/interface identity,
+version та canonical type hash. Metadata генерується з compiled product
+inventory у CI; ручне редагування заборонене.
+
+Embedded authoritative manifest і historical projections не підтримуються.
+`plugin-environment/v1` є permanent additive schema:
+
+- наявні поля та їхня семантика не змінюються;
+- нові поля можуть бути лише optional;
+- старі applications ігнорують невідомі optional fields;
+- новий major schema не створюється, доки потрібен direct update зі старих
+  application versions.
+
+Після першого запуску нова application version порівнює фактичний generated
+registry fingerprint із release metadata. Drift створює audit event і не
+відкочує application; affected plugin graphs не активуються.
+
+### 11.2. Preflight
+
+Update check працює в такому порядку:
+
+1. Отримати latest available application metadata.
+2. Вибрати plugins із `desired_state: enabled`. Manually disabled plugins
+   повністю ігноруються.
+3. Через `wkg` виконати staged compatibility repair для target environment.
+4. Перевірити exact WIT identities/type hashes.
+5. Виконати dry composition і Component compilation check без запуску plugin logic.
+6. Побудувати compatibility impact і consent preview.
+
+Preflight класифікує graphs як compatible unchanged, compatible after plugin
+update, needs new grant або incompatible/will be disabled. Якщо resolver source
+недоступний чи repair неповний, application update блокується до завершення
+перевірки. Partial/unknown result не дозволяє override.
+
+Repeated repair є event-driven. Він запускається лише коли змінився application
+manifest fingerprint, configured `wkg` source index/digest, active desired graph
+або користувач натиснув `Check again`. Однаковий input не запускає повторну
+composition.
+
+### 11.3. User choice і consent
+
+Основний dialog пропонує:
+
+```text
+Update application
+  compatible plugins remain enabled
+  compatible plugin releases will update
+  known incompatible plugins will be disabled
+
+[Update and restart] [Stay on current version]
+```
+
+Якщо repair знайшов сумісний plugin release з новими capabilities, dialog додає
+per-plugin choice: `Allow and keep enabled` або `Do not allow — disable plugin`.
+New grants staged і фіксуються атомарно з target graph. Відмова не блокує
+application update, а вимикає лише відповідний root graph.
+
+Application installer завантажується й перевіряється лише після `Update and
+restart`. При `Stay` installer не завантажується, staging roots одразу
+звільняються, а unreachable CAS objects прибирає звичайний quarantine/grace GC.
+
+### 11.4. Deferral і reminders
+
+Зберігаються:
+
+```text
+target_application_version
+compatibility_impact_hash
+decision_timestamp
+notification_policy
+```
+
+Для тієї самої version та impact повторного modal немає. Settings показує
+passive update status. Одне material-change reminder дозволене, коли:
+
+- з'явився новіший application release;
+- зменшилася кількість incompatible graphs;
+- усі desired graphs стали compatible;
+- користувач сам попросив нагадати пізніше.
+
+При поверненні до update завжди вибирається latest available version і
+виконується новий preflight. Application updates ніколи не примусові: немає
+critical override, minimum supported version або expiration старої версії.
+
+### 11.5. Activation після update
+
+Application update не відкочується через plugin activation failure. Успішні
+graphs активуються, а невдалі отримують system disable reason:
+
+```text
+desired_state: enabled | disabled
+effective_state: active | system_disabled | activation_failed
+disabled_by: user | application_incompatibility | activation_failure | missing_grant | policy
+```
+
+Якщо runtime вимкнув plugin автоматично, він автоматично підготує та активує
+сумісний graph під час наступного application restart, коли причина усунена і
+нові grants не потрібні. Manually disabled plugin ніколи не вмикається
+автоматично.
+
+## 12. Failure semantics
+
+Stable public error categories:
+
+- `package-missing`;
+- `dependency-missing`;
+- `dependency-cycle`;
+- `wit-incompatible`;
+- `runtime-profile-incompatible`;
+- `grant-denied`;
+- `policy-denied`;
+- `plugin-disabled`;
+- `activation-failed`;
+- `source-unavailable`;
+- `internal`.
+
+Guest і UI не отримують linker internals, filesystem paths, OAuth details або
+secrets. No automatic call replay applies to traps, application restart або
+generation switch.
+
+## 13. Міграція
+
+1. Зафіксувати runtime 48 LTS toolchain snapshot після stable release.
+2. Створити coordinated monorepo `nitra/n-plugin` з єдиним release
+   profile для Rust, Vue, WIT і CLI artifacts.
+3. Побудувати в ньому M0 neutral typed Component з async stream і generated host
+   binding.
+4. Додати generic `PluginHostInterfaceRegistry` та `ApplicationTriggerSet` у
+   plugin platform.
+5. Реалізувати `n-plugin-cli`, embedded `WkgResolutionBackend`, standard
+   `wkg.lock`, raw Component manifest section і local Component test host.
+6. Реалізувати SQLite registry, filesystem CAS, immutable activation generations
+   та guarded dependency composition.
+7. Додати grants, layered deny, audit і Vue UI.
+8. Додати neutral `Platform Info` demo та LLM integration guide.
+9. Винести Gmail WIT/handlers у `mlmail`; реалізувати `nitra:gmail/search`.
+10. Перепакувати Draft Helper як Component і додати Booking Finder demo.
+11. Додати application compatibility metadata/preflight flow.
+12. Видалити legacy core-Wasm loader, JSON/string ABI і mail-specific platform API
+    з `tauri-components` та product repositories.
+13. Після завершення реалізації створити в `nitra/n-plugin/docs/`
+    детальну документацію роботи plugin system: architecture й runtime lifecycle,
+    host application integration, plugin authoring через `n-plugin-cli`, WIT
+    contracts, dependencies, grants і consent, installation та updates,
+    state/CAS/audit, testing, diagnostics, troubleshooting і наскрізні приклади.
+
+Migration branch не постачає legacy fallback у production build.
+
+## 14. M0 acceptance criteria
+
+- Новий Vue/Tauri application реєструє product WIT без зміни plugin platform або
+  `tauri-components`.
+- `tauri-components` не містить plugin-specific code і не залежить від plugin
+  platform; dependency graph перевіряється CI.
+- Installing plugin із відомими interfaces/triggers не rebuild-ить application.
+- Runtime відхиляє core-Wasm module і приймає valid WebAssembly Component.
+- Typed host call і native async stream працюють через generated bindings.
+- Required dependency іншого publisher завантажується окремо, exact lock-иться
+  та викликається через generated edge guard.
+- `wasm-pkg-core` є єдиним version selector; `n-plugin` не містить власного
+  SemVer selection або SAT/backtracking solver.
+- `wkg.lock` лишається upstream-compatible без plugin-specific fields, а SQLite
+  activation generation відтворює ті самі exact package versions і digests.
+- Optional dependency відхиляється manifest validation.
+- Caller і dependency не успадковують grants одне одного.
+- New grant показується per-plugin; dependency без host capability не створює
+  consent.
+- Copy-on-write generation activation є atomic; failure зберігає стару generation.
+- Trap не replay-ить call і запускає self-healing restart policy.
+- State schema change очищає graph state та створює audit event.
+- `Platform Info` повертає лише public plugin environment.
+- Gmail search приймає unrestricted query і повертає native stream сторінок із
+  семантикою `users.messages.list`.
+- Application preflight знаходить compatible plugin releases, показує impact і
+  не встановлює application update без completed repair та user consent.
+- `Stay` не повторює modal без material change; manual update завжди доступний.
+- Automatically disabled plugin автоматично повертається після появи compatible
+  graph; manually disabled plugin лишається disabled.
+- Production M0 явно позначений `experimental/trusted-only` і не заявляє захист
+  від malicious plugins.
+- Реалізація не вважається завершеною без актуальної детальної документації
+  plugin system у `docs/`, перевіреної на відповідність фактичному runtime та CLI.
+
+## 15. Допоміжні implementation spikes
+
+Архітектурних open decisions для M0 не залишилося. Перед coding потрібно
+підтвердити експериментами:
+
+1. Exact generated Rust shape для heterogeneous typed host registrations.
+2. Runtime 48 API та pinned unrestricted async snapshot після stable release.
+3. Embedded `wasm-pkg-core` integration: exact/multi-version locks, offline
+   cache, yanked releases, raw Component content digest і custom-section
+   encoding.
+4. Guard component generation та composition для multi-publisher graph.
+5. Tauri updater custom metadata plumbing для `plugin-environment/v1`.
+6. Cold/warm compile й application preflight timings як diagnostics, без
+   enforcement budgets.
+
+Ці spikes можуть змінити internal API, але не ухвалені product/runtime semantics.
