@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.19.0] - 2026-08-12
+
+### Added
+
+- Явні налаштування OpenAI-compatible локальної LLM з перевіркою endpoint і без legacy omlx fallback.
+
 ## [0.18.0] - 2026-08-06
 
 ### Changed
