@@ -1,23 +1,13 @@
-//! Platform-agnostic chat command: Vue calls one `llm_chat`/`llm_list_models`/
-//! `llm_providers` surface regardless of OS, mirroring the tool-surface
-//! `dispatch` pattern (see `docs/adr/n-tool-surface-llm-доступний-бекенд.md`)
-//! — the desktop/mobile split lives here, not in the frontend.
+//! OpenAI-compatible local LLM access for the desktop app.
 //!
-//! Desktop: local OpenAI-compatible HTTP servers via the `llm-lib` crate's
-//! `LocalCloud`, the Rust mirror of `@7n/llm-lib`'s `local-providers.mjs`
-//! env-var convention — a single generic `local-openai` slot
-//! (`N_LOCAL_OPENAI_BASE_URL`/`N_LOCAL_OPENAI_API_KEY`) covering ANY custom
-//! OpenAI-compatible server (omlx, litellm-proxy, TurboFieldfareServer, ...),
-//! one shared env pair instead of one per server (nitra/7n-rules#374). Only
-//! one such server can be active per process — switching means
-//! reconfiguring the env pair, not registering a second named provider.
-//!
-//! Android: LiteRT-LM on-device (Gemma 3n) via a JNI bridge — not yet
-//! implemented (see ADR "Наступні кроки"), so these commands return a clear
-//! error there rather than silently no-op.
+//! The frontend supplies an explicit endpoint for every request. A developer
+//! may provide the initial endpoint through `N_LOCAL_OPENAI_BASE_URL`, while
+//! the settings dialog stores the chosen URL and model locally. API keys stay
+//! in memory and are never written by this module.
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use llm_lib::local_cloud::LocalProvider;
+use serde::Serialize;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use std::collections::HashMap;
 
@@ -26,87 +16,86 @@ use std::collections::HashMap;
 #[cfg(any(target_os = "android", target_os = "ios"))]
 const LITERT_NOT_IMPLEMENTED: &str = "LiteRT-LM ще не реалізовано на цій платформі";
 
-/// Read `(base_url, api_key)` from `~/.omlx/settings.json` — the same file
-/// the omlx server itself reads. `None` on any error (missing file, bad
-/// JSON, missing keys), so callers fall back to their own defaults.
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
-fn omlx_from_settings() -> (Option<String>, Option<String>) {
-    use serde_json::Value;
-    use std::path::PathBuf;
+/// The generic provider name used in every desktop model specification.
+const LOCAL_OPENAI_PROVIDER: &str = "local-openai";
 
-    let Some(home) = std::env::var_os("HOME") else {
-        return (None, None);
-    };
-    let path = PathBuf::from(home).join(".omlx/settings.json");
-    let Ok(raw) = std::fs::read_to_string(&path) else {
-        return (None, None);
-    };
-    let Ok(json) = serde_json::from_str::<Value>(&raw) else {
-        return (None, None);
-    };
-    let str_at = |obj: &str, key: &str| {
-        json.get(obj)
-            .and_then(|o| o.get(key))
-            .and_then(|v| v.as_str())
-            .filter(|s| !s.is_empty())
-            .map(str::to_owned)
-    };
-    let host = str_at("server", "host");
-    let port = json
-        .get("server")
-        .and_then(|s| s.get("port"))
-        .and_then(Value::as_u64);
-    // Trailing slash required — `LocalProvider::base_url` joins the request
-    // path onto it (see llm-lib's local_cloud.rs doc comment).
-    let base_url = match (host, port) {
-        (Some(h), Some(p)) => Some(format!("http://{h}:{p}/v1/")),
-        _ => None,
-    };
-    (base_url, str_at("auth", "api_key"))
+/// Initial non-secret desktop configuration exposed to the settings dialog.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LlmDefaultConfig {
+    base_url: Option<String>,
 }
 
-/// Registered local providers — a single `local-openai` entry, the same
-/// env-var name and shape as `@7n/llm-lib`'s `defaultLocalProviders()`
-/// (nitra/7n-rules#374), so a developer's `N_LOCAL_OPENAI_*` env stays valid
-/// whether the call goes through Node tooling or this app. Falls back to
-/// `~/.omlx/settings.json` (the omlx server's own config) before the
-/// hardcoded default when `N_LOCAL_OPENAI_BASE_URL` isn't set — omlx is the
-/// common zero-config local dev server, and with only one slot registered
-/// there's no ambiguity about which server the fallback belongs to.
+/// Normalise and validate an OpenAI-compatible API root.
 ///
-/// **Deliberately not `openai`**: that prefix is what `LocalCloud` (and
-/// genai) resolve to the real cloud OpenAI API when it's absent from this
-/// map — registering it here would silently hijack real cloud calls to a
-/// local baseUrl.
+/// Only HTTP(S) roots ending at `/v1/` are accepted. Keeping this validation
+/// at the native boundary prevents malformed URLs from being passed into the
+/// shared HTTP client even when a caller bypasses the settings UI.
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-fn build_local_providers() -> HashMap<String, LocalProvider> {
-    use std::env;
+fn normalize_base_url(raw: &str) -> Result<String, String> {
+    let mut url = reqwest::Url::parse(raw.trim()).map_err(|_| {
+        "Некоректна адреса LLM. Вкажіть повний URL на кшталт http://127.0.0.1:8080/v1/.".to_string()
+    })?;
+    if !matches!(url.scheme(), "http" | "https") || url.host_str().is_none() {
+        return Err("Адреса LLM має використовувати http:// або https://.".to_string());
+    }
+    if url.query().is_some() || url.fragment().is_some() {
+        return Err("Адреса LLM не повинна містити query або fragment.".to_string());
+    }
+    let path = url.path().trim_end_matches('/');
+    if path != "/v1" {
+        return Err("Адреса LLM має завершуватися на /v1/.".to_string());
+    }
+    url.set_path("/v1/");
+    Ok(url.to_string())
+}
 
-    let (settings_base_url, settings_api_key) = omlx_from_settings();
+/// Build the one explicitly configured local provider for a request.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn build_local_providers(
+    base_url: Option<String>,
+    api_key: Option<String>,
+) -> Result<HashMap<String, LocalProvider>, String> {
+    let configured_url = base_url
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| std::env::var("N_LOCAL_OPENAI_BASE_URL").ok())
+        .ok_or_else(|| "LLM не налаштовано. Вкажіть адресу сервера в Налаштуваннях LLM або задайте N_LOCAL_OPENAI_BASE_URL.".to_string())?;
     let mut providers = HashMap::new();
     providers.insert(
-        "local-openai".to_string(),
+        LOCAL_OPENAI_PROVIDER.to_string(),
         LocalProvider {
-            base_url: env::var("N_LOCAL_OPENAI_BASE_URL")
-                .ok()
-                .or(settings_base_url)
-                .unwrap_or_else(|| "http://127.0.0.1:8000/v1/".to_string()),
-            api_key: env::var("N_LOCAL_OPENAI_API_KEY").ok().or(settings_api_key),
+            base_url: normalize_base_url(&configured_url)?,
+            api_key: api_key
+                .filter(|value| !value.is_empty())
+                .or_else(|| std::env::var("N_LOCAL_OPENAI_API_KEY").ok()),
         },
     );
-    providers
+    Ok(providers)
 }
 
-/// The provider prefixes Vue may pick from — desktop returns the
-/// `build_local_providers()` keys (sorted for a stable UI order), mobile
-/// returns an empty list until LiteRT-LM is wired up.
+/// Return the optional endpoint inherited by a freshly started desktop app.
+/// The API key intentionally never crosses the Tauri boundary.
+#[tauri::command]
+pub fn llm_default_config() -> LlmDefaultConfig {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        let base_url = std::env::var("N_LOCAL_OPENAI_BASE_URL")
+            .ok()
+            .and_then(|url| normalize_base_url(&url).ok());
+        LlmDefaultConfig { base_url }
+    }
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    {
+        LlmDefaultConfig { base_url: None }
+    }
+}
+
+/// The only provider prefix accepted by the desktop local-LLM surface.
 #[tauri::command]
 pub fn llm_providers() -> Vec<String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        let mut names: Vec<String> = build_local_providers().into_keys().collect();
-        names.sort();
-        names
+        vec![LOCAL_OPENAI_PROVIDER.to_string()]
     }
     #[cfg(any(target_os = "android", target_os = "ios"))]
     {
@@ -114,72 +103,95 @@ pub fn llm_providers() -> Vec<String> {
     }
 }
 
-/// Loaded model ids for `provider`, via `GET {baseUrl}/models` (generic
-/// OpenAI shape `{ data: [{ id }] }`). Empty on any failure — mirrors the
-/// old `listOmlxModels()` JS helper's degrade-gracefully contract.
+/// Load model ids from an explicit OpenAI-compatible endpoint.
 #[tauri::command]
-pub async fn llm_list_models(provider: String) -> Result<Vec<String>, String> {
+pub async fn llm_list_models(
+    base_url: Option<String>,
+    api_key: Option<String>,
+) -> Result<Vec<String>, String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        let providers = build_local_providers();
+        let providers = build_local_providers(base_url, api_key)?;
         let config = providers
-            .get(&provider)
-            .ok_or_else(|| format!("невідомий провайдер {provider:?}"))?;
+            .get(LOCAL_OPENAI_PROVIDER)
+            .expect("local-openai provider is always registered");
         let url = format!("{}models", config.base_url);
         let client = reqwest::Client::new();
         let mut request = client.get(&url);
         if let Some(key) = &config.api_key {
             request = request.bearer_auth(key);
         }
-        let Ok(response) = request.send().await else {
-            return Ok(Vec::new());
-        };
-        if !response.status().is_success() {
-            return Ok(Vec::new());
-        }
-        let Ok(data) = response.json::<serde_json::Value>().await else {
-            return Ok(Vec::new());
-        };
+        let response = request
+            .send()
+            .await
+            .map_err(|error| format!("Не вдалося з’єднатися з LLM: {error}"))?
+            .error_for_status()
+            .map_err(|error| format!("LLM не прийняла запит моделей: {error}"))?;
+        let data = response
+            .json::<serde_json::Value>()
+            .await
+            .map_err(|error| format!("LLM повернула некоректний список моделей: {error}"))?;
         Ok(data
             .get("data")
             .and_then(serde_json::Value::as_array)
             .map(|items| {
                 items
                     .iter()
-                    .filter_map(|m| m.get("id").and_then(|i| i.as_str()).map(str::to_owned))
+                    .filter_map(|model| {
+                        model
+                            .get("id")
+                            .and_then(|id| id.as_str())
+                            .map(str::to_owned)
+                    })
                     .collect()
             })
             .unwrap_or_default())
     }
     #[cfg(any(target_os = "android", target_os = "ios"))]
     {
-        let _ = provider;
-        Ok(Vec::new())
+        let _ = (base_url, api_key);
+        Err(LITERT_NOT_IMPLEMENTED.to_string())
     }
 }
 
-/// One-shot chat call for the summarize/ask/pattern/newsletter-render/
-/// call-analysis composables (always system+single-user, never tools —
-/// `LocalCloud::one_shot_with_spec` fits exactly, no genai `ChatRequest`
-/// plumbing needed in Vue). `model_spec` is `"provider/model-id"`, e.g.
-/// `"local-openai/gemma-4-26b-a4b-it"`.
+/// Send one system-plus-user request to the explicitly configured local LLM.
 #[tauri::command]
 pub async fn llm_chat(
     model_spec: String,
     system: Option<String>,
     user: String,
+    base_url: Option<String>,
+    api_key: Option<String>,
 ) -> Result<String, String> {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        let cascade = llm_lib::LocalCloud::new(build_local_providers());
+        let cascade = llm_lib::LocalCloud::new(build_local_providers(base_url, api_key)?);
         cascade
             .one_shot_with_spec(&model_spec, system.as_deref(), &user)
             .await
-            .map_err(|e| e.to_string())
+            .map_err(|error| error.to_string())
     }
     #[cfg(any(target_os = "android", target_os = "ios"))]
     {
-        let _ = (model_spec, system, user);
+        let _ = (model_spec, system, user, base_url, api_key);
         Err(LITERT_NOT_IMPLEMENTED.to_string())
+    }
+}
+
+#[cfg(all(test, not(any(target_os = "android", target_os = "ios"))))]
+mod tests {
+    use super::normalize_base_url;
+
+    #[test]
+    fn normalizes_v1_url() {
+        assert_eq!(
+            normalize_base_url("http://127.0.0.1:8080/v1").unwrap(),
+            "http://127.0.0.1:8080/v1/"
+        );
+    }
+
+    #[test]
+    fn rejects_non_v1_url() {
+        assert!(normalize_base_url("http://127.0.0.1:8080").is_err());
     }
 }

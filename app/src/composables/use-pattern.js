@@ -1,12 +1,6 @@
+/** Підбирає стабільний шаблон теми листа через налаштований локальний LLM із fail-safe fallback на оригінал. */
 import { useLlm } from '../llm.js'
 import { sanitizeSubjectSuggestion } from '../services/pattern.js'
-
-// Local-LLM helper for the "rule from this email" panel: given a concrete
-// subject line, ask the on-device omlx model for the stable, sender-generated
-// prefix to match similar automated mail on (dropping the variable tail —
-// versions, names, ids, dates). One-shot, no tools. Best-effort: any failure
-// (omlx down, network, odd output) falls back to the original subject, so the
-// panel always has a usable value.
 
 const SYSTEM = [
   'You extract a reusable matching pattern from an automated email subject line.',

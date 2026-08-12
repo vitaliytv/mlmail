@@ -1,12 +1,22 @@
+//! Tauri application shell that wires authentication, Gmail, plugins and LLM commands.
+
+/// OAuth authentication commands and persistent state.
 pub mod auth;
 #[cfg(debug_assertions)]
+/// Debug-only cloud analysis command.
 pub mod call_analysis;
+/// Shared remote endpoint definitions.
 pub mod endpoints;
+/// Gmail message and filter commands.
 pub mod gmail;
+/// OpenAI-compatible local LLM commands.
 pub mod llm;
+/// Newsletter template persistence commands.
 pub mod newsletter_template;
+/// Installed plugin commands and sample integrations.
 pub mod plugins;
 
+/// Native host implementation for installed mlmail plugins.
 pub use mlmail_plugin_host as plugin_host;
 
 use std::sync::Mutex;
@@ -28,6 +38,7 @@ fn app_set_title(app: tauri::AppHandle, title: String) {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+/// Starts the Tauri runtime and registers the application's command surface.
 pub fn run() {
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -107,6 +118,7 @@ pub fn run() {
                     newsletter_template::newsletter_template_list,
                     newsletter_template::newsletter_template_save,
                     newsletter_template::newsletter_template_delete,
+                    llm::llm_default_config,
                     llm::llm_providers,
                     llm::llm_list_models,
                     llm::llm_chat,
@@ -152,6 +164,7 @@ pub fn run() {
                     newsletter_template::newsletter_template_delete,
                     newsletter_template::newsletter_template_save_builtin,
                     call_analysis::analyze_call_with_pi,
+                    llm::llm_default_config,
                     llm::llm_providers,
                     llm::llm_list_models,
                     llm::llm_chat,

@@ -53,14 +53,14 @@
               :loading="analyzingId === rec.id && analyzingVia === 'pi'"
               :disable="analyzingId === rec.id" />
             <q-btn
-              @click="runAnalysis(rec, 'omlx')"
-              label="Аналіз: omlx"
+              @click="runAnalysis(rec, 'local')"
+              label="Аналіз: локальна LLM"
               icon="sym_o_dns"
               flat
               no-caps
               dense
               size="sm"
-              :loading="analyzingId === rec.id && analyzingVia === 'omlx'"
+              :loading="analyzingId === rec.id && analyzingVia === 'local'"
               :disable="analyzingId === rec.id" />
           </div>
           <div v-if="analysisError[rec.id]" class="audit-analysis-error">{{ analysisError[rec.id] }}</div>
@@ -77,7 +77,7 @@ import { useQuasar } from 'quasar'
 import { BaseDialog, RequestView, StatePill } from '@7n/tauri-components/components'
 import { useCallAnalysis } from '../composables/use-call-analysis.js'
 
-// Local fork of @7n/tauri-components' AuditDialog: that component has no
+// Local fork of \@7n/tauri-components' AuditDialog: that component has no
 // slots to hang extra per-row actions off of, and it ships from a separate
 // npm-released repo, so the "analyze this call" buttons live here instead —
 // same journal data source, same look, plus an analysis panel per row.
@@ -125,7 +125,7 @@ async function refresh() {
 /**
  * Reload the journal list when the dialog opens.
  * Local-LLM analysis loads its own config via app-local useLlm (agent
- * gateway no longer exposes loadOmlxEnv after @7n/tauri-components@0.11.0).
+ * gateway no longer exposes loadOmlxEnv after \@7n/tauri-components@0.11.0).
  */
 async function onShow() {
   await refresh()
@@ -175,10 +175,10 @@ async function onApprove(rec, ok) {
 }
 
 /**
- * Ask pi (cloud max model) or the local omlx model to analyze this call's
+ * Ask pi (cloud max model) or the configured local model to analyze this call's
  * request/response and suggest project-code adaptations.
  * @param {object} rec the journal record to analyze
- * @param {'pi'|'omlx'} via which backend to use
+ * @param {'pi'|'local'} via which backend to use
  */
 async function runAnalysis(rec, via) {
   analyzingId.value = rec.id
