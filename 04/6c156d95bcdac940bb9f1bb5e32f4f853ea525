@@ -1,0 +1,20 @@
+docs/specs/2026-08-07-domain-agnostic-plugin-runtime.md
+  s_0287eb07cb0df4::t_25e509dbd6885b 302,350,354,356,360,364,366,372,376,378
+  s_0287eb07cb0df4::t_149af464992410 342
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "046c156d95bcdac940bb9f1bb5e32f4f853ea525",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
