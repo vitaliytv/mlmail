@@ -166,6 +166,10 @@
                 <q-item-section avatar><q-icon name="sym_o_filter_alt" /></q-item-section>
                 <q-item-section>Фільтри Gmail</q-item-section>
               </q-item>
+              <q-item v-close-popup @click="showLlmSettings = true" clickable>
+                <q-item-section avatar><q-icon name="sym_o_smart_toy" /></q-item-section>
+                <q-item-section>Налаштування LLM</q-item-section>
+              </q-item>
               <q-separator />
               <q-item v-close-popup @click="auth.logout()" clickable>
                 <q-item-section avatar><q-icon name="sym_o_logout" /></q-item-section>
@@ -180,6 +184,7 @@
     <TemplatesManager v-model="showTemplates" />
     <PluginManagerPanel v-model="showPlugins" />
     <GmailFiltersDialog v-model="showFilters" />
+    <LlmSettingsDialog v-model="showLlmSettings" />
 
     <q-dialog v-model="showActionLog">
       <q-card style="min-width: 480px; max-width: 90vw">
@@ -222,6 +227,7 @@ import PluginDetailPanel from '../components/PluginDetailPanel.vue'
 import PluginManagerPanel from '../components/PluginManagerPanel.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
 import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'
+import LlmSettingsDialog from '../components/LlmSettingsDialog.vue'
 
 const auth = useAuthStore()
 const agent = useAgent()
@@ -323,6 +329,7 @@ const showActionLog = ref(false)
 const showTemplates = ref(false)
 const showFilters = ref(false)
 const showPlugins = ref(false)
+const showLlmSettings = ref(false)
 
 /**
  * @param {boolean} value whether to request only newsletters

@@ -1,20 +1,16 @@
+/** Керує явним OpenAI-compatible endpoint, моделлю й тимчасовим ключем для локальних LLM-функцій. */
 import { ref } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 
-// Platform-agnostic local-LLM composable for the direct-chat composables
-// (summarize/ask/pattern/newsletter-render/call-analysis). Replaces the old
-// omlx.js, which fetched an OpenAI-compatible endpoint straight from the
-// webview — a desktop-only assumption. The actual HTTP call (and the
-// desktop/Android split — omlx/litellm/turbofieldfare via Rust's llm-lib vs.
-// LiteRT-LM) now lives behind the Rust `llm_chat`/`llm_list_models`/
-// `llm_providers` commands (app/src-tauri/src/llm.rs), so Vue only tracks
-// *which* provider/model it wants, never a baseUrl.
+const LOCAL_OPENAI_PROVIDER = 'local-openai'
+const LEGACY_PROVIDERS = new Set(['omlx', 'turbofieldfare', 'litellm'])
+const transientApiKeys = new Map()
 
 /**
  * Read a localStorage value, or null when localStorage is unavailable
  * (component tests without a DOM store, SSR).
  * @param {string} key storage key
- * @returns {string|null} stored value, or null
+ * @returns {string|null} stored value
  */
 function readStored(key) {
   try {
@@ -25,26 +21,47 @@ function readStored(key) {
 }
 
 /**
- * Write a localStorage value; no-op when localStorage is unavailable.
+ * Write a localStorage value, or no-op when storage is unavailable.
  * @param {string} key storage key
- * @param {string} value value to store
+ * @param {string} value stored value
  */
 function writeStored(key, value) {
   try {
     globalThis.localStorage?.setItem(key, value)
   } catch {
-    // no localStorage (tests / SSR) — in-memory ref state is still updated
+    // Tests and SSR can lack localStorage; the reactive state still works.
   }
 }
 
 /**
- * Race `promise` against a rejection after `timeoutMs` — mirrors the old
- * `AbortSignal.timeout`-wrapped fetch's fail-fast UX (some local servers
- * stall indefinitely on a large batch instead of erroring). Doesn't cancel
- * the underlying Rust-side call, only stops the UI from waiting on it.
- * @param {Promise<T>} promise the pending call
- * @param {number} timeoutMs abort the wait after this many milliseconds
- * @returns {Promise<T>} `promise`'s value, or a timeout rejection
+ * Convert an OpenAI-compatible API root into its canonical `/v1/` form.
+ * @param {string} raw user-provided base URL
+ * @returns {string} canonical URL
+ */
+export function normalizeBaseUrl(raw) {
+  let url
+  try {
+    url = new URL(raw.trim())
+  } catch {
+    throw new Error('Вкажіть повну адресу LLM, наприклад http://127.0.0.1:8080/v1/.')
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) {
+    throw new Error('Адреса LLM має використовувати http:// або https://.')
+  }
+  let path = url.pathname
+  while (path.endsWith('/')) path = path.slice(0, -1)
+  if (url.search || url.hash || path !== '/v1') {
+    throw new Error('Адреса LLM має завершуватися на /v1/.')
+  }
+  url.pathname = '/v1/'
+  return url.href
+}
+
+/**
+ * Race a chat call against a UI timeout without cancelling its native request.
+ * @param {Promise<T>} promise pending operation
+ * @param {number} timeoutMs maximum UI wait
+ * @returns {Promise<T>} operation result or timeout
  * @template T
  */
 function withTimeout(promise, timeoutMs) {
@@ -57,61 +74,96 @@ function withTimeout(promise, timeoutMs) {
 }
 
 /**
- * Persisted provider/model selection for the local-LLM direct-chat
- * composables. `storagePrefix` namespaces the localStorage keys per
- * composable/feature.
- * @param {{ storagePrefix?: string, defaultProvider?: string, defaultModel?: string }} [options] config
- * @returns {{
- *   provider: import('vue').Ref<string>,
- *   model: import('vue').Ref<string>,
- *   save: () => void,
- *   loadEnv: () => Promise<void>,
- *   chat: (params: { system?: string, user: string, timeoutMs?: number }) => Promise<{content: string}>
- * }} persisted local-LLM config, an env loader, a saver and the chat call
+ * Migrate prior provider and URL keys into the single local OpenAI profile.
+ * @param {string} storagePrefix settings namespace
+ * @returns {{baseUrl: string, model: string}} persisted non-secret values
  */
-export function useLlm({ storagePrefix = 'agent', defaultProvider = 'omlx', defaultModel = '' } = {}) {
+function loadPersistedConfig(storagePrefix) {
   const providerKey = `${storagePrefix}:llmProvider`
+  const baseUrlKey = `${storagePrefix}:llmBaseUrl`
   const modelKey = `${storagePrefix}:llmModel`
+  const savedProvider = readStored(providerKey)
+  if (LEGACY_PROVIDERS.has(savedProvider)) writeStored(providerKey, LOCAL_OPENAI_PROVIDER)
+  const savedBaseUrl = readStored(baseUrlKey) || readStored(`${storagePrefix}:omlxBaseUrl`) || ''
+  if (savedBaseUrl && !readStored(baseUrlKey)) writeStored(baseUrlKey, savedBaseUrl)
+  const savedModel = readStored(modelKey) || readStored(`${storagePrefix}:omlxModel`) || ''
+  if (savedModel && !readStored(modelKey)) writeStored(modelKey, savedModel)
+  return { baseUrl: savedBaseUrl, model: savedModel }
+}
 
-  const provider = ref(readStored(providerKey) || defaultProvider)
-  const model = ref(readStored(modelKey) || defaultModel)
+/**
+ * Persisted endpoint/model selection and memory-only API-key state for direct
+ * local-LLM features. Every request carries the explicit endpoint to Rust;
+ * neither `.omlx` files nor a hard-coded port participate in resolution.
+ * @param {{ storagePrefix?: string, defaultModel?: string }} [options] config
+ * @returns {{ provider: import('vue').Ref<string>, baseUrl: import('vue').Ref<string>, apiKey: import('vue').Ref<string>, model: import('vue').Ref<string>, save: () => void, loadEnv: () => Promise<void>, refreshModels: () => Promise<string[]>, chat: (params: { system?: string, user: string, timeoutMs?: number }) => Promise<{content: string}> }} local LLM configuration and chat surface
+ */
+export function useLlm({ storagePrefix = 'agent', defaultModel = '' } = {}) {
+  const { baseUrl: savedBaseUrl, model: savedModel } = loadPersistedConfig(storagePrefix)
+  const provider = ref(LOCAL_OPENAI_PROVIDER)
+  const baseUrl = ref(savedBaseUrl)
+  const model = ref(savedModel || defaultModel)
+  const apiKey = transientApiKeys.get(storagePrefix) || ref('')
+  transientApiKeys.set(storagePrefix, apiKey)
 
   /**
-   * Auto-resolve `model` via `llm_list_models` when the user hasn't picked
-   * one yet — the server requires a non-empty model per request (no
-   * server-side default). Not persisted — re-resolved every call so a model
-   * swapped on the server is picked up without editing localStorage by hand.
-   * No-op outside Tauri (tests / web) or when the command isn't registered.
-   * @returns {Promise<void>}
+   * Pull a launch-time endpoint from Rust only when the user has none saved.
+   * @returns {Promise<void>} resolves after endpoint/model preparation
    */
   async function loadEnv() {
-    if (model.value) return
-    try {
-      const models = await invoke('llm_list_models', { provider: provider.value })
-      if (models.length > 0) model.value = models[0]
-    } catch {
-      // not running under Tauri, or no models loaded — keep empty; chat()
-      // below will surface whatever error the backend gives for an empty model.
+    if (!baseUrl.value) {
+      const config = await invoke('llm_default_config')
+      if (config?.baseUrl) baseUrl.value = config.baseUrl
     }
-  }
-
-  /** Persist provider/model to localStorage. */
-  function save() {
-    writeStored(providerKey, provider.value)
-    writeStored(modelKey, model.value)
+    if (!baseUrl.value) {
+      throw new Error('LLM не налаштовано. Відкрийте «Налаштування LLM» і вкажіть адресу сервера.')
+    }
+    if (!model.value) await refreshModels()
   }
 
   /**
-   * One-shot chat via the Rust `llm_chat` command — always system+single-user,
-   * never tools (every composable using this is one-shot).
-   * @param {{ system?: string, user: string, timeoutMs?: number }} params chat input
-   * @returns {Promise<{content: string}>} the assistant's reply
+   * Validate the endpoint through Rust and use its first model if none is selected.
+   * @returns {Promise<string[]>} models reported by the endpoint
+   */
+  async function refreshModels() {
+    const models = await invoke('llm_list_models', {
+      baseUrl: normalizeBaseUrl(baseUrl.value),
+      apiKey: apiKey.value || null
+    })
+    if (!model.value && models.length > 0) model.value = models[0]
+    return models
+  }
+
+  /**
+   * Persist only endpoint and model. API keys intentionally remain in memory.
+   * @returns {void} no return value
+   */
+  function save() {
+    const canonicalUrl = normalizeBaseUrl(baseUrl.value)
+    baseUrl.value = canonicalUrl
+    writeStored(`${storagePrefix}:llmProvider`, LOCAL_OPENAI_PROVIDER)
+    writeStored(`${storagePrefix}:llmBaseUrl`, canonicalUrl)
+    writeStored(`${storagePrefix}:llmModel`, model.value)
+  }
+
+  /**
+   * Send a one-shot request using the currently selected endpoint and model.
+   * @param {{ system?: string, user: string, timeoutMs?: number }} params request data
+   * @returns {Promise<{content: string}>} assistant response
    */
   async function chat({ system, user, timeoutMs }) {
-    const call = invoke('llm_chat', { modelSpec: `${provider.value}/${model.value}`, system, user })
+    await loadEnv()
+    if (!model.value) throw new Error('LLM не повернула жодної моделі. Перевірте налаштування сервера.')
+    const call = invoke('llm_chat', {
+      modelSpec: `${LOCAL_OPENAI_PROVIDER}/${model.value}`,
+      system,
+      user,
+      baseUrl: normalizeBaseUrl(baseUrl.value),
+      apiKey: apiKey.value || null
+    })
     const content = await (timeoutMs ? withTimeout(call, timeoutMs) : call)
     return { content }
   }
 
-  return { provider, model, save, loadEnv, chat }
+  return { provider, baseUrl, apiKey, model, save, loadEnv, refreshModels, chat }
 }

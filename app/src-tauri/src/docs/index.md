@@ -8,3 +8,6 @@ resource: app/src-tauri/src/
 | ------------------------------------ | ----------- |
 | [call_analysis.rs](call_analysis.md) | Rust Module |
 | [endpoints.rs](endpoints.md)         | Rust Module |
+| [llm.rs](llm.md)                     | Rust Module |
+| [lib.rs](lib.md)                     | Module      |
+| [plugins.rs](plugins.md)             | Module      |

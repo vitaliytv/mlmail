@@ -1,13 +1,9 @@
+/** Створює стислий виклад і переклад email через налаштований локальний LLM з fail-safe результатами для UI. */
 import { useLlm } from '../llm.js'
 import { buildSummaryPrompt, translateHtmlEmail, SUMMARY_SYSTEM, TRANSLATE_BATCH_SYSTEM } from '../services/summary.js'
 
-// Local-LLM helper for the two-column reader: summarize the current email in
-// Ukrainian via the on-device model. One-shot, no tools. Best-effort —
-// returns null on any failure (backend down, network) so the UI can show a
-// notice instead of crashing, and '' for an empty body.
-
 // The local server can stall indefinitely on a large batch instead of
-// erroring (observed on omlx: an 80-string batch received no data for
+// erroring (an 80-string batch received no data for
 // 120s+), so every call gets its own timeout — otherwise a stuck request
 // leaves the UI spinning forever.
 const LLM_TIMEOUT_MS = 60_000
@@ -58,7 +54,7 @@ export function useSummary() {
        * @returns {Promise<string[]>} the translated strings, same length and order as `texts`
        */
       const translateBatch = async texts => {
-        // omlx quality/latency degrades sharply past ~35 items per batch (a
+        // Local-model quality/latency degrades sharply past ~35 items per batch (a
         // 35-item batch already took 41s with a mangled translation; an
         // 80-item batch hung indefinitely) — keep chunks well under that.
         const CHUNK = 15
@@ -69,7 +65,7 @@ export function useSummary() {
           // A single slow/stuck chunk shouldn't fail the whole email: retry
           // once, then fall back to the untranslated chunk so long emails
           // (many sequential chunks, each with its own 60s budget) degrade to
-          // partial translation instead of the generic omlx-down error.
+          // partial translation instead of a generic server error.
           let parsed = chunk
           for (let attempt = 0; attempt < 2; attempt++) {
             try {
