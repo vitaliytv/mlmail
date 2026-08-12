@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.20.0] - 2026-08-12
+
+### Added
+
+- Product-local Gmail search WIT contract and native paged users.messages.list host adapter.
+
 ## [0.19.1] - 2026-08-12
 
 ### Fixed
