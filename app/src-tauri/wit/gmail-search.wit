@@ -1,0 +1,42 @@
+package nitra:gmail@0.1.0;
+
+/// Product-owned Gmail host contract. It mirrors `users.messages.list` paging,
+/// while leaving Gmail's query language entirely unrestricted.
+interface search {
+  /// Exact supported subset of Gmail `users.messages.list` request fields.
+  record list-request {
+    /// Gmail search expression; an empty string has Gmail's normal all-mail meaning.
+    q: string,
+    /// Optional Gmail API page size. Omitted values use the API default.
+    max-results: option<u32>,
+    /// Opaque token returned by the previous page.
+    page-token: option<string>,
+    /// Gmail label identifiers, without any product-imposed default label.
+    label-ids: list<string>,
+    /// Whether Gmail spam and trash should be included.
+    include-spam-trash: option<bool>,
+  }
+
+  /// Gmail `Message` reference returned by `users.messages.list`.
+  record message-ref {
+    id: string,
+    thread-id: option<string>,
+  }
+
+  /// Page shape returned by Gmail `users.messages.list`.
+  record list-response {
+    messages: option<list<message-ref>>,
+    next-page-token: option<string>,
+    result-size-estimate: option<u32>,
+  }
+
+  /// Host-owned errors intentionally omit credentials, URLs and HTTP response bodies.
+  variant error {
+    unauthenticated,
+    unavailable,
+    invalid-response,
+  }
+
+  /// Streams native Gmail list pages until the API omits `nextPageToken`.
+  list-pages: async func(request: list-request) -> result<stream<result<list-response, error>>, error>;
+}

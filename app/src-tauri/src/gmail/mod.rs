@@ -1,5 +1,13 @@
+//! Gmail API host functions and product-local plugin contracts.
+
+/// Stable Gmail host error mapping used by UI commands and plugin adapters.
 pub mod error;
+/// Gmail message parsing and attachment helpers.
 pub mod message;
+/// Native pager implementing the product-owned `nitra:gmail/search` contract.
+pub mod plugin_search;
+
+pub use plugin_search::{GmailListRequest, GmailListResponse, GmailMessageRef};
 
 use crate::auth::{self, state::AuthState, storage::SharedStorage};
 use crate::endpoints::Endpoints;
@@ -10,8 +18,10 @@ use std::sync::Mutex;
 use tauri::Manager;
 use tauri::State;
 
+/// Gmail endpoint for the Inbox label metadata.
 pub const GMAIL_LABEL_INBOX_URL: &str =
     "https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX";
+/// Gmail endpoint for listing account labels.
 pub const GMAIL_LABELS_URL: &str = "https://gmail.googleapis.com/gmail/v1/users/me/labels";
 
 #[derive(Deserialize)]
@@ -20,6 +30,7 @@ struct LabelResponse {
     messages_total: Option<u64>,
 }
 
+/// Parses the `messagesTotal` value from Gmail label JSON.
 pub fn parse_messages_total(body: &str) -> Result<u64, GmailError> {
     let v: LabelResponse =
         serde_json::from_str(body).map_err(|e| GmailError::Parse(e.to_string()))?;
@@ -51,6 +62,7 @@ pub(crate) async fn fetch_inbox_count_at(
     })
 }
 
+/// Returns the current Inbox count and updates the macOS badge when available.
 #[tauri::command]
 pub async fn gmail_inbox_count<R: tauri::Runtime>(
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))] app: tauri::AppHandle<R>,
@@ -72,11 +84,14 @@ pub async fn gmail_inbox_count<R: tauri::Runtime>(
     Ok(count)
 }
 
+/// Gmail endpoint for `users.messages.list` and message fetches.
 pub const GMAIL_MESSAGES_LIST_URL: &str = "https://gmail.googleapis.com/gmail/v1/users/me/messages";
 
+/// Gmail endpoint for batched label modifications.
 pub const GMAIL_BATCH_MODIFY_URL: &str =
     "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify";
 
+/// Gmail endpoint for account filter management.
 pub const GMAIL_FILTERS_URL: &str =
     "https://gmail.googleapis.com/gmail/v1/users/me/settings/filters";
 
@@ -215,6 +230,7 @@ pub(crate) async fn post_one_click(url: &str) -> Result<(), GmailError> {
     })
 }
 
+/// Performs one supported unsubscribe action for a Gmail message.
 #[tauri::command]
 pub async fn gmail_unsubscribe(
     app: AppHandle,
@@ -239,6 +255,7 @@ pub async fn gmail_unsubscribe(
     }
 }
 
+/// Picks and returns one random Inbox message.
 #[tauri::command]
 pub async fn gmail_random_message(
     endpoints: State<'_, Endpoints>,
@@ -259,6 +276,7 @@ pub async fn gmail_random_message(
     get_message_at(&endpoints.gmail_messages_list, &token, &ids[i]).await
 }
 
+/// Picks and returns one random Inbox newsletter.
 #[tauri::command]
 pub async fn gmail_random_newsletter(
     endpoints: State<'_, Endpoints>,
