@@ -4,6 +4,8 @@
 pub mod error;
 /// Gmail message parsing and attachment helpers.
 pub mod message;
+/// Generated Component Model bindings for the product-owned `nitra:gmail/search` contract.
+pub mod plugin_bindings;
 /// Native pager implementing the product-owned `nitra:gmail/search` contract.
 pub mod plugin_search;
 
