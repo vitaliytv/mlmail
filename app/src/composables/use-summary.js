@@ -12,10 +12,25 @@ const CODE_FENCE_OPEN_RE = /^```[^\n]*\n?/
 const CODE_FENCE_CLOSE_RE = /\n?```$/
 
 /**
- * @returns {{ summarize: (message: object) => Promise<string|null>, translateHtml: (message: object) => Promise<{html: string}|null>, translateProgress: import('vue').Ref<{done: number, total: number}> }} summary helper
+ * Turn an LLM failure into an actionable message without hiding the server response.
+ * @param {unknown} error rejected LLM request error
+ * @returns {string} user-facing failure details
+ */
+function llmErrorMessage(error) {
+  const message = String(error?.message ?? error)
+  if (message.includes('queue_full')) {
+    return `Локальна LLM зайнята: черга генерації переповнена. Зачекайте завершення поточного запиту й повторіть спробу. (${message})`
+  }
+  return message
+}
+
+/**
+ * @returns {{ summarize: (message: object) => Promise<string|null>, translateHtml: (message: object) => Promise<{html: string}|null>, summaryError: import('vue').Ref<string>, translateError: import('vue').Ref<string>, translateProgress: import('vue').Ref<{done: number, total: number}> }} summary helper
  */
 export function useSummary() {
   const { loadEnv, chat } = useLlm({ storagePrefix: 'mlmail' })
+  const summaryError = ref('')
+  const translateError = ref('')
   // Chunk progress for the current translateHtml() call, e.g. { done: 3, total: 16 }.
   // total is 0 outside a translate call so the UI can hide the progress bar.
   const translateProgress = ref({ done: 0, total: 0 })
@@ -27,11 +42,13 @@ export function useSummary() {
    */
   async function summarize(message) {
     if (!(message?.body ?? '').trim()) return ''
+    summaryError.value = ''
     try {
       await loadEnv()
       const reply = await chat({ system: SUMMARY_SYSTEM, user: buildSummaryPrompt(message), timeoutMs: LLM_TIMEOUT_MS })
       return (reply?.content ?? '').trim() || null
-    } catch {
+    } catch (error) {
+      summaryError.value = llmErrorMessage(error)
       return null
     }
   }
@@ -46,6 +63,7 @@ export function useSummary() {
     const html = message?.html_body
     if (!html && !(message?.body ?? '').trim()) return { html: '' }
     translateProgress.value = { done: 0, total: 0 }
+    translateError.value = ''
     try {
       await loadEnv()
 
@@ -97,10 +115,11 @@ export function useSummary() {
       // Plain-text fallback: translate as single-item batch
       const [translated] = await translateBatch([message.body])
       return { html: `<pre style="white-space:pre-wrap;font-family:inherit">${translated}</pre>` }
-    } catch {
+    } catch (error) {
+      translateError.value = llmErrorMessage(error)
       return null
     }
   }
 
-  return { summarize, translateHtml, translateProgress }
+  return { summarize, translateHtml, summaryError, translateError, translateProgress }
 }

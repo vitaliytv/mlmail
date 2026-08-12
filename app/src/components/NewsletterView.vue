@@ -107,7 +107,7 @@
             <q-skeleton type="text" width="70%" />
           </template>
           <q-banner v-else-if="summaryFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
-            Не вдалося отримати резюме. Перевірте, чи запущено локальну модель (omlx).
+            Не вдалося отримати резюме. {{ summary.summaryError.value }}
           </q-banner>
           <div v-else-if="summaryText" class="summary-body q-pt-md">{{ summaryText }}</div>
           <div v-else class="text-grey-6 q-pt-md">Порожній лист — нема що резюмувати.</div>
@@ -129,7 +129,7 @@
             <q-skeleton type="text" width="70%" />
           </template>
           <q-banner v-else-if="translateFailed" class="bg-orange-1 text-orange-9 q-mt-md" rounded dense>
-            Не вдалося перекласти. Перевірте, чи запущено локальну модель (omlx).
+            Не вдалося перекласти. {{ summary.translateError.value }}
           </q-banner>
           <iframe
             v-else-if="translateHtml"
