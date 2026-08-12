@@ -29,7 +29,7 @@ tauri-plugin-dialog = "2"
 tauri-plugin-http = { version = "2", features = ["unsafe-headers"] }
 tauri-plugin-agent = { git = "https://github.com/nitra/tauri-components" }
 mlmail-plugin-host = { path = "mlmail-plugin-host" }
-serde = { version = "1", features = ["derive"] }
+serde = { version = "=1.0.228", features = ["derive"] }
 serde_json = "1"
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "query", "form"] }
 tokio = { version = "1", features = ["net", "io-util", "time", "macros", "rt", "sync", "process"] }
@@ -45,6 +45,11 @@ encoding_rs = "0.8"
 tauri-plugin-mcp-bridge = "0.11.2"
 tauri-plugin-process = "2.3.1"
 wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", rev = "45af25f4984d14c65663ed43541d2e641752f66d", features = ["component-model", "component-model-async"] }
+n-plugin-compatibility = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "b1703a796b6edae08ccabcaa690aeef21688f34d" }
+n-plugin-package = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "b1703a796b6edae08ccabcaa690aeef21688f34d" }
+n-plugin-runtime = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "b1703a796b6edae08ccabcaa690aeef21688f34d" }
+n-plugin-wkg = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "b1703a796b6edae08ccabcaa690aeef21688f34d" }
+anyhow = "1"
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21"
