@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.21.0] - 2026-08-12
+
+### Added
+
+- Generated async Component Model binding for the product-local Gmail search stream.
+
 ## [0.20.0] - 2026-08-12
 
 ### Added
