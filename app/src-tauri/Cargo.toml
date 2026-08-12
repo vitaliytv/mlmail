@@ -44,6 +44,7 @@ html-escape = "0.2"
 encoding_rs = "0.8"
 tauri-plugin-mcp-bridge = "0.11.2"
 tauri-plugin-process = "2.3.1"
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", rev = "45af25f4984d14c65663ed43541d2e641752f66d", features = ["component-model", "component-model-async"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jni = "0.21"

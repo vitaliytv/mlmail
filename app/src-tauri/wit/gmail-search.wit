@@ -40,3 +40,7 @@ interface search {
   /// Streams native Gmail list pages until the API omits `nextPageToken`.
   list-pages: async func(request: list-request) -> result<stream<result<list-response, error>>, error>;
 }
+
+world gmail-plugin {
+  import search;
+}
