@@ -1,0 +1,35 @@
+.gitignore
+  s_0287eb07cb0df4::t_55d16ead69b724 69
+knip.json
+  s_0287eb07cb0df4::t_b471f081711e39 7
+Cargo.toml
+  s_0287eb07cb0df4::t_55d16ead69b724 1-8
+.cspell.json
+  s_0287eb07cb0df4::t_55d16ead69b724 13
+.v8rignore
+  s_0287eb07cb0df4::t_55d16ead69b724 7
+.github/workflows/lint-rust.yml
+  s_0287eb07cb0df4::t_b471f081711e39 43
+app/scripts/test-booking-finder-component.sh
+  s_0287eb07cb0df4::t_b471f081711e39 5,11
+app/.changes/260813-1000.md
+  s_0287eb07cb0df4::t_55d16ead69b724 1-5
+app/scripts/test-draft-helper-component.sh
+  s_0287eb07cb0df4::t_b471f081711e39 5,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "aa3b786910118adc2180bfa5555ffae9ed390cdc",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
