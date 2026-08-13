@@ -15,6 +15,7 @@
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
     "test:booking-finder-component": "./scripts/test-booking-finder-component.sh",
+    "test:draft-helper-component": "./scripts/test-draft-helper-component.sh",
     "test:all": "bun run test && bun run test:rust"
   },
   "dependencies": {

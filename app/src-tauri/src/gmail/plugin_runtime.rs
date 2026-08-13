@@ -25,8 +25,12 @@ pub const GMAIL_SEARCH_PACKAGE: &str = "nitra:gmail";
 pub const GMAIL_SEARCH_REQUIREMENT: &str = "=0.1.0";
 /// Exact generated interface identity made available to installed Components.
 pub const GMAIL_SEARCH_INTERFACE: &str = "nitra:gmail/search@0.1.0";
+/// Exact generated interface identity for authenticated Gmail draft creation.
+pub const GMAIL_DRAFTS_INTERFACE: &str = "nitra:gmail/drafts@0.1.0";
 /// Exact generated Component trigger implemented by the Booking Finder demo.
 pub const GMAIL_BOOKING_FINDER_INTERFACE: &str = "nitra:gmail/booking-finder@0.1.0";
+/// Exact generated Component trigger implemented by the Draft Helper demo.
+pub const GMAIL_DRAFT_HELPER_INTERFACE: &str = "nitra:gmail/draft-helper@0.1.0";
 /// Public, stable application identity used in plugin environment metadata.
 pub const MLMAIL_APPLICATION_ID: &str = "vitaliytv:mlmail";
 
@@ -94,6 +98,19 @@ pub async fn gmail_booking_finder_descriptor(
     .context("locked Gmail package must use a canonical WKG content digest")
 }
 
+async fn gmail_descriptor(
+    lock_path: impl AsRef<Path>,
+    interface: &str,
+) -> Result<WitInterfaceDescriptor> {
+    let locked =
+        load_locked_package(lock_path, GMAIL_SEARCH_PACKAGE, GMAIL_SEARCH_REQUIREMENT).await?;
+    WitInterfaceDescriptor::new(
+        WitExportRef::parse(interface).context("compiled Gmail WIT identity must remain valid")?,
+        locked.digest,
+    )
+    .context("locked Gmail package must use a canonical WKG content digest")
+}
+
 /// Builds the generic Component runtime from the product's exact Gmail package lock.
 ///
 /// # Errors
@@ -106,10 +123,18 @@ pub async fn build_gmail_plugin_runtime(
 ) -> Result<GmailPluginRuntime> {
     let lock_path = lock_path.as_ref();
     let descriptor = gmail_search_descriptor(lock_path).await?;
+    let drafts_descriptor = gmail_descriptor(lock_path, GMAIL_DRAFTS_INTERFACE).await?;
     let booking_trigger = gmail_booking_finder_descriptor(lock_path).await?;
+    let draft_helper_trigger = gmail_descriptor(lock_path, GMAIL_DRAFT_HELPER_INTERFACE).await?;
     let mut interfaces = PluginHostInterfaceRegistry::<GmailSearchHost>::new();
     interfaces.register(descriptor, |linker| {
         plugin_bindings::nitra::gmail::search::add_to_linker::<_, GmailSearchHost>(
+            linker,
+            |state| state,
+        )
+    })?;
+    interfaces.register(drafts_descriptor, |linker| {
+        plugin_bindings::nitra::gmail::drafts::add_to_linker::<_, GmailSearchHost>(
             linker,
             |state| state,
         )
@@ -119,6 +144,7 @@ pub async fn build_gmail_plugin_runtime(
         .register_host_interfaces(interfaces)?
         .register_triggers(ApplicationTriggerInventory::from_descriptors([
             booking_trigger,
+            draft_helper_trigger,
         ]))
         .build();
     let environment = runtime.plugin_environment(PluginEnvironmentContext {
@@ -178,22 +204,36 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
             MLMAIL_APPLICATION_ID
         );
         assert_eq!(registered.environment().application.version, "0.20.0");
-        assert_eq!(registered.environment().host_interfaces.len(), 1);
-        assert_eq!(registered.environment().triggers.len(), 1);
-        assert_eq!(
-            registered.environment().host_interfaces[0]
-                .identity
-                .as_str(),
-            GMAIL_SEARCH_INTERFACE
-        );
-        assert_eq!(
-            registered.environment().host_interfaces[0].package_digest,
-            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        );
-        assert_eq!(
-            registered.environment().triggers[0].identity.as_str(),
-            GMAIL_BOOKING_FINDER_INTERFACE
-        );
+        assert_eq!(registered.environment().host_interfaces.len(), 2);
+        assert_eq!(registered.environment().triggers.len(), 2);
+        assert!(registered
+            .environment()
+            .host_interfaces
+            .iter()
+            .all(|interface| {
+                interface.package_digest
+                    == "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }));
+        assert!(registered
+            .environment()
+            .host_interfaces
+            .iter()
+            .any(|interface| interface.identity.as_str() == GMAIL_SEARCH_INTERFACE));
+        assert!(registered
+            .environment()
+            .host_interfaces
+            .iter()
+            .any(|interface| interface.identity.as_str() == GMAIL_DRAFTS_INTERFACE));
+        assert!(registered
+            .environment()
+            .triggers
+            .iter()
+            .any(|trigger| trigger.identity.as_str() == GMAIL_BOOKING_FINDER_INTERFACE));
+        assert!(registered
+            .environment()
+            .triggers
+            .iter()
+            .any(|trigger| trigger.identity.as_str() == GMAIL_DRAFT_HELPER_INTERFACE));
     }
 
     #[tokio::test]

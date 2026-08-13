@@ -1,0 +1,9 @@
+schema = "nitra.plugin-manifest/v1"
+publisher_id = "nitra"
+package = "draft-helper"
+version = "0.1.0"
+
+triggers = ["nitra:gmail/draft-helper@0.1.0"]
+
+[entrypoints]
+create = "nitra:gmail/draft-helper@0.1.0"

@@ -41,6 +41,39 @@ interface search {
   list-pages: async func(request: list-request) -> result<stream<result<list-response, error>>, error>;
 }
 
+/// Product-owned Gmail draft creation contract for trusted Components.
+interface drafts {
+  /// The RFC 822 fields used for the message created inside a Gmail draft.
+  record create-request {
+    to: string,
+    subject: string,
+    body: string,
+  }
+
+  /// Gmail's opaque draft identifier.
+  record draft-ref {
+    id: string,
+  }
+
+  /// Host-owned errors intentionally omit credentials, URLs and HTTP response bodies.
+  variant error {
+    unauthenticated,
+    unavailable,
+    invalid-response,
+  }
+
+  /// Creates one Gmail draft with the authenticated account.
+  create: async func(request: create-request) -> result<draft-ref, error>;
+}
+
+/// Product demo Component that creates one deterministic draft.
+interface draft-helper {
+  use drafts.{draft-ref, error};
+
+  /// Creates the demo draft through the typed Gmail drafts import.
+  create: async func() -> result<draft-ref, error>;
+}
+
 /// Demo trigger implemented by the Booking Finder Component.
 interface booking-finder {
   use search.{error, message-ref};
@@ -59,6 +92,12 @@ interface booking-finder {
 
 world gmail-plugin {
   import search;
+  import drafts;
+}
+
+world draft-helper-plugin {
+  import drafts;
+  export draft-helper;
 }
 
 /// Product-local Component entrypoint used by the Booking Finder demo.

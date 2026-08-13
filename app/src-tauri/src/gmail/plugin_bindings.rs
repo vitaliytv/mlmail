@@ -1,7 +1,9 @@
 //! Generated Component Model bindings for mlmail's Gmail plugin contract.
 
 use super::{
-    plugin_search::list_messages_page_at, GmailError, GmailListRequest, GmailListResponse,
+    plugin_drafts::{create_draft_at, GmailDraftRef, GmailDraftRequest},
+    plugin_search::list_messages_page_at,
+    GmailError, GmailListRequest, GmailListResponse,
 };
 use wasmtime::component::{Accessor, HasData, ResourceTable, StreamReader};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
@@ -70,6 +72,32 @@ impl<T> nitra::gmail::search::HostWithStore<T> for GmailSearchHost {
 
 impl nitra::gmail::search::Host for GmailSearchHost {}
 
+impl<T> nitra::gmail::drafts::HostWithStore<T> for GmailSearchHost {
+    async fn create(
+        host: &Accessor<T, Self>,
+        request: nitra::gmail::drafts::CreateRequest,
+    ) -> Result<nitra::gmail::drafts::DraftRef, nitra::gmail::drafts::Error> {
+        let (endpoint, access_token) = host.with(|mut access| {
+            let state = access.get();
+            (drafts_endpoint(&state.endpoint), state.access_token.clone())
+        });
+        let draft = create_draft_at(
+            &endpoint,
+            &access_token,
+            &GmailDraftRequest {
+                to: request.to,
+                subject: request.subject,
+                body: request.body,
+            },
+        )
+        .await
+        .map_err(map_draft_error)?;
+        Ok(to_component_draft(draft))
+    }
+}
+
+impl nitra::gmail::drafts::Host for GmailSearchHost {}
+
 async fn list_pages(
     endpoint: &str,
     access_token: &str,
@@ -128,6 +156,30 @@ fn map_error(error: GmailError) -> nitra::gmail::search::Error {
     }
 }
 
+fn map_draft_error(error: GmailError) -> nitra::gmail::drafts::Error {
+    match map_error(error) {
+        nitra::gmail::search::Error::Unauthenticated => {
+            nitra::gmail::drafts::Error::Unauthenticated
+        }
+        nitra::gmail::search::Error::Unavailable => nitra::gmail::drafts::Error::Unavailable,
+        nitra::gmail::search::Error::InvalidResponse => {
+            nitra::gmail::drafts::Error::InvalidResponse
+        }
+    }
+}
+
+fn to_component_draft(draft: GmailDraftRef) -> nitra::gmail::drafts::DraftRef {
+    nitra::gmail::drafts::DraftRef { id: draft.id }
+}
+
+fn drafts_endpoint(messages_endpoint: &str) -> String {
+    let messages_endpoint = messages_endpoint.trim_end_matches('/');
+    messages_endpoint.strip_suffix("/messages").map_or_else(
+        || format!("{messages_endpoint}/drafts"),
+        |base| format!("{base}/drafts"),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -154,6 +206,14 @@ mod tests {
             map_error(GmailError::ReauthRequired),
             nitra::gmail::search::Error::Unauthenticated
         ));
+    }
+
+    #[test]
+    fn derives_gmail_drafts_endpoint_from_messages_endpoint() {
+        assert_eq!(
+            drafts_endpoint("https://gmail.example/v1/users/me/messages"),
+            "https://gmail.example/v1/users/me/drafts"
+        );
     }
 
     #[tokio::test]
