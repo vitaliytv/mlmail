@@ -1,0 +1,63 @@
+app/src-tauri/src/gmail/plugin_drafts.rs
+  s_0287eb07cb0df4::t_26b4d6fe22ee74 1-73,75-77,79-99
+  s_0287eb07cb0df4::t_b4b8f496d55728 74,78
+app/src-tauri/wit/gmail-search.wit
+  s_0287eb07cb0df4::t_26b4d6fe22ee74 44-70,73,75-76,95-100
+  s_0287eb07cb0df4::t_d08396ec7b8f51 71-72,74
+app/src-tauri/src/gmail/plugin_draft_helper.rs
+  s_0287eb07cb0df4::t_d589694a4ca8a0 1-25,27-111
+  s_0287eb07cb0df4::t_8e4f4f52468432 26
+app/src-tauri/plugins/draft-helper/Cargo.toml
+  s_0287eb07cb0df4::t_d589694a4ca8a0 1-12
+app/src-tauri/plugins/draft-helper/.n-plugin.toml
+  s_0287eb07cb0df4::t_d589694a4ca8a0 1-9
+app/package.json
+  s_0287eb07cb0df4::t_bd3d47b50f49f4 18
+app/.changes/260813-0920.md
+  s_0287eb07cb0df4::t_38dbc1524a4384 1-5
+app/scripts/test-draft-helper-component.sh
+  s_0287eb07cb0df4::t_bd3d47b50f49f4 1-14
+app/src-tauri/plugins/draft-helper/src/lib.rs
+  s_0287eb07cb0df4::t_d589694a4ca8a0 1-38
+app/src-tauri/Cargo.toml
+  s_0287eb07cb0df4::t_d589694a4ca8a0 3
+app/src-tauri/src/gmail/plugin_runtime.rs
+  s_0287eb07cb0df4::t_56a977e0685619 137-140,209-232
+  s_0287eb07cb0df4::t_ed8d3608325bcd 28-29,32-33,101-113,126,128,136,147,207-208
+  s_0287eb07cb0df4::t_bb6a62964ddf96 141,233-236
+app/src-tauri/src/gmail/mod.rs
+  s_0287eb07cb0df4::t_26b4d6fe22ee74 11-14
+app/src-tauri/src/gmail/plugin_bindings.rs
+  s_0287eb07cb0df4::t_ed8d3608325bcd 4-6,75-100,159-176,211
+  s_0287eb07cb0df4::t_53ff24a5a30305 177-179
+  s_0287eb07cb0df4::t_6b466889290a4f 212-214
+  s_55cca408b3cd55::t_23bf8ffdb98338 180-182,215-218
+app/src-tauri/Cargo.lock
+  s_55cca408b3cd55::t_ef7fe8c26537a2 1724-1730
+.v8rignore
+  s_0287eb07cb0df4::t_e5b1b31f14f1a5 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "772768c6e61800f7854380f8a54d279968c3250c",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    },
+    "s_55cca408b3cd55": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ff93d-2ba9-71f1-a210-22b9618bc159",
+        "model": "unknown"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
