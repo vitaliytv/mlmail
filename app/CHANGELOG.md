@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.0] - 2026-08-13
+
+### Added
+
+- Додано Draft Helper WebAssembly Component з typed Gmail draft creation.
+
 ## [0.23.0] - 2026-08-13
 
 ### Added
