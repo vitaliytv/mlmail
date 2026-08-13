@@ -6,6 +6,8 @@ pub mod error;
 pub mod message;
 /// Generated Component Model bindings for the product-owned `nitra:gmail/search` contract.
 pub mod plugin_bindings;
+/// Product registration of Gmail search in the generic n-plugin Component runtime.
+pub mod plugin_runtime;
 /// Native pager implementing the product-owned `nitra:gmail/search` contract.
 pub mod plugin_search;
 
