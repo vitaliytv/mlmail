@@ -1,0 +1,21 @@
+.cspell.json
+  s_0287eb07cb0df4::t_47f90509c48e53 98,135-137
+.v8rignore
+  s_0287eb07cb0df4::t_47f90509c48e53 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5bf20034f2992fdc1a9d62523d38e71685f35c6b",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
