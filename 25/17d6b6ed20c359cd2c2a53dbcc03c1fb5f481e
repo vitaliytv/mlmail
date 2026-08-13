@@ -1,0 +1,53 @@
+app/.changes/260813-0703.md
+  s_0287eb07cb0df4::t_530a8e44d4fb39 1-5
+app/src-tauri/plugins/booking-finder/src/lib.rs
+  s_0287eb07cb0df4::t_7b1f1225f96b78 1-35,37-48
+  s_0287eb07cb0df4::t_bc1615b0127d3a 36
+app/src-tauri/wit/gmail-search.wit
+  s_0287eb07cb0df4::t_7b1f1225f96b78 44-59,63-68
+app/src-tauri/src/gmail/plugin_runtime.rs
+  s_0287eb07cb0df4::t_7b1f1225f96b78 15-16,28-29,78-96,109,182,193-195
+  s_0287eb07cb0df4::t_c3757c1a78b67e 107
+  s_0287eb07cb0df4::t_263f037dae1179 120-122
+  s_0287eb07cb0df4::t_4b2f9a688dc8bc 196
+app/src-tauri/src/gmail/plugin_bindings.rs
+  s_0287eb07cb0df4::t_7b1f1225f96b78 6-7,22-23,33-34,43-51,60-64,74-75,88,187-188
+app/src-tauri/src/gmail/mod.rs
+  s_0287eb07cb0df4::t_7b1f1225f96b78 9-10
+app/src-tauri/plugins/booking-finder/Cargo.toml
+  s_0287eb07cb0df4::t_7b1f1225f96b78 1-12
+app/src-tauri/src/gmail/plugin_booking_finder.rs
+  s_0287eb07cb0df4::t_b1db0bcd8ccf2e 47-133
+  s_0287eb07cb0df4::t_2a5b14dee6000a 6
+  s_0287eb07cb0df4::t_c3757c1a78b67e 36-43
+  s_0287eb07cb0df4::t_263f037dae1179 4
+  s_0287eb07cb0df4::t_7b1f1225f96b78 1-2,5,7-35,44,46
+  s_0287eb07cb0df4::t_778d2eaeb98acf 3,45
+app/scripts/test-booking-finder-component.sh
+  s_0287eb07cb0df4::t_b1db0bcd8ccf2e 1-14
+app/package.json
+  s_0287eb07cb0df4::t_b1db0bcd8ccf2e 17
+app/src-tauri/plugins/booking-finder/.n-plugin.toml
+  s_0287eb07cb0df4::t_6917303e061422 6-7
+  s_0287eb07cb0df4::t_7b1f1225f96b78 1-5,8-9
+app/src-tauri/Cargo.toml
+  s_0287eb07cb0df4::t_7b1f1225f96b78 3,48
+app/src-tauri/Cargo.lock
+  s_0287eb07cb0df4::t_cc1b87a22d4840 529-535,2800,3416-3426,3570,4740-4749,6289,6568,7470,8360,8384,8440,8452,8468-8480,8487,8532,8882-8935,9058
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "2517d6b6ed20c359cd2c2a53dbcc03c1fb5f481e",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
