@@ -1,0 +1,37 @@
+app/scripts/test-draft-helper-component.sh
+  s_0287eb07cb0df4::t_b471f081711e39 5,11
+.v8rignore
+  s_0287eb07cb0df4::t_55d16ead69b724 7
+Cargo.toml
+  s_0287eb07cb0df4::t_55d16ead69b724 1-8
+app/.changes/260813-1000.md
+  s_0287eb07cb0df4::t_55d16ead69b724 1-5
+app/scripts/test-booking-finder-component.sh
+  s_0287eb07cb0df4::t_b471f081711e39 5,11
+knip.json
+  s_0287eb07cb0df4::t_b471f081711e39 7
+.gitignore
+  s_0287eb07cb0df4::t_55d16ead69b724 69
+.cspell.json
+  s_0287eb07cb0df4::t_55d16ead69b724 13
+.github/workflows/release.yml
+  s_0287eb07cb0df4::t_4ecc4bb563e695 69-70,143-144
+.github/workflows/lint-rust.yml
+  s_0287eb07cb0df4::t_b471f081711e39 43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "8efaf491207ad73e6cc7cd2e98816389493436a2",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": null
+    }
+  }
+}
