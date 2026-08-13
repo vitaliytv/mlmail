@@ -1,0 +1,9 @@
+schema = "nitra.plugin-manifest/v1"
+publisher_id = "nitra"
+package = "booking-finder"
+version = "0.1.0"
+
+triggers = ["nitra:gmail/booking-finder@0.1.0"]
+
+[entrypoints]
+find = "nitra:gmail/booking-finder@0.1.0"

@@ -41,6 +41,28 @@ interface search {
   list-pages: async func(request: list-request) -> result<stream<result<list-response, error>>, error>;
 }
 
+/// Demo trigger implemented by the Booking Finder Component.
+interface booking-finder {
+  use search.{error, message-ref};
+
+  /// Booking-related Gmail message identities returned without message bodies.
+  record booking-results {
+    /// The unrestricted Gmail query that the Component supplied to the host.
+    query: string,
+    /// References gathered from all available Gmail result pages.
+    messages: list<message-ref>,
+  }
+
+  /// Finds messages sent by Booking.com through the typed Gmail search import.
+  find: async func() -> result<booking-results, error>;
+}
+
 world gmail-plugin {
   import search;
+}
+
+/// Product-local Component entrypoint used by the Booking Finder demo.
+world booking-finder-plugin {
+  import search;
+  export booking-finder;
 }
