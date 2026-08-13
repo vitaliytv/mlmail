@@ -8,6 +8,10 @@ pub mod message;
 pub mod plugin_bindings;
 /// Typed invocation of the product-local Booking Finder demo Component.
 pub mod plugin_booking_finder;
+/// Typed invocation of the product-local Draft Helper demo Component.
+pub mod plugin_draft_helper;
+/// Native draft creation implementing the product-owned `nitra:gmail/drafts` contract.
+pub mod plugin_drafts;
 /// Product registration of Gmail search in the generic n-plugin Component runtime.
 pub mod plugin_runtime;
 /// Native pager implementing the product-owned `nitra:gmail/search` contract.
