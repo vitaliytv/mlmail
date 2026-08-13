@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
     "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
+    "test:booking-finder-component": "./scripts/test-booking-finder-component.sh",
     "test:all": "bun run test && bun run test:rust"
   },
   "dependencies": {

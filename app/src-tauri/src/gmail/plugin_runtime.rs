@@ -12,7 +12,8 @@ use n_plugin_compatibility::{
 };
 use n_plugin_package::WitExportRef;
 use n_plugin_runtime::{
-    PluginEnvironmentContext, PluginHostInterfaceRegistry, PluginRuntime, PluginRuntimeBuilder,
+    ApplicationTriggerInventory, PluginEnvironmentContext, PluginHostInterfaceRegistry,
+    PluginRuntime, PluginRuntimeBuilder,
 };
 use n_plugin_wkg::load_locked_package;
 
@@ -24,6 +25,8 @@ pub const GMAIL_SEARCH_PACKAGE: &str = "nitra:gmail";
 pub const GMAIL_SEARCH_REQUIREMENT: &str = "=0.1.0";
 /// Exact generated interface identity made available to installed Components.
 pub const GMAIL_SEARCH_INTERFACE: &str = "nitra:gmail/search@0.1.0";
+/// Exact generated Component trigger implemented by the Booking Finder demo.
+pub const GMAIL_BOOKING_FINDER_INTERFACE: &str = "nitra:gmail/booking-finder@0.1.0";
 /// Public, stable application identity used in plugin environment metadata.
 pub const MLMAIL_APPLICATION_ID: &str = "vitaliytv:mlmail";
 
@@ -72,6 +75,25 @@ pub async fn gmail_search_descriptor(
     .context("locked Gmail package must use a canonical WKG content digest")
 }
 
+/// Reads the exact Booking Finder trigger descriptor from the same Gmail WKG release.
+///
+/// # Errors
+///
+/// Returns an error when the standard lock lacks the exact Gmail package or its
+/// content digest cannot be used as a canonical Component package descriptor.
+pub async fn gmail_booking_finder_descriptor(
+    lock_path: impl AsRef<Path>,
+) -> Result<WitInterfaceDescriptor> {
+    let locked =
+        load_locked_package(lock_path, GMAIL_SEARCH_PACKAGE, GMAIL_SEARCH_REQUIREMENT).await?;
+    WitInterfaceDescriptor::new(
+        WitExportRef::parse(GMAIL_BOOKING_FINDER_INTERFACE)
+            .context("compiled Booking Finder WIT identity must remain valid")?,
+        locked.digest,
+    )
+    .context("locked Gmail package must use a canonical WKG content digest")
+}
+
 /// Builds the generic Component runtime from the product's exact Gmail package lock.
 ///
 /// # Errors
@@ -82,7 +104,9 @@ pub async fn build_gmail_plugin_runtime(
     lock_path: impl AsRef<Path>,
     application_version: &str,
 ) -> Result<GmailPluginRuntime> {
+    let lock_path = lock_path.as_ref();
     let descriptor = gmail_search_descriptor(lock_path).await?;
+    let booking_trigger = gmail_booking_finder_descriptor(lock_path).await?;
     let mut interfaces = PluginHostInterfaceRegistry::<GmailSearchHost>::new();
     interfaces.register(descriptor, |linker| {
         plugin_bindings::nitra::gmail::search::add_to_linker::<_, GmailSearchHost>(
@@ -93,6 +117,9 @@ pub async fn build_gmail_plugin_runtime(
 
     let runtime = PluginRuntimeBuilder::new()?
         .register_host_interfaces(interfaces)?
+        .register_triggers(ApplicationTriggerInventory::from_descriptors([
+            booking_trigger,
+        ]))
         .build();
     let environment = runtime.plugin_environment(PluginEnvironmentContext {
         application: ApplicationIdentity {
@@ -152,6 +179,7 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         );
         assert_eq!(registered.environment().application.version, "0.20.0");
         assert_eq!(registered.environment().host_interfaces.len(), 1);
+        assert_eq!(registered.environment().triggers.len(), 1);
         assert_eq!(
             registered.environment().host_interfaces[0]
                 .identity
@@ -161,6 +189,10 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         assert_eq!(
             registered.environment().host_interfaces[0].package_digest,
             "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        );
+        assert_eq!(
+            registered.environment().triggers[0].identity.as_str(),
+            GMAIL_BOOKING_FINDER_INTERFACE
         );
     }
 

@@ -1,0 +1,12 @@
+[package]
+name = "booking-finder"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = { version = "=0.60.0", features = ["async-spawn"] }

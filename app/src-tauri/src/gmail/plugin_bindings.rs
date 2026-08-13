@@ -3,7 +3,8 @@
 use super::{
     plugin_search::list_messages_page_at, GmailError, GmailListRequest, GmailListResponse,
 };
-use wasmtime::component::{Accessor, HasData, StreamReader};
+use wasmtime::component::{Accessor, HasData, ResourceTable, StreamReader};
+use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 #[cfg(test)]
 use super::GmailMessageRef;
@@ -15,10 +16,11 @@ wasmtime::component::bindgen!({
 });
 
 /// Host state that serves the generated Gmail search import for one plugin instance.
-#[derive(Clone)]
 pub struct GmailSearchHost {
     endpoint: String,
     access_token: String,
+    wasi: WasiCtx,
+    table: ResourceTable,
 }
 
 impl GmailSearchHost {
@@ -28,12 +30,23 @@ impl GmailSearchHost {
         Self {
             endpoint: endpoint.into(),
             access_token: access_token.into(),
+            wasi: WasiCtxBuilder::new().build(),
+            table: ResourceTable::default(),
         }
     }
 }
 
 impl HasData for GmailSearchHost {
     type Data<'a> = &'a mut Self;
+}
+
+impl WasiView for GmailSearchHost {
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView {
+            ctx: &mut self.wasi,
+            table: &mut self.table,
+        }
+    }
 }
 
 impl<T> nitra::gmail::search::HostWithStore<T> for GmailSearchHost {
@@ -44,8 +57,11 @@ impl<T> nitra::gmail::search::HostWithStore<T> for GmailSearchHost {
         StreamReader<Result<nitra::gmail::search::ListResponse, nitra::gmail::search::Error>>,
         nitra::gmail::search::Error,
     > {
-        let state = host.with(|mut access| access.get().clone());
-        let pages = list_pages(&state, request).await;
+        let (endpoint, access_token) = host.with(|mut access| {
+            let state = access.get();
+            (state.endpoint.clone(), state.access_token.clone())
+        });
+        let pages = list_pages(&endpoint, &access_token, request).await;
         host.with(|access| {
             StreamReader::new(access, pages).map_err(|_| nitra::gmail::search::Error::Unavailable)
         })
@@ -55,7 +71,8 @@ impl<T> nitra::gmail::search::HostWithStore<T> for GmailSearchHost {
 impl nitra::gmail::search::Host for GmailSearchHost {}
 
 async fn list_pages(
-    host: &GmailSearchHost,
+    endpoint: &str,
+    access_token: &str,
     request: nitra::gmail::search::ListRequest,
 ) -> Vec<Result<nitra::gmail::search::ListResponse, nitra::gmail::search::Error>> {
     let mut request = GmailListRequest {
@@ -68,7 +85,7 @@ async fn list_pages(
     let mut pages = Vec::new();
 
     loop {
-        let page = match list_messages_page_at(&host.endpoint, &host.access_token, &request).await {
+        let page = match list_messages_page_at(endpoint, access_token, &request).await {
             Ok(page) => page,
             Err(error) => {
                 pages.push(Err(map_error(error)));
@@ -167,7 +184,8 @@ mod tests {
         let host = GmailSearchHost::new(format!("{}/messages", server.url()), "token");
 
         let pages = list_pages(
-            &host,
+            &host.endpoint,
+            &host.access_token,
             nitra::gmail::search::ListRequest {
                 q: "from:booking.com newer_than:30d".to_owned(),
                 max_results: None,
