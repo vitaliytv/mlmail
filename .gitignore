@@ -66,4 +66,4 @@ reports/stryker/incremental.json
 .claude/scheduled_tasks.lock
 
 # Tauri — Rust build artifacts (tauri.mdc)
-app/src-tauri/target/
+target/

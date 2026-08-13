@@ -1,7 +1,3 @@
-[workspace]
-resolver = "2"
-members = [".", "mlmail-plugin-host", "plugins/booking-finder", "plugins/draft-helper"]
-
 [package]
 name = "mlmail"
 version = "0.1.0"
