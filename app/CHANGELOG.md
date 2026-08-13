@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.0] - 2026-08-13
+
+### Added
+
+- Додано Booking Finder WebAssembly Component з typed Gmail search.
+
 ## [0.22.0] - 2026-08-13
 
 ### Added
