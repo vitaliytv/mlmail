@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.22.0] - 2026-08-13
+
+### Added
+
+- Registered the generated Gmail search WIT binding with the generic n-plugin Component runtime using exact WKG lock metadata.
+
 ## [0.21.0] - 2026-08-12
 
 ### Added
