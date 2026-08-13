@@ -66,6 +66,8 @@ jobs:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - uses: Swatinem/rust-cache@v2 # zizmor: ignore[cache-poisoning]
+        with:
+          workspaces: app/src-tauri
       - name: Sync app version from tag
         run: |
           VER="${GITHUB_REF_NAME#v}"
@@ -138,6 +140,8 @@ jobs:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
       - uses: Swatinem/rust-cache@v2 # zizmor: ignore[cache-poisoning]
+        with:
+          workspaces: app/src-tauri
       - name: Sync app version from tag
         run: |
           VER="${GITHUB_REF_NAME#v}"
