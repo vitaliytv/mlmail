@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.2] - 2026-08-14
+
+### Changed
+
+- Оновлено точний snapshot plugin platform `n-plugin`.
+
 ## [0.24.1] - 2026-08-14
 
 ### Changed
