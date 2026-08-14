@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.1] - 2026-08-14
+
+### Changed
+
+- Перенесено Rust workspace і lockfile в корінь monorepo.
+
 ## [0.24.0] - 2026-08-13
 
 ### Added
