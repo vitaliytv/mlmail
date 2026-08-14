@@ -4,7 +4,7 @@
   "ignore": [
     "**/__fixtures__/**",
     ".pi/extensions/n-cursor-adr/**",
-    "app/src-tauri/target/**",
+    "target/**",
     "scripts/docs-regen/manifest.mjs",
     "scripts/docs-regen/marks.mjs",
     "scripts/stryker.config.mjs"
