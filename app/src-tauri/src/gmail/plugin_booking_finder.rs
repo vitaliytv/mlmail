@@ -3,7 +3,10 @@
 use anyhow::{anyhow, Result};
 use wasmtime::{component::Component, Store};
 
-use super::{plugin_bindings::GmailSearchHost, plugin_runtime::GmailPluginRuntime};
+use super::{
+    plugin_bindings::GmailSearchHost, plugin_consent::GmailSearchConsentStore,
+    plugin_runtime::GmailPluginRuntime,
+};
 
 wasmtime::component::bindgen!({
     path: "wit",
@@ -17,13 +20,18 @@ wasmtime::component::bindgen!({
 /// # Errors
 ///
 /// Returns an error when bytes are not a Component, required typed imports cannot be linked,
-/// Component instantiation fails, or the demo returns a Gmail host error.
+/// exact `mail:search` consent is absent, Component instantiation fails, or the demo returns a
+/// Gmail host error.
 pub async fn invoke_booking_finder(
     runtime: &GmailPluginRuntime,
     component_bytes: &[u8],
     endpoint: impl Into<String>,
     access_token: impl Into<String>,
+    consent: &GmailSearchConsentStore,
+    account_id: &str,
 ) -> Result<exports::nitra::gmail::booking_finder::BookingResults> {
+    let embedded = n_plugin_package::inspect_component(component_bytes)?;
+    consent.require(&embedded.release, account_id)?;
     n_plugin_runtime::ensure_component(component_bytes)?;
     let component = Component::from_binary(runtime.runtime().engine(), component_bytes)?;
     let mut linker = runtime.runtime().new_linker()?;
@@ -51,8 +59,11 @@ mod tests {
     use n_plugin_package::{embed_manifest, inspect_component, PluginManifest};
 
     use super::*;
-    use crate::gmail::plugin_runtime::{
-        build_gmail_plugin_runtime, GMAIL_BOOKING_FINDER_INTERFACE, MLMAIL_APPLICATION_ID,
+    use crate::gmail::{
+        plugin_consent::GmailSearchConsentStore,
+        plugin_runtime::{
+            build_gmail_plugin_runtime, GMAIL_BOOKING_FINDER_INTERFACE, MLMAIL_APPLICATION_ID,
+        },
     };
 
     const LOCK: &str = r#"
@@ -110,11 +121,29 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         let lock_path = temporary.path().join("wkg.lock");
         std::fs::write(&lock_path, LOCK)?;
         let runtime = build_gmail_plugin_runtime(&lock_path, "0.22.0").await?;
+        let inspected = inspect_component(&packaged)?;
+        let mut consent = GmailSearchConsentStore::open(temporary.path().join("consent.json"))?;
+
+        let denied = invoke_booking_finder(
+            &runtime,
+            &packaged,
+            format!("{}/messages", server.url()),
+            "token",
+            &consent,
+            "person@example.com",
+        )
+        .await
+        .expect_err("the Gmail host call must require an exact mail:search grant");
+        assert!(denied.to_string().contains("grant-required"));
+
+        consent.grant(inspected.release, "person@example.com")?;
         let results = invoke_booking_finder(
             &runtime,
             &packaged,
             format!("{}/messages", server.url()),
             "token",
+            &consent,
+            "person@example.com",
         )
         .await?;
 

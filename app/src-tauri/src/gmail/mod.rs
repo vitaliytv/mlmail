@@ -8,6 +8,8 @@ pub mod message;
 pub mod plugin_bindings;
 /// Typed invocation of the product-local Booking Finder demo Component.
 pub mod plugin_booking_finder;
+/// Persistent account-scoped consent for `mail:search` host access.
+pub mod plugin_consent;
 /// Typed invocation of the product-local Draft Helper demo Component.
 pub mod plugin_draft_helper;
 /// Native draft creation implementing the product-owned `nitra:gmail/drafts` contract.
