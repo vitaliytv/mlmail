@@ -1,0 +1,67 @@
+app/src-tauri/plugins/booking-finder/wit/booking-finder.wit
+  s_0287eb07cb0df4::t_3ecea9ef570717 1-21
+app/src-tauri/src/gmail/plugin_runtime.rs
+  s_0287eb07cb0df4::t_2da6b64972cf12 197,204-217
+  s_0287eb07cb0df4::t_880d4086fa7689 24-25,33,115
+  s_0287eb07cb0df4::t_191ee108fc620a 23,27,29-31,34-35,37,90,94,99-102,104,111,119,141-145
+  s_0287eb07cb0df4::t_13b9f044da021d 71
+  s_0287eb07cb0df4::t_a99a79e4bccb1f 70,72-75,112-114,116-118,124,146,149,155,218-221
+app/src-tauri/src/gmail/plugin_booking_finder.rs
+  s_0287eb07cb0df4::t_4e2453e69c6dce 69-86
+  s_0287eb07cb0df4::t_327c1e816a5f86 9,26,39,62
+app/src-tauri/plugins/booking-finder/Cargo.toml
+  s_0287eb07cb0df4::t_bc935d895a4b78 11-20
+app/src-tauri/plugins/draft-helper/Cargo.toml
+  s_0287eb07cb0df4::t_bc935d895a4b78 11-20
+app/src-tauri/plugins/draft-helper/src/lib.rs
+  s_0287eb07cb0df4::t_32a45bb34c7914 12-14
+  s_0287eb07cb0df4::t_3ecea9ef570717 10,22-23,28
+app/src-tauri/plugins/draft-helper/.n-plugin.toml
+  s_0287eb07cb0df4::t_3ecea9ef570717 2,6,9
+app/src-tauri/src/gmail/plugin_draft_helper.rs
+  s_0287eb07cb0df4::t_327c1e816a5f86 9,26,39,62
+  s_0287eb07cb0df4::t_4e2453e69c6dce 69-86
+app/src-tauri/plugins/draft-helper/wit/draft-helper.wit
+  s_0287eb07cb0df4::t_3ecea9ef570717 1-13
+app/src-tauri/plugins/booking-finder/wit/deps/gmail/gmail-search.wit
+  s_0287eb07cb0df4::t_3ecea9ef570717 1-35
+app/src-tauri/plugins/draft-helper/wit/deps/gmail/gmail-drafts.wit
+  s_0287eb07cb0df4::t_3ecea9ef570717 1-25
+app/src-tauri/wit/gmail-search.wit
+  s_0287eb07cb0df4::t_327c1e816a5f86 1
+app/src-tauri/plugins/booking-finder/.n-plugin.toml
+  s_0287eb07cb0df4::t_3ecea9ef570717 2,6,9
+app/src-tauri/plugins/booking-finder/src/lib.rs
+  s_0287eb07cb0df4::t_3ecea9ef570717 10,22-23
+  s_0287eb07cb0df4::t_32a45bb34c7914 12-14
+app/.changes/260816-1130.md
+  s_0287eb07cb0df4::t_9e3a4545fc8bf3 1-5
+app/src-tauri/src/gmail/mod.rs
+  s_0287eb07cb0df4::t_b49ad28430a140 7,13,17
+app/src-tauri/src/gmail/plugin_bindings.rs
+  s_0287eb07cb0df4::t_f1d6de8a81aba3 54,57,59-62,70-71,76,78,81-82,102,107-108,135-136,140,151,153-154,156-159,164,166-170,172-173,178-179,214,256
+app/src-tauri/src/gmail/plugin_drafts.rs
+  s_0287eb07cb0df4::t_860bc3ed5d3407 1
+app/src-tauri/src/gmail/plugin_search.rs
+  s_0287eb07cb0df4::t_ef03333cd9cbcf 1
+.cargo/mutants.toml
+  s_0287eb07cb0df4::t_9dcddaa6527af5 1-7
+deny.toml
+  s_0287eb07cb0df4::t_a348ec04d7efd8 1-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d33ff190cea44be2ee859443a98b03cb8bf75fe5",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
