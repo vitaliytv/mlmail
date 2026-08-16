@@ -1,9 +1,9 @@
 schema = "nitra.plugin-manifest/v1"
-publisher_id = "nitra"
+publisher_id = "vitaliytv"
 package = "booking-finder"
 version = "0.1.0"
 
-triggers = ["nitra:gmail/booking-finder@0.1.0"]
+triggers = ["vitaliytv:booking-finder/booking-finder@0.1.0"]
 
 [entrypoints]
-find = "nitra:gmail/booking-finder@0.1.0"
+find = "vitaliytv:booking-finder/booking-finder@0.1.0"

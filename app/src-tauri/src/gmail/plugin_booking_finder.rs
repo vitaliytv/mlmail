@@ -6,7 +6,7 @@ use wasmtime::{component::Component, Store};
 use super::{plugin_bindings::GmailSearchHost, plugin_runtime::GmailPluginRuntime};
 
 wasmtime::component::bindgen!({
-    path: "wit",
+    path: "plugins/booking-finder/wit",
     world: "booking-finder-plugin",
     imports: { default: async },
     exports: { default: async },
@@ -23,7 +23,7 @@ pub async fn invoke_booking_finder(
     component_bytes: &[u8],
     endpoint: impl Into<String>,
     access_token: impl Into<String>,
-) -> Result<exports::nitra::gmail::booking_finder::BookingResults> {
+) -> Result<exports::vitaliytv::booking_finder::booking_finder::BookingResults> {
     n_plugin_runtime::ensure_component(component_bytes)?;
     let component = Component::from_binary(runtime.runtime().engine(), component_bytes)?;
     let mut linker = runtime.runtime().new_linker()?;
@@ -36,7 +36,7 @@ pub async fn invoke_booking_finder(
     let results = store
         .run_concurrent(async |accessor| {
             plugin
-                .nitra_gmail_booking_finder()
+                .vitaliytv_booking_finder_booking_finder()
                 .call_find(accessor)
                 .await
         })
@@ -59,13 +59,31 @@ mod tests {
 version = 1
 
 [[packages]]
-name = "nitra:gmail"
+name = "vitaliytv:gmail"
 registry = "mlmail"
 
 [[packages.versions]]
 requirement = "=0.1.0"
 version = "0.1.0"
 digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[packages]]
+name = "vitaliytv:booking-finder"
+registry = "mlmail"
+
+[[packages.versions]]
+requirement = "=0.1.0"
+version = "0.1.0"
+digest = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+[[packages]]
+name = "vitaliytv:draft-helper"
+registry = "mlmail"
+
+[[packages.versions]]
+requirement = "=0.1.0"
+version = "0.1.0"
+digest = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
 "#;
 
     #[tokio::test]

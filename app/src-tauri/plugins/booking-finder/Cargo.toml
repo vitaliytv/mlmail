@@ -8,5 +8,15 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[package.metadata.component]
+package = "vitaliytv:booking-finder"
+
+[package.metadata.component.target]
+path = "wit"
+world = "booking-finder-plugin"
+
+[package.metadata.component.target.dependencies]
+"vitaliytv:gmail" = { path = "wit/deps/gmail" }
+
 [dependencies]
 wit-bindgen = { version = "=0.60.0", features = ["async-spawn"] }
