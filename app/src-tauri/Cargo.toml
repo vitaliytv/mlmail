@@ -42,10 +42,10 @@ tauri-plugin-mcp-bridge = "0.11.2"
 tauri-plugin-process = "2.3.1"
 wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", rev = "45af25f4984d14c65663ed43541d2e641752f66d", features = ["component-model", "component-model-async"] }
 wasmtime-wasi = { git = "https://github.com/bytecodealliance/wasmtime", rev = "45af25f4984d14c65663ed43541d2e641752f66d", default-features = false, features = ["p2"] }
-n-plugin-compatibility = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "408575cb9782f0c55ec0c4bd062ffac980c7db3c" }
-n-plugin-package = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "408575cb9782f0c55ec0c4bd062ffac980c7db3c" }
-n-plugin-runtime = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "408575cb9782f0c55ec0c4bd062ffac980c7db3c" }
-n-plugin-wkg = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "408575cb9782f0c55ec0c4bd062ffac980c7db3c" }
+n-plugin-compatibility = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "f50ed471263c858b5a01fd63c979f75ebbe16ef7" }
+n-plugin-package = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "f50ed471263c858b5a01fd63c979f75ebbe16ef7" }
+n-plugin-runtime = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "f50ed471263c858b5a01fd63c979f75ebbe16ef7" }
+n-plugin-wkg = { git = "https://git.7n.ai/nitra/n-plugin.git", rev = "f50ed471263c858b5a01fd63c979f75ebbe16ef7" }
 anyhow = "1"
 
 [target.'cfg(target_os = "android")'.dependencies]
