@@ -1,4 +1,4 @@
-//! Product-owned native implementation of the `nitra:gmail/drafts` WIT contract.
+//! Product-owned native implementation of the `vitaliytv:gmail/drafts` WIT contract.
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use serde::Deserialize;

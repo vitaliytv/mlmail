@@ -1,0 +1,21 @@
+package vitaliytv:booking-finder@0.1.0;
+
+interface booking-finder {
+  use vitaliytv:gmail/search@0.1.0.{error, message-ref};
+
+  /// Booking-related Gmail message identities returned without message bodies.
+  record booking-results {
+    /// The unrestricted Gmail query that the Component supplied to the host.
+    query: string,
+    /// References gathered from all available Gmail result pages.
+    messages: list<message-ref>,
+  }
+
+  /// Finds messages sent by Booking.com through the typed Gmail search import.
+  find: async func() -> result<booking-results, error>;
+}
+
+world booking-finder-plugin {
+  import vitaliytv:gmail/search@0.1.0;
+  export booking-finder;
+}

@@ -1,4 +1,4 @@
-package nitra:gmail@0.1.0;
+package vitaliytv:gmail@0.1.0;
 
 /// Product-owned Gmail host contract. It mirrors `users.messages.list` paging,
 /// while leaving Gmail's query language entirely unrestricted.
@@ -66,42 +66,7 @@ interface drafts {
   create: async func(request: create-request) -> result<draft-ref, error>;
 }
 
-/// Product demo Component that creates one deterministic draft.
-interface draft-helper {
-  use drafts.{draft-ref, error};
-
-  /// Creates the demo draft through the typed Gmail drafts import.
-  create: async func() -> result<draft-ref, error>;
-}
-
-/// Demo trigger implemented by the Booking Finder Component.
-interface booking-finder {
-  use search.{error, message-ref};
-
-  /// Booking-related Gmail message identities returned without message bodies.
-  record booking-results {
-    /// The unrestricted Gmail query that the Component supplied to the host.
-    query: string,
-    /// References gathered from all available Gmail result pages.
-    messages: list<message-ref>,
-  }
-
-  /// Finds messages sent by Booking.com through the typed Gmail search import.
-  find: async func() -> result<booking-results, error>;
-}
-
 world gmail-plugin {
   import search;
   import drafts;
-}
-
-world draft-helper-plugin {
-  import drafts;
-  export draft-helper;
-}
-
-/// Product-local Component entrypoint used by the Booking Finder demo.
-world booking-finder-plugin {
-  import search;
-  export booking-finder;
 }

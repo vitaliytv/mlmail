@@ -7,8 +7,11 @@
 )]
 mod bindings {
     wit_bindgen::generate!({
-        path: "../../wit",
+        path: "wit",
         world: "booking-finder-plugin",
+        with: {
+            "vitaliytv:gmail/search@0.1.0": generate,
+        },
     });
 
     use super::BookingFinder;
@@ -16,8 +19,8 @@ mod bindings {
 }
 
 use bindings::{
-    exports::nitra::gmail::booking_finder::{BookingResults, Guest},
-    nitra::gmail::search::{self, Error, ListRequest},
+    exports::vitaliytv::booking_finder::booking_finder::{BookingResults, Guest},
+    vitaliytv::gmail::search::{self, Error, ListRequest},
 };
 
 const BOOKING_QUERY: &str = "from:(booking.com)";

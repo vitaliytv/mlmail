@@ -1,0 +1,25 @@
+package vitaliytv:gmail@0.1.0;
+
+interface drafts {
+  /// The RFC 822 fields used for the message created inside a Gmail draft.
+  record create-request {
+    to: string,
+    subject: string,
+    body: string,
+  }
+
+  /// Gmail's opaque draft identifier.
+  record draft-ref {
+    id: string,
+  }
+
+  /// Host-owned errors intentionally omit credentials and transport details.
+  variant error {
+    unauthenticated,
+    unavailable,
+    invalid-response,
+  }
+
+  /// Creates one Gmail draft with the authenticated account.
+  create: async func(request: create-request) -> result<draft-ref, error>;
+}

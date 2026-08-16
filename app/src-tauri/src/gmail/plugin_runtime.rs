@@ -20,17 +20,21 @@ use n_plugin_wkg::load_locked_package;
 use super::plugin_bindings::{self, GmailSearchHost};
 
 /// Exact WIT package that owns the product Gmail search interface.
-pub const GMAIL_SEARCH_PACKAGE: &str = "nitra:gmail";
-/// Exact M0 package requirement used when looking up Gmail in `wkg.lock`.
-pub const GMAIL_SEARCH_REQUIREMENT: &str = "=0.1.0";
+pub const GMAIL_SEARCH_PACKAGE: &str = "vitaliytv:gmail";
+/// Exact M0 release requirement used when looking up a package in `wkg.lock`.
+pub const M0_EXACT_RELEASE_REQUIREMENT: &str = "=0.1.0";
 /// Exact generated interface identity made available to installed Components.
-pub const GMAIL_SEARCH_INTERFACE: &str = "nitra:gmail/search@0.1.0";
+pub const GMAIL_SEARCH_INTERFACE: &str = "vitaliytv:gmail/search@0.1.0";
 /// Exact generated interface identity for authenticated Gmail draft creation.
-pub const GMAIL_DRAFTS_INTERFACE: &str = "nitra:gmail/drafts@0.1.0";
+pub const GMAIL_DRAFTS_INTERFACE: &str = "vitaliytv:gmail/drafts@0.1.0";
+/// Exact package identity of the Booking Finder Component release.
+pub const BOOKING_FINDER_PACKAGE: &str = "vitaliytv:booking-finder";
 /// Exact generated Component trigger implemented by the Booking Finder demo.
-pub const GMAIL_BOOKING_FINDER_INTERFACE: &str = "nitra:gmail/booking-finder@0.1.0";
+pub const GMAIL_BOOKING_FINDER_INTERFACE: &str = "vitaliytv:booking-finder/booking-finder@0.1.0";
+/// Exact package identity of the Draft Helper Component release.
+pub const DRAFT_HELPER_PACKAGE: &str = "vitaliytv:draft-helper";
 /// Exact generated Component trigger implemented by the Draft Helper demo.
-pub const GMAIL_DRAFT_HELPER_INTERFACE: &str = "nitra:gmail/draft-helper@0.1.0";
+pub const GMAIL_DRAFT_HELPER_INTERFACE: &str = "vitaliytv:draft-helper/draft-helper@0.1.0";
 /// Public, stable application identity used in plugin environment metadata.
 pub const MLMAIL_APPLICATION_ID: &str = "vitaliytv:mlmail";
 
@@ -63,8 +67,12 @@ impl GmailPluginRuntime {
 pub async fn gmail_search_descriptor(
     lock_path: impl AsRef<Path>,
 ) -> Result<WitInterfaceDescriptor> {
-    let locked =
-        load_locked_package(lock_path, GMAIL_SEARCH_PACKAGE, GMAIL_SEARCH_REQUIREMENT).await?;
+    let locked = load_locked_package(
+        lock_path,
+        GMAIL_SEARCH_PACKAGE,
+        M0_EXACT_RELEASE_REQUIREMENT,
+    )
+    .await?;
     if locked.version != "0.1.0" {
         bail!(
             "Gmail search requires `{GMAIL_SEARCH_PACKAGE}@0.1.0`, but wkg.lock selected `{}`",
@@ -79,36 +87,41 @@ pub async fn gmail_search_descriptor(
     .context("locked Gmail package must use a canonical WKG content digest")
 }
 
-/// Reads the exact Booking Finder trigger descriptor from the same Gmail WKG release.
+/// Reads the exact Booking Finder trigger descriptor from its WKG release.
 ///
 /// # Errors
 ///
-/// Returns an error when the standard lock lacks the exact Gmail package or its
+/// Returns an error when the standard lock lacks the exact Component package or its
 /// content digest cannot be used as a canonical Component package descriptor.
 pub async fn gmail_booking_finder_descriptor(
     lock_path: impl AsRef<Path>,
 ) -> Result<WitInterfaceDescriptor> {
-    let locked =
-        load_locked_package(lock_path, GMAIL_SEARCH_PACKAGE, GMAIL_SEARCH_REQUIREMENT).await?;
-    WitInterfaceDescriptor::new(
-        WitExportRef::parse(GMAIL_BOOKING_FINDER_INTERFACE)
-            .context("compiled Booking Finder WIT identity must remain valid")?,
-        locked.digest,
+    locked_descriptor(
+        lock_path,
+        BOOKING_FINDER_PACKAGE,
+        GMAIL_BOOKING_FINDER_INTERFACE,
     )
-    .context("locked Gmail package must use a canonical WKG content digest")
+    .await
 }
 
 async fn gmail_descriptor(
     lock_path: impl AsRef<Path>,
     interface: &str,
 ) -> Result<WitInterfaceDescriptor> {
-    let locked =
-        load_locked_package(lock_path, GMAIL_SEARCH_PACKAGE, GMAIL_SEARCH_REQUIREMENT).await?;
+    locked_descriptor(lock_path, GMAIL_SEARCH_PACKAGE, interface).await
+}
+
+async fn locked_descriptor(
+    lock_path: impl AsRef<Path>,
+    package: &str,
+    interface: &str,
+) -> Result<WitInterfaceDescriptor> {
+    let locked = load_locked_package(lock_path, package, M0_EXACT_RELEASE_REQUIREMENT).await?;
     WitInterfaceDescriptor::new(
         WitExportRef::parse(interface).context("compiled Gmail WIT identity must remain valid")?,
         locked.digest,
     )
-    .context("locked Gmail package must use a canonical WKG content digest")
+    .context("locked Component package must use a canonical WKG content digest")
 }
 
 /// Builds the generic Component runtime from the product's exact Gmail package lock.
@@ -125,16 +138,21 @@ pub async fn build_gmail_plugin_runtime(
     let descriptor = gmail_search_descriptor(lock_path).await?;
     let drafts_descriptor = gmail_descriptor(lock_path, GMAIL_DRAFTS_INTERFACE).await?;
     let booking_trigger = gmail_booking_finder_descriptor(lock_path).await?;
-    let draft_helper_trigger = gmail_descriptor(lock_path, GMAIL_DRAFT_HELPER_INTERFACE).await?;
+    let draft_helper_trigger = locked_descriptor(
+        lock_path,
+        DRAFT_HELPER_PACKAGE,
+        GMAIL_DRAFT_HELPER_INTERFACE,
+    )
+    .await?;
     let mut interfaces = PluginHostInterfaceRegistry::<GmailSearchHost>::new();
     interfaces.register(descriptor, |linker| {
-        plugin_bindings::nitra::gmail::search::add_to_linker::<_, GmailSearchHost>(
+        plugin_bindings::vitaliytv::gmail::search::add_to_linker::<_, GmailSearchHost>(
             linker,
             |state| state,
         )
     })?;
     interfaces.register(drafts_descriptor, |linker| {
-        plugin_bindings::nitra::gmail::drafts::add_to_linker::<_, GmailSearchHost>(
+        plugin_bindings::vitaliytv::gmail::drafts::add_to_linker::<_, GmailSearchHost>(
             linker,
             |state| state,
         )
@@ -176,13 +194,31 @@ mod tests {
 version = 1
 
 [[packages]]
-name = "nitra:gmail"
+name = "vitaliytv:gmail"
 registry = "mlmail"
 
 [[packages.versions]]
 requirement = "=0.1.0"
 version = "0.1.0"
 digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[packages]]
+name = "vitaliytv:booking-finder"
+registry = "mlmail"
+
+[[packages.versions]]
+requirement = "=0.1.0"
+version = "0.1.0"
+digest = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+[[packages]]
+name = "vitaliytv:draft-helper"
+registry = "mlmail"
+
+[[packages.versions]]
+requirement = "=0.1.0"
+version = "0.1.0"
+digest = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
 "#;
 
     #[tokio::test]

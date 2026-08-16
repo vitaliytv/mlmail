@@ -51,13 +51,15 @@ impl WasiView for GmailSearchHost {
     }
 }
 
-impl<T> nitra::gmail::search::HostWithStore<T> for GmailSearchHost {
+impl<T> vitaliytv::gmail::search::HostWithStore<T> for GmailSearchHost {
     async fn list_pages(
         host: &Accessor<T, Self>,
-        request: nitra::gmail::search::ListRequest,
+        request: vitaliytv::gmail::search::ListRequest,
     ) -> Result<
-        StreamReader<Result<nitra::gmail::search::ListResponse, nitra::gmail::search::Error>>,
-        nitra::gmail::search::Error,
+        StreamReader<
+            Result<vitaliytv::gmail::search::ListResponse, vitaliytv::gmail::search::Error>,
+        >,
+        vitaliytv::gmail::search::Error,
     > {
         let (endpoint, access_token) = host.with(|mut access| {
             let state = access.get();
@@ -65,18 +67,19 @@ impl<T> nitra::gmail::search::HostWithStore<T> for GmailSearchHost {
         });
         let pages = list_pages(&endpoint, &access_token, request).await;
         host.with(|access| {
-            StreamReader::new(access, pages).map_err(|_| nitra::gmail::search::Error::Unavailable)
+            StreamReader::new(access, pages)
+                .map_err(|_| vitaliytv::gmail::search::Error::Unavailable)
         })
     }
 }
 
-impl nitra::gmail::search::Host for GmailSearchHost {}
+impl vitaliytv::gmail::search::Host for GmailSearchHost {}
 
-impl<T> nitra::gmail::drafts::HostWithStore<T> for GmailSearchHost {
+impl<T> vitaliytv::gmail::drafts::HostWithStore<T> for GmailSearchHost {
     async fn create(
         host: &Accessor<T, Self>,
-        request: nitra::gmail::drafts::CreateRequest,
-    ) -> Result<nitra::gmail::drafts::DraftRef, nitra::gmail::drafts::Error> {
+        request: vitaliytv::gmail::drafts::CreateRequest,
+    ) -> Result<vitaliytv::gmail::drafts::DraftRef, vitaliytv::gmail::drafts::Error> {
         let (endpoint, access_token) = host.with(|mut access| {
             let state = access.get();
             (drafts_endpoint(&state.endpoint), state.access_token.clone())
@@ -96,13 +99,13 @@ impl<T> nitra::gmail::drafts::HostWithStore<T> for GmailSearchHost {
     }
 }
 
-impl nitra::gmail::drafts::Host for GmailSearchHost {}
+impl vitaliytv::gmail::drafts::Host for GmailSearchHost {}
 
 async fn list_pages(
     endpoint: &str,
     access_token: &str,
-    request: nitra::gmail::search::ListRequest,
-) -> Vec<Result<nitra::gmail::search::ListResponse, nitra::gmail::search::Error>> {
+    request: vitaliytv::gmail::search::ListRequest,
+) -> Vec<Result<vitaliytv::gmail::search::ListResponse, vitaliytv::gmail::search::Error>> {
     let mut request = GmailListRequest {
         q: request.q,
         max_results: request.max_results,
@@ -129,12 +132,12 @@ async fn list_pages(
     }
 }
 
-fn to_component_page(page: GmailListResponse) -> nitra::gmail::search::ListResponse {
-    nitra::gmail::search::ListResponse {
+fn to_component_page(page: GmailListResponse) -> vitaliytv::gmail::search::ListResponse {
+    vitaliytv::gmail::search::ListResponse {
         messages: page.messages.map(|messages| {
             messages
                 .into_iter()
-                .map(|message| nitra::gmail::search::MessageRef {
+                .map(|message| vitaliytv::gmail::search::MessageRef {
                     id: message.id,
                     thread_id: message.thread_id,
                 })
@@ -145,31 +148,35 @@ fn to_component_page(page: GmailListResponse) -> nitra::gmail::search::ListRespo
     }
 }
 
-fn map_error(error: GmailError) -> nitra::gmail::search::Error {
+fn map_error(error: GmailError) -> vitaliytv::gmail::search::Error {
     match error {
-        GmailError::ReauthRequired => nitra::gmail::search::Error::Unauthenticated,
-        GmailError::Parse(_) => nitra::gmail::search::Error::InvalidResponse,
+        GmailError::ReauthRequired => vitaliytv::gmail::search::Error::Unauthenticated,
+        GmailError::Parse(_) => vitaliytv::gmail::search::Error::InvalidResponse,
         GmailError::Network(_) | GmailError::Http { .. } | GmailError::Platform(_) => {
-            nitra::gmail::search::Error::Unavailable
+            vitaliytv::gmail::search::Error::Unavailable
         }
-        GmailError::Empty | GmailError::EmptyQuery => nitra::gmail::search::Error::InvalidResponse,
+        GmailError::Empty | GmailError::EmptyQuery => {
+            vitaliytv::gmail::search::Error::InvalidResponse
+        }
     }
 }
 
-fn map_draft_error(error: GmailError) -> nitra::gmail::drafts::Error {
+fn map_draft_error(error: GmailError) -> vitaliytv::gmail::drafts::Error {
     match map_error(error) {
-        nitra::gmail::search::Error::Unauthenticated => {
-            nitra::gmail::drafts::Error::Unauthenticated
+        vitaliytv::gmail::search::Error::Unauthenticated => {
+            vitaliytv::gmail::drafts::Error::Unauthenticated
         }
-        nitra::gmail::search::Error::Unavailable => nitra::gmail::drafts::Error::Unavailable,
-        nitra::gmail::search::Error::InvalidResponse => {
-            nitra::gmail::drafts::Error::InvalidResponse
+        vitaliytv::gmail::search::Error::Unavailable => {
+            vitaliytv::gmail::drafts::Error::Unavailable
+        }
+        vitaliytv::gmail::search::Error::InvalidResponse => {
+            vitaliytv::gmail::drafts::Error::InvalidResponse
         }
     }
 }
 
-fn to_component_draft(draft: GmailDraftRef) -> nitra::gmail::drafts::DraftRef {
-    nitra::gmail::drafts::DraftRef { id: draft.id }
+fn to_component_draft(draft: GmailDraftRef) -> vitaliytv::gmail::drafts::DraftRef {
+    vitaliytv::gmail::drafts::DraftRef { id: draft.id }
 }
 
 fn drafts_endpoint(messages_endpoint: &str) -> String {
@@ -204,7 +211,7 @@ mod tests {
     fn maps_reauthentication_to_the_wit_error() {
         assert!(matches!(
             map_error(GmailError::ReauthRequired),
-            nitra::gmail::search::Error::Unauthenticated
+            vitaliytv::gmail::search::Error::Unauthenticated
         ));
     }
 
@@ -246,7 +253,7 @@ mod tests {
         let pages = list_pages(
             &host.endpoint,
             &host.access_token,
-            nitra::gmail::search::ListRequest {
+            vitaliytv::gmail::search::ListRequest {
                 q: "from:booking.com newer_than:30d".to_owned(),
                 max_results: None,
                 page_token: None,

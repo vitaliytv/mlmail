@@ -1,4 +1,4 @@
-//! Product-owned native representation of the `nitra:gmail/search` WIT contract.
+//! Product-owned native representation of the `vitaliytv:gmail/search` WIT contract.
 
 use serde::{Deserialize, Serialize};
 

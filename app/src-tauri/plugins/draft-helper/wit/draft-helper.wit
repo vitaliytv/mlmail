@@ -1,0 +1,13 @@
+package vitaliytv:draft-helper@0.1.0;
+
+interface draft-helper {
+  use vitaliytv:gmail/drafts@0.1.0.{draft-ref, error};
+
+  /// Creates the demo draft through the typed Gmail drafts import.
+  create: async func() -> result<draft-ref, error>;
+}
+
+world draft-helper-plugin {
+  import vitaliytv:gmail/drafts@0.1.0;
+  export draft-helper;
+}

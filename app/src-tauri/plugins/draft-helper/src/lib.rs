@@ -7,8 +7,11 @@
 )]
 mod bindings {
     wit_bindgen::generate!({
-        path: "../../wit",
+        path: "wit",
         world: "draft-helper-plugin",
+        with: {
+            "vitaliytv:gmail/drafts@0.1.0": generate,
+        },
     });
 
     use super::DraftHelper;
@@ -16,13 +19,13 @@ mod bindings {
 }
 
 use bindings::{
-    exports::nitra::gmail::draft_helper::Guest,
-    nitra::gmail::drafts::{self, CreateRequest, DraftRef, Error},
+    exports::vitaliytv::draft_helper::draft_helper::Guest,
+    vitaliytv::gmail::drafts::{self, CreateRequest, DraftRef, Error},
 };
 
 const DEMO_RECIPIENT: &str = "a@example.com";
 const DEMO_SUBJECT: &str = "Hello from mlmail";
-const DEMO_BODY: &str = "Draft created by the typed nitra:gmail/drafts Component import.";
+const DEMO_BODY: &str = "Draft created by the typed vitaliytv:gmail/drafts Component import.";
 
 struct DraftHelper;
 
