@@ -69,14 +69,13 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 "#;
 
     #[tokio::test]
-    #[ignore = "requires the Booking Finder guest Component built for wasm32-wasip2"]
+    #[ignore = "requires a built guest or an installed packaged Booking Finder Component"]
     async fn invokes_packaged_booking_finder_through_typed_gmail_search() -> Result<()> {
-        let component_path = std::env::var_os("MLMAIL_BOOKING_FINDER_COMPONENT")
-            .context("MLMAIL_BOOKING_FINDER_COMPONENT must point to the built guest Component")?;
+        let component_path = std::env::var_os("MLMAIL_BOOKING_FINDER_COMPONENT").context(
+            "MLMAIL_BOOKING_FINDER_COMPONENT must point to the Booking Finder Component",
+        )?;
         let component = std::fs::read(component_path)?;
-        let manifest =
-            PluginManifest::from_toml(include_str!("../../plugins/booking-finder/.n-plugin.toml"))?;
-        let packaged = embed_manifest(&component, &manifest)?;
+        let packaged = packaged_component(component)?;
         let inspected = inspect_component(&packaged)?;
         assert_eq!(
             inspected.manifest.entrypoints["find"].as_str(),
@@ -128,5 +127,20 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         assert_eq!(results.messages[0].thread_id.as_deref(), Some("thread-1"));
         assert_eq!(results.messages[1].id, "reservation-2");
         Ok(())
+    }
+
+    fn packaged_component(component: Vec<u8>) -> Result<Vec<u8>> {
+        match inspect_component(&component) {
+            Ok(_) => Ok(component),
+            Err(error)
+                if error.to_string() == "Component does not contain `nitra.plugin-manifest/v1`" =>
+            {
+                let manifest = PluginManifest::from_toml(include_str!(
+                    "../../plugins/booking-finder/.n-plugin.toml"
+                ))?;
+                Ok(embed_manifest(&component, &manifest)?)
+            }
+            Err(error) => Err(error.into()),
+        }
     }
 }
