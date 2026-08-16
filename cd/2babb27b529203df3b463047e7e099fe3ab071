@@ -1,0 +1,27 @@
+app/.changes/260816-2350.md
+  s_0287eb07cb0df4::t_f29a4fc12828cb 3
+app/src-tauri/src/gmail/plugin_consent.rs
+  s_0287eb07cb0df4::t_60a2ebf5385710 1-166
+  s_0287eb07cb0df4::t_2b456f08d49d89 167-177
+app/src-tauri/src/gmail/mod.rs
+  s_0287eb07cb0df4::t_60a2ebf5385710 11-12
+app/src-tauri/src/gmail/plugin_booking_finder.rs
+  s_0287eb07cb0df4::t_60a2ebf5385710 6-9,23-24,30-31,33-34,62-66,124,145-146
+  s_0287eb07cb0df4::t_f29a4fc12828cb 125-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "cd2babb27b529203df3b463047e7e099fe3ab071",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
