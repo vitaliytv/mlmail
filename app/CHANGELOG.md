@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.25.0] - 2026-08-16
+
+### Fixed
+
+- Дозволено E2E тесту Booking Finder приймати встановлений packaged Component
+
 ## [0.24.2] - 2026-08-14
 
 ### Changed
