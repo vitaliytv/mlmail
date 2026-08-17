@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.27.0] - 2026-08-17
+
+### Removed
+
+- Plugin Manager перейшов на n-plugin WebAssembly Components: legacy `mlmail-plugin-host`, ZIP/core-Wasm loader та JSON/string ABI видалено.
+
 ## [0.26.0] - 2026-08-17
 
 ### Added
