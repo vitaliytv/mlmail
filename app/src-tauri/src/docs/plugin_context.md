@@ -3,7 +3,7 @@ type: Rust Module
 title: plugin_context.rs
 resource: app/src-tauri/src/plugin_context.rs
 docgen:
-  crc: d048e509
+  crc: d79525c2
   model: manual
 ---
 

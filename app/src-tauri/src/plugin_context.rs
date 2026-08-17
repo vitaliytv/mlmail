@@ -341,7 +341,11 @@ mod tests {
             .context("replacement Gmail provider should load")?;
         let helper_v2_load = events
             .iter()
-            .rposition(|event| event == "load:plugin:draft-helper:sha256:helper")
+            .enumerate()
+            .rev()
+            .find_map(|(index, event)| {
+                (event == "load:plugin:draft-helper:sha256:helper").then_some(index)
+            })
             .context("Draft Helper should reload")?;
 
         assert!(helper_drain < provider_drain);
