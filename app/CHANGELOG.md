@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.26.0] - 2026-08-17
+
+### Added
+
+- Додано exact account-scoped consent `mail:search` для Booking Finder
+
 ## [0.25.0] - 2026-08-16
 
 ### Fixed
