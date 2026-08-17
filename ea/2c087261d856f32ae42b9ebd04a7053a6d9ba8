@@ -1,0 +1,41 @@
+app/src-tauri/src/docs/lib.md
+  s_0287eb07cb0df4::t_7c053847950371 6,12
+app/src-tauri/src/docs/plugin_context.md
+  s_0287eb07cb0df4::t_7c053847950371 1-31
+app/src-tauri/Cargo.toml
+  s_0287eb07cb0df4::t_f1beb3158641d3 44-48
+app/src-tauri/src/plugin_context.rs
+  s_0287eb07cb0df4::t_8d2edfd6727a59 1-416
+app/src-tauri/src/docs/plugins.md
+  s_0287eb07cb0df4::t_7c053847950371 1-35
+app/src-tauri/src/lib.rs
+  s_0287eb07cb0df4::t_811b580192883f 16-17
+docs/plugin-context-runtime.md
+  s_0287eb07cb0df4::t_1bb6f6237aa932 1-119
+app/src-tauri/src/plugins.rs
+  s_0287eb07cb0df4::t_99af826424a1fa 226,245-256,265-267,310,330
+  s_0287eb07cb0df4::t_dd097d1b890e5d 365
+  s_0287eb07cb0df4::t_811b580192883f 30
+  s_0287eb07cb0df4::t_c94276ece8509b 376,380-382
+  s_0287eb07cb0df4::t_33e0cf8206d41b 257-264,344-345,368-375,377-379,383
+Cargo.lock
+  s_0287eb07cb0df4::t_eb09c14abb820a 3391,3403,3411,3419,3434,3449,3463,3475
+app/.changes/260817-2022.md
+  s_0287eb07cb0df4::t_f705fca2773c0d 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ea2c087261d856f32ae42b9ebd04a7053a6d9ba8",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
