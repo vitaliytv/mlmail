@@ -2,7 +2,6 @@
 resolver = "2"
 members = [
   "app/src-tauri",
-  "app/src-tauri/mlmail-plugin-host",
   "app/src-tauri/plugins/booking-finder",
   "app/src-tauri/plugins/draft-helper"
 ]
