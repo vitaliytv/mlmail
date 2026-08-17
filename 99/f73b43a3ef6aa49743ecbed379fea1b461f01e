@@ -1,0 +1,35 @@
+app/src-tauri/src/docs/acp_agent_plugin.md
+  s_6ba7cc57e797b2::t_dd52c8e2673d63 1-22
+app/src-tauri/src/lib.rs
+  s_6ba7cc57e797b2::t_021514a1f93dda 3-4
+app/src-tauri/src/acp_agent_plugin.rs
+  s_6ba7cc57e797b2::t_021514a1f93dda 1-6,8-9,11-52,54-106
+  s_6ba7cc57e797b2::t_baa1566c1b1f6b 53
+  s_6ba7cc57e797b2::t_445930f0415c43 7
+  s_6ba7cc57e797b2::t_0dc610d4845091 10
+docs/specs/2026-08-17-acp-agent-wasm-plugin.md
+  s_6ba7cc57e797b2::t_0388c95ed68d20 1-171
+docs/adr/wasm-acp-agent-plugin.md
+  s_6ba7cc57e797b2::t_97774ab8723662 1-84
+app/src-tauri/Cargo.toml
+  s_6ba7cc57e797b2::t_021514a1f93dda 55
+  s_6ba7cc57e797b2::t_0bf61a562aa6da 30,50
+app/src-tauri/Cargo.lock
+  s_6ba7cc57e797b2::t_3382791c07fed3 3540,3547,3652-3659,6470
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "99f73b43a3ef6aa49743ecbed379fea1b461f01e",
+  "prompts": {},
+  "sessions": {
+    "s_6ba7cc57e797b2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda1e-f585-7672-8da5-a7f421ca91da",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
