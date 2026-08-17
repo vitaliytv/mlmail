@@ -1,5 +1,5 @@
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="onToggle" maximized>
+  <q-dialog @update:model-value="onToggle" :model-value="modelValue" maximized>
     <q-card>
       <q-bar>
         <span class="text-weight-medium">Плагіни</span>
@@ -10,20 +10,16 @@
       <q-card-section class="column q-gutter-sm">
         <div class="row q-gutter-sm items-center">
           <q-btn
-            @click="installSample"
+            @click="pickAndInstall"
             color="primary"
             no-caps
-            icon="sym_o_download"
-            label="Встановити signed sample"
-            :loading="busy" />
-          <q-btn
-            @click="pickAndPreview"
-            color="secondary"
-            no-caps
             icon="sym_o_folder_open"
-            label="Обрати .n-plugin"
+            label="Встановити .n-plugin"
             :loading="busy" />
           <q-btn @click="reload" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="busy" />
+        </div>
+        <div class="text-caption text-grey-7">
+          Можна встановити тільки typed Draft Helper WebAssembly Component. ZIP/core-Wasm пакети не підтримуються.
         </div>
         <div v-if="error" class="text-negative text-caption">{{ error }}</div>
       </q-card-section>
@@ -31,27 +27,34 @@
       <q-card-section>
         <div v-if="!plugins.length" class="text-grey-6">Плагінів ще немає.</div>
         <q-list v-else bordered separator rounded>
-          <q-item v-for="p in plugins" :key="p.id">
+          <q-item v-for="plugin in plugins" :key="plugin.release.digest">
             <q-item-section>
               <q-item-label class="row items-center q-gutter-xs">
-                <span>{{ p.name }}</span>
-                <q-badge color="grey-7" :label="p.version" />
-                <q-badge v-if="p.disabled" color="orange" label="Вимкнено" />
+                <span>{{ plugin.release.package }}</span>
+                <q-badge color="grey-7" :label="plugin.release.version" />
+                <q-badge v-if="!plugin.enabled" color="orange" label="Вимкнено" />
               </q-item-label>
-              <q-item-label caption>
-                {{ p.publisher }} · {{ p.id }}
-                <span v-if="p.fingerprint"> · fp {{ p.fingerprint }}</span>
-              </q-item-label>
-              <q-item-label caption>
-                Grants: {{ p.granted?.length || 0 }} · caps:
-                {{ (p.capabilities || []).map(c => c.name).join(', ') }}
-              </q-item-label>
+              <q-item-label caption>{{ plugin.release.digest }}</q-item-label>
+              <q-item-label caption>Triggers: {{ plugin.triggers.join(', ') }}</q-item-label>
             </q-item-section>
             <q-item-section side>
               <div class="row q-gutter-xs">
-                <q-btn @click="toggleDisabled(p)" flat dense no-caps :label="p.disabled ? 'Увімкнути' : 'Вимкнути'" />
                 <q-btn
-                  @click="uninstall(p)"
+                  v-if="canCreateDraft(plugin)"
+                  @click="createDraft"
+                  color="primary"
+                  dense
+                  no-caps
+                  label="Create draft"
+                  :loading="busy" />
+                <q-btn
+                  @click="toggleDisabled(plugin)"
+                  flat
+                  dense
+                  no-caps
+                  :label="plugin.enabled ? 'Вимкнути' : 'Увімкнути'" />
+                <q-btn
+                  @click="uninstall(plugin)"
                   flat
                   dense
                   round
@@ -62,20 +65,20 @@
             </q-item-section>
           </q-item>
         </q-list>
+        <div v-if="lastDraft" class="text-positive text-caption q-mt-md">{{ lastDraft }}</div>
       </q-card-section>
-
-      <PluginConsentDialog v-model="consentOpen" :preview="consentPreview" @accept="confirmInstall" />
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
 /**
- * Plugin Manager: list / signed sample / native .n-plugin picker / disable / uninstall purge.
+ * Component-only Plugin Manager for installing and invoking the typed Draft Helper demo.
  */
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
-import PluginConsentDialog from './PluginConsentDialog.vue'
+
+const DRAFT_HELPER_TRIGGER = 'nitra:gmail/draft-helper@0.1.0'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false }
@@ -85,112 +88,90 @@ const emit = defineEmits(['update:modelValue'])
 const plugins = ref([])
 const busy = ref(false)
 const error = ref('')
-const consentOpen = ref(false)
-const consentPreview = ref(null)
-const pendingPath = ref('')
+const lastDraft = ref('')
 
-function onToggle(v) {
-  emit('update:modelValue', v)
-  if (v) reload()
+/** Синхронізує відкриття діалогу та одразу завантажує актуальний список. */
+function onToggle(value) {
+  emit('update:modelValue', value)
+  if (value) reload()
 }
 
+/** Завантажує локальну product projection встановлених Components. */
 async function reload() {
   error.value = ''
   try {
     plugins.value = await invoke('plugin_manager_list')
-  } catch (err) {
-    error.value = err?.message || String(err)
+  } catch (error) {
+    error.value = error?.message || String(error)
   }
 }
 
-async function installSample() {
+/** Повертає, чи доступний цьому увімкненому Component Draft Helper trigger. */
+function canCreateDraft(plugin) {
+  return plugin.enabled && plugin.triggers.includes(DRAFT_HELPER_TRIGGER)
+}
+
+/** Відкриває нативний picker і передає вибраний Component у typed installer. */
+async function pickAndInstall() {
   busy.value = true
   error.value = ''
   try {
-    await invoke('plugin_manager_install_sample')
-    await reload()
-  } catch (err) {
-    error.value = err?.message || String(err)
+    const path = await open({
+      multiple: false,
+      filters: [{ name: 'n-plugin Component', extensions: ['n-plugin'] }]
+    })
+    if (path) {
+      await invoke('plugin_manager_install', { path })
+      await reload()
+    }
+  } catch (error) {
+    error.value = error?.message || String(error)
   } finally {
     busy.value = false
   }
 }
 
-async function toggleDisabled(p) {
+/** Змінює явний user enablement без зміни immutable Component bytes. */
+async function toggleDisabled(plugin) {
   busy.value = true
   error.value = ''
   try {
     await invoke('plugin_manager_set_disabled', {
-      pluginId: p.id,
-      disabled: !p.disabled
+      package: plugin.release.package,
+      disabled: plugin.enabled
     })
     await reload()
-  } catch (err) {
-    error.value = err?.message || String(err)
+  } catch (error) {
+    error.value = error?.message || String(error)
   } finally {
     busy.value = false
   }
 }
 
-async function uninstall(p) {
+/** Вимикає Component generation та прибирає його з product projection. */
+async function uninstall(plugin) {
   busy.value = true
   error.value = ''
   try {
-    await invoke('plugin_manager_uninstall', { pluginId: p.id })
+    await invoke('plugin_manager_uninstall', { package: plugin.release.package })
     await reload()
-  } catch (err) {
-    error.value = err?.message || String(err)
+  } catch (error) {
+    error.value = error?.message || String(error)
   } finally {
     busy.value = false
   }
 }
 
-async function previewPath(path) {
-  pendingPath.value = path
-  consentPreview.value = await invoke('plugin_manager_preview_install', { path })
-  consentOpen.value = true
-}
-
-/** Native OS file picker for a single `.n-plugin` package. */
-async function pickAndPreview() {
+/** Викликає typed Draft Helper trigger для поточного авторизованого акаунта. */
+async function createDraft() {
   busy.value = true
   error.value = ''
+  lastDraft.value = ''
   try {
-    const selected = await open({
-      multiple: false,
-      filters: [{ name: 'Nitra plugin', extensions: ['n-plugin'] }]
-    })
-    if (selected) await previewPath(selected)
-  } catch (err) {
-    error.value = err?.message || String(err)
-  } finally {
-    busy.value = false
-  }
-}
-
-async function confirmInstall() {
-  if (!pendingPath.value || !consentPreview.value) return
-  busy.value = true
-  error.value = ''
-  try {
-    const caps = consentPreview.value.manifest.capabilities || []
-    const grants = caps.flatMap(c => {
-      const kinds = c.resourceKinds || c.resource_kinds || []
-      return kinds.map(kind => ({
-        capability: c.name,
-        resourceKind: kind,
-        resourceId: kind === 'message' ? 'msg_1' : kind === 'account' ? 'acct_1' : null
-      }))
-    })
-    await invoke('plugin_manager_install', {
-      path: pendingPath.value,
-      grants,
-      tofuAccept: true
-    })
-    consentOpen.value = false
-    await reload()
-  } catch (err) {
-    error.value = err?.message || String(err)
+    const result = await invoke('plugin_draft_helper_create')
+    lastDraft.value = `Чернетку ${result.draftId} створено через ${result.release.package}.`
+  } catch (error) {
+    error.value = error?.message || String(error)
   } finally {
     busy.value = false
   }
@@ -198,8 +179,8 @@ async function confirmInstall() {
 
 watch(
   () => props.modelValue,
-  v => {
-    if (v) reload()
+  value => {
+    if (value) reload()
   }
 )
 </script>

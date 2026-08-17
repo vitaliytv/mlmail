@@ -13,11 +13,8 @@ pub mod gmail;
 pub mod llm;
 /// Newsletter template persistence commands.
 pub mod newsletter_template;
-/// Installed plugin commands and sample integrations.
+/// Component-only installed plugin commands.
 pub mod plugins;
-
-/// Native host implementation for installed mlmail plugins.
-pub use mlmail_plugin_host as plugin_host;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -122,15 +119,11 @@ pub fn run() {
                     llm::llm_providers,
                     llm::llm_list_models,
                     llm::llm_chat,
-                    plugins::plugin_a2ui_sample_sidebar,
-                    plugins::plugin_a2ui_sample_detail,
-                    plugins::plugin_sidebar_create_draft,
                     plugins::plugin_manager_list,
-                    plugins::plugin_manager_preview_install,
                     plugins::plugin_manager_install,
-                    plugins::plugin_manager_install_sample,
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
+                    plugins::plugin_draft_helper_create,
                     app_open_url,
                     app_set_title,
                 ]
@@ -168,15 +161,11 @@ pub fn run() {
                     llm::llm_providers,
                     llm::llm_list_models,
                     llm::llm_chat,
-                    plugins::plugin_a2ui_sample_sidebar,
-                    plugins::plugin_a2ui_sample_detail,
-                    plugins::plugin_sidebar_create_draft,
                     plugins::plugin_manager_list,
-                    plugins::plugin_manager_preview_install,
                     plugins::plugin_manager_install,
-                    plugins::plugin_manager_install_sample,
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
+                    plugins::plugin_draft_helper_create,
                     app_open_url,
                     app_set_title,
                 ]

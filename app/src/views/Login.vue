@@ -51,8 +51,6 @@
             <q-card flat bordered class="fit column">
               <NewsletterView ref="newsletterViewRef" :message="auth.currentMessage.value" />
             </q-card>
-            <PluginDetailPanel class="q-mt-md" />
-            <PluginSidebar class="q-mt-md" />
           </div>
         </div>
       </template>
@@ -222,8 +220,6 @@ import { useAuthStore } from '../services/auth-store.js'
 import { useAgent } from '../composables/use-agent.js'
 import AuditAnalysisDialog from '../components/AuditAnalysisDialog.vue'
 import NewsletterView from '../components/NewsletterView.vue'
-import PluginSidebar from '../components/PluginSidebar.vue'
-import PluginDetailPanel from '../components/PluginDetailPanel.vue'
 import PluginManagerPanel from '../components/PluginManagerPanel.vue'
 import TemplatesManager from '../components/TemplatesManager.vue'
 import GmailFiltersDialog from '../components/GmailFiltersDialog.vue'

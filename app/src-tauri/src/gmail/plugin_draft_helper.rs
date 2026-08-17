@@ -74,9 +74,15 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         let component_path = std::env::var_os("MLMAIL_DRAFT_HELPER_COMPONENT")
             .context("MLMAIL_DRAFT_HELPER_COMPONENT must point to the built guest Component")?;
         let component = std::fs::read(component_path)?;
-        let manifest =
-            PluginManifest::from_toml(include_str!("../../plugins/draft-helper/.n-plugin.toml"))?;
-        let packaged = embed_manifest(&component, &manifest)?;
+        let packaged = match inspect_component(&component) {
+            Ok(_) => component,
+            Err(_) => {
+                let manifest = PluginManifest::from_toml(include_str!(
+                    "../../plugins/draft-helper/.n-plugin.toml"
+                ))?;
+                embed_manifest(&component, &manifest)?
+            }
+        };
         let inspected = inspect_component(&packaged)?;
         assert_eq!(
             inspected.manifest.entrypoints["create"].as_str(),

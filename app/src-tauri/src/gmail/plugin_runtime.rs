@@ -98,6 +98,28 @@ pub async fn gmail_booking_finder_descriptor(
     .context("locked Gmail package must use a canonical WKG content digest")
 }
 
+/// Reads the exact Gmail drafts host descriptor from the standard WKG lock.
+///
+/// # Errors
+///
+/// Returns an error when the lock lacks the exact Gmail package or its digest is invalid.
+pub async fn gmail_drafts_descriptor(
+    lock_path: impl AsRef<Path>,
+) -> Result<WitInterfaceDescriptor> {
+    gmail_descriptor(lock_path, GMAIL_DRAFTS_INTERFACE).await
+}
+
+/// Reads the exact Draft Helper trigger descriptor from the standard WKG lock.
+///
+/// # Errors
+///
+/// Returns an error when the lock lacks the exact Gmail package or its digest is invalid.
+pub async fn gmail_draft_helper_descriptor(
+    lock_path: impl AsRef<Path>,
+) -> Result<WitInterfaceDescriptor> {
+    gmail_descriptor(lock_path, GMAIL_DRAFT_HELPER_INTERFACE).await
+}
+
 async fn gmail_descriptor(
     lock_path: impl AsRef<Path>,
     interface: &str,
@@ -123,9 +145,9 @@ pub async fn build_gmail_plugin_runtime(
 ) -> Result<GmailPluginRuntime> {
     let lock_path = lock_path.as_ref();
     let descriptor = gmail_search_descriptor(lock_path).await?;
-    let drafts_descriptor = gmail_descriptor(lock_path, GMAIL_DRAFTS_INTERFACE).await?;
+    let drafts_descriptor = gmail_drafts_descriptor(lock_path).await?;
     let booking_trigger = gmail_booking_finder_descriptor(lock_path).await?;
-    let draft_helper_trigger = gmail_descriptor(lock_path, GMAIL_DRAFT_HELPER_INTERFACE).await?;
+    let draft_helper_trigger = gmail_draft_helper_descriptor(lock_path).await?;
     let mut interfaces = PluginHostInterfaceRegistry::<GmailSearchHost>::new();
     interfaces.register(descriptor, |linker| {
         plugin_bindings::nitra::gmail::search::add_to_linker::<_, GmailSearchHost>(

@@ -1,0 +1,10 @@
+version = 1
+
+[[packages]]
+name = "nitra:gmail"
+registry = "mlmail"
+
+[[packages.versions]]
+requirement = "=0.1.0"
+version = "0.1.0"
+digest = "sha256:b72310b4cc119b8ac9d184659aa6faaf16d1f8619d412791bbc5ab2db25faf70"
