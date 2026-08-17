@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.28.0] - 2026-08-17
+
+### Added
+
+- Додано durable context для Gmail provider і Draft Helper з offline replay та emission gate
+
 ## [0.27.0] - 2026-08-17
 
 ### Removed
