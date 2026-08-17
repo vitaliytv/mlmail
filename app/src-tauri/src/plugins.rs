@@ -27,6 +27,7 @@ use crate::{
             build_gmail_plugin_runtime, gmail_draft_helper_descriptor, GMAIL_DRAFTS_INTERFACE,
         },
     },
+    plugin_context::{self, PluginContextCoordinator},
 };
 
 const DRAFT_HELPER_TRIGGER: &str = "nitra:gmail/draft-helper@0.1.0";
@@ -222,6 +223,7 @@ async fn install_draft_helper_at(app_data: &Path, path: &Path) -> anyhow::Result
         .plugins
         .sort_by(|left, right| left.release.package.cmp(&right.release.package));
     index.next_generation = next_generation;
+    publish_plugin_context(app_data, &index)?;
     write_index(app_data, &index)?;
     Ok(installed)
 }
@@ -238,6 +240,29 @@ fn find_draft_helper(app_data: &Path) -> anyhow::Result<InstalledPlugin> {
                     .any(|trigger| trigger == DRAFT_HELPER_TRIGGER)
         })
         .ok_or_else(|| anyhow::anyhow!("install and enable a Draft Helper Component first"))
+}
+
+fn publish_plugin_context(app_data: &Path, index: &PluginIndex) -> anyhow::Result<()> {
+    let draft_helper = index
+        .plugins
+        .iter()
+        .find(|plugin| {
+            plugin
+                .triggers
+                .iter()
+                .any(|trigger| trigger == DRAFT_HELPER_TRIGGER)
+        })
+        .map(|plugin| (plugin.release.clone(), plugin.enabled));
+    let entries = plugin_context::draft_helper_context(draft_helper)?;
+    let store =
+        n_plugin_runtime::DurableContextStore::open(plugin_context::context_database(app_data))?;
+    if store
+        .active()?
+        .is_none_or(|desired| desired.entries != entries)
+    {
+        store.publish(entries)?;
+    }
+    Ok(())
 }
 
 /// Lists root Components installed through the n-plugin Component manager.
@@ -282,6 +307,7 @@ pub fn plugin_manager_set_disabled(
     registry(&app_data)
         .and_then(|registry| registry.set_graph_lifecycle(&plugin.release, lifecycle))
         .map_err(|error| error.to_string())?;
+    publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
     write_index(&app_data, &index).map_err(|error| error.to_string())
 }
 
@@ -301,6 +327,7 @@ pub fn plugin_manager_uninstall(app: AppHandle, package: String) -> Result<(), S
             registry.set_graph_lifecycle(&plugin.release, GraphLifecycleState::manually_disabled())
         })
         .map_err(|error| error.to_string())?;
+    publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
     write_index(&app_data, &index).map_err(|error| error.to_string())
 }
 
@@ -314,6 +341,8 @@ pub async fn plugin_draft_helper_create(
 ) -> Result<PluginDraftActionDto, String> {
     let app_data = app_data(&app)?;
     let plugin = find_draft_helper(&app_data).map_err(|error| error.to_string())?;
+    let index = load_index(&app_data).map_err(|error| error.to_string())?;
+    publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
     let registry = registry(&app_data).map_err(|error| error.to_string())?;
     let active = registry
         .active(&plugin.release)
@@ -333,16 +362,25 @@ pub async fn plugin_draft_helper_create(
     let runtime = build_gmail_plugin_runtime(&lock_path, env!("CARGO_PKG_VERSION"))
         .await
         .map_err(|error| error.to_string())?;
-    let token = auth::acquire_access_token(
-        &endpoints.google_token,
-        storage.inner().as_ref(),
-        state.inner(),
-    )
-    .await
-    .map_err(|error| error.to_string())?;
-    let draft = invoke_draft_helper(&runtime, &component, &endpoints.gmail_messages_list, token)
+    let context = PluginContextCoordinator::start(plugin_context::context_database(&app_data))
         .await
         .map_err(|error| error.to_string())?;
+    let action = context
+        .run_draft_helper(|| async {
+            let token = auth::acquire_access_token(
+                &endpoints.google_token,
+                storage.inner().as_ref(),
+                state.inner(),
+            )
+            .await?;
+            invoke_draft_helper(&runtime, &component, &endpoints.gmail_messages_list, token).await
+        })
+        .await
+        .map_err(|error| error.to_string());
+    if let Err(error) = context.shutdown().await {
+        log::error!("Draft Helper context shutdown failed after emission boundary: {error}");
+    }
+    let draft = action?;
     Ok(PluginDraftActionDto {
         draft_id: draft.id,
         release: plugin.release,

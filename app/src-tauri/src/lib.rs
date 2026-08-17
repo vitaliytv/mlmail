@@ -13,6 +13,8 @@ pub mod gmail;
 pub mod llm;
 /// Newsletter template persistence commands.
 pub mod newsletter_template;
+/// Durable lifecycle coordinator for product plugin instances.
+pub mod plugin_context;
 /// Component-only installed plugin commands.
 pub mod plugins;
 
