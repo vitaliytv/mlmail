@@ -1,0 +1,25 @@
+app/src-tauri/src/plugin_context.rs
+  s_0287eb07cb0df4::t_d894e563d8f5af 344-348
+app/src-tauri/src/docs/plugin_context.md
+  s_0287eb07cb0df4::t_d250d73df8cbee 6
+.cargo/mutants.toml
+  s_0287eb07cb0df4::t_c46e6d12f3d5b1 1-7
+deny.toml
+  s_0287eb07cb0df4::t_6e40a390d38be9 1-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b9672ecd46347cac73abd8da0fe09ab1a763ec6a",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
