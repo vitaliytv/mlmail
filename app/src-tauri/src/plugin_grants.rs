@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use n_plugin_package::ReleaseIdentity;
+use n_plugin_runtime::GrantScope;
 use serde::{Deserialize, Serialize};
 
 /// Sealed payload-free product scope attached to an exact capability grant.
@@ -23,6 +24,30 @@ pub enum PluginGrantScope {
     },
     /// The local application installation without an account resource.
     Application,
+}
+
+impl PluginGrantScope {
+    /// Converts one resolved product scope into the generic immutable runtime policy scope.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when account identity was unresolved during preflight.
+    pub fn to_runtime_scope(&self) -> Result<GrantScope> {
+        let (resource_kind, resource_id) = match self {
+            Self::UnresolvedMailAccount => {
+                bail!("unresolved mail account scope cannot enter activation policy")
+            }
+            Self::MailAccount { account_id } => {
+                ("mail-account".to_owned(), Some(account_id.clone()))
+            }
+            Self::Application => ("application-installation".to_owned(), None),
+        };
+        Ok(GrantScope {
+            resource_kind,
+            resource_id,
+            constraints: Default::default(),
+        })
+    }
 }
 
 /// Exact product-owned authorization key for one typed plugin-to-host edge.

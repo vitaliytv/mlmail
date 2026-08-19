@@ -3,7 +3,7 @@ type: Rust Module
 title: plugins.rs
 resource: app/src-tauri/src/plugins.rs
 docgen:
-  crc: 9806ab07
+  crc: 67541f6b
   model: manual
 ---
 
@@ -13,19 +13,20 @@ Product boundary для preflight, встановлення, enablement, вид�
 
 ## Поведінка
 
-Preflight читає local Component і повертає account-bound compatibility/consent preview без CAS,
-SQLite, installed projection чи activation writes. Confirm повторно читає bytes, звіряє exact
-release, `preview_id` і opaque grant decisions, після чого серіалізовано публікує activation.
+Preflight читає local Component, online резолвить exact OCI dependencies у product-owned cache/lock
+і повертає account-bound compatibility/consent preview без activation writes. Confirm повторно
+читає bytes, strictly offline перевіряє той самий graph, звіряє exact release, lock, `preview_id`
+і opaque grant decisions, після чого серіалізовано публікує activation з edge policy.
 Activation registry є commit record; pending journal забезпечує idempotent roll-forward installed
 projection і durable context після restart. Це логічна recoverable операція, а не cross-store
 транзакція.
 
-Disable та uninstall приймають exact `ReleaseIdentity`, тому update race не може змінити інший digest того самого package. Typed Draft Helper і Booking Finder commands отримують explicit exact target, звіряють immutable generation, durable context та generic account grant і лише після цього отримують app-owned OAuth token. Cleanup failure після успішної emission пишеться в log і не перетворює завершену операцію на retryable command error.
+Disable та uninstall приймають exact `ReleaseIdentity`, тому update race не може змінити інший digest того самого package. Uninstall переводить generation у durable retirement, оновлює context, а потім запускає registry-owned quarantine/grace GC, який зберігає shared reachable dependencies. Typed commands авторизують exact grants та dependency edges до OAuth і повторюють edge check під час Component instantiation.
 
 ## Публічний API
 
-- `InstalledPlugin` — durable product index exact release, triggers і manual enablement.
-- `InstalledPluginDto` — output-only UI projection exact generation, registry lifecycle і product-owned actions.
+- `InstalledPlugin` — durable product index exact release, deployment lock, grants, generation і manual enablement.
+- `InstalledPluginDto` — output-only UI projection exact generation, dependencies, lock, registry lifecycle і product-owned actions.
 - `PluginDraftActionDto` — повертає opaque Gmail draft id, exact plugin release та generation.
 - `PluginBookingActionDto` — повертає typed booking query, message references, exact release та generation.
 - `plugin_manager_list` — читає встановлені root Components.
@@ -39,7 +40,7 @@ Disable та uninstall приймають exact `ReleaseIdentity`, тому upda
 
 ## Гарантії поведінки
 
-- Core-Wasm, ZIP packages і unresolved dependency graphs не активуються цим installer path.
+- Core-Wasm, ZIP packages і unresolved або digest-mismatched dependency graphs не активуються цим installer path.
 - Package identity не використовується як Draft Helper-specific allowlist.
 - Unknown triggers та host imports fail closed до будь-якого activation state write.
 - Stale bytes, account або consent set вимагають нового preview.
@@ -47,4 +48,5 @@ Disable та uninstall приймають exact `ReleaseIdentity`, тому upda
 - Component bytes читаються тільки з verified active CAS generation.
 - Wrong digest, disabled, uninstalled або stale generation не виконують guest logic чи Gmail request.
 - Exact generic `mail:draft.create` або `mail:search` grant перевіряється до OAuth token.
+- Online transport закінчується на preview; confirm не звертається до registry/network.
 - Успішна Gmail emission не повторюється через подальшу lifecycle cleanup error.

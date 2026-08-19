@@ -9,7 +9,7 @@ use n_plugin_runtime::{ActivationGeneration, GenerationStatus};
 
 use crate::{
     plugin_context::{self, PluginContextEntry},
-    plugin_contracts::MlmailPluginContractRegistry,
+    plugin_contracts::{is_no_consent_runtime_interface, MlmailPluginContractRegistry},
     plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantScope, PluginGrantStore},
     plugins::{load_index, registry},
 };
@@ -26,6 +26,12 @@ pub struct PluginDispatchSelection {
     pub generation: u64,
     /// Product host interfaces imported by the stored activation generation.
     pub host_interfaces: Vec<String>,
+    /// Exact product grants approved for the installed root and dependency graph.
+    pub grants: Vec<PluginGrantKey>,
+    /// Product host interfaces imported directly by the root Component.
+    pub root_host_interfaces: Vec<String>,
+    /// Generated dependency edge guards that must authorize before OAuth acquisition.
+    pub edge_ids: Vec<String>,
 }
 
 /// Resolves one exact installed release for a required typed trigger.
@@ -85,6 +91,9 @@ pub(crate) fn dispatch_component_at(
         context_id: durable_context_id(target),
         generation: generation.get(),
         host_interfaces: stored.host_interfaces,
+        grants: installed.grants,
+        root_host_interfaces: installed.root_host_interfaces,
+        edge_ids: stored.edges.into_iter().map(|edge| edge.id).collect(),
     })
 }
 
@@ -116,7 +125,10 @@ pub(crate) fn publish_context_at(app_data: &Path) -> Result<()> {
                 .host_interfaces
                 .iter()
                 .map(WitExportRef::parse)
-                .collect::<std::result::Result<Vec<_>, _>>()?,
+                .collect::<std::result::Result<Vec<_>, _>>()?
+                .into_iter()
+                .filter(|identity| !is_no_consent_runtime_interface(identity))
+                .collect(),
             enabled: installed.enabled,
         });
     }
@@ -145,8 +157,45 @@ pub(crate) fn require_dispatch_grants(
     account_id: &str,
 ) -> Result<()> {
     let store = PluginGrantStore::open(grant_store_path(app_data))?;
-    for interface in &selection.host_interfaces {
+    for key in &selection.grants {
+        if key.root != selection.release {
+            bail!("stored plugin grant belongs to another exact root release")
+        }
+        let identity = WitExportRef::parse(&key.host_interface)?;
+        if is_no_consent_runtime_interface(&identity) {
+            bail!("no-consent runtime interface cannot be persisted as a product grant")
+        }
+        let requirements = contracts
+            .capability_requirements_for(&identity)
+            .with_context(|| {
+                format!(
+                    "stored grant host interface `{}` has no product capability mapping",
+                    key.host_interface
+                )
+            })?;
+        if !requirements
+            .iter()
+            .any(|requirement| requirement.capability == key.capability)
+        {
+            bail!("stored plugin grant capability does not match its typed host interface")
+        }
+        match &key.scope {
+            PluginGrantScope::MailAccount {
+                account_id: granted,
+            } if granted == account_id && key.account_id.as_deref() == Some(account_id) => {}
+            PluginGrantScope::Application if key.account_id.is_none() => {}
+            PluginGrantScope::UnresolvedMailAccount => {
+                bail!("unresolved mail account scope reached plugin dispatch")
+            }
+            _ => bail!("grant-required: stored plugin grant does not cover the current account"),
+        }
+        store.require(key)?;
+    }
+    for interface in &selection.root_host_interfaces {
         let identity = WitExportRef::parse(interface)?;
+        if is_no_consent_runtime_interface(&identity) {
+            bail!("root host grant list contains a no-consent runtime interface")
+        }
         let requirements = contracts
             .capability_requirements_for(&identity)
             .with_context(|| {
@@ -176,6 +225,13 @@ pub(crate) fn require_dispatch_grants(
             };
             store.require(&key)?;
         }
+    }
+    let registry = registry(app_data)?;
+    let generation = ActivationGeneration::new(selection.generation)?;
+    for edge_id in &selection.edge_ids {
+        registry
+            .authorize_edge(generation, edge_id)
+            .map_err(|error| anyhow::anyhow!("{}: dependency edge denied", error.category()))?;
     }
     Ok(())
 }

@@ -3388,8 +3388,8 @@ dependencies = [
 
 [[package]]
 name = "n-plugin-compatibility"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "n-plugin-package",
  "serde",
@@ -3400,24 +3400,24 @@ dependencies = [
 
 [[package]]
 name = "n-plugin-host"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "wasmtime",
 ]
 
 [[package]]
 name = "n-plugin-interfaces"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "n-plugin-oci"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "anyhow",
  "docker_credential",
@@ -3431,8 +3431,8 @@ dependencies = [
 
 [[package]]
 name = "n-plugin-package"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "serde",
  "serde_json",
@@ -3446,8 +3446,8 @@ dependencies = [
 
 [[package]]
 name = "n-plugin-runtime"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "anyhow",
  "futures",
@@ -3472,8 +3472,8 @@ dependencies = [
 
 [[package]]
 name = "n-plugin-wkg"
-version = "0.1.0"
-source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=9f6cc2bb51bee7850f2549cbb1416505ebfa235f#9f6cc2bb51bee7850f2549cbb1416505ebfa235f"
+version = "0.2.0"
+source = "git+https://git.7n.ai/nitra/n-plugin.git?rev=14ab626ba27a136f57213083eeb1fe49bf49a38b#14ab626ba27a136f57213083eeb1fe49bf49a38b"
 dependencies = [
  "anyhow",
  "futures",

@@ -1,6 +1,7 @@
 //! Typed execution of the Booking Finder demo over mlmail's generic plugin runtime.
 
 use anyhow::{anyhow, Result};
+use n_plugin_runtime::{ActivationGeneration, ActivationRegistry};
 use wasmtime::{component::Component, Store};
 
 use super::{plugin_bindings::GmailSearchHost, plugin_runtime::GmailPluginRuntime};
@@ -19,8 +20,10 @@ wasmtime::component::bindgen!({
 /// Returns an error when bytes are not a Component, required typed imports cannot be linked,
 /// Component instantiation fails, or the demo returns a Gmail host error. The product command
 /// enforces the exact generic grant before passing Component bytes or OAuth credentials here.
-pub async fn invoke_booking_finder(
+pub(crate) async fn invoke_booking_finder(
     runtime: &GmailPluginRuntime,
+    activation_registry: &ActivationRegistry,
+    generation: ActivationGeneration,
     component_bytes: &[u8],
     endpoint: impl Into<String>,
     access_token: impl Into<String>,
@@ -28,6 +31,11 @@ pub async fn invoke_booking_finder(
     n_plugin_runtime::ensure_component(component_bytes)?;
     let component = Component::from_binary(runtime.runtime().engine(), component_bytes)?;
     let mut linker = runtime.runtime().new_linker()?;
+    n_plugin_runtime::register_generation_edge_guards(
+        &mut linker,
+        activation_registry,
+        generation,
+    )?;
     wasmtime_wasi::p2::add_to_linker_async(&mut linker)?;
     let mut store = Store::new(
         runtime.runtime().engine(),
@@ -53,7 +61,8 @@ mod tests {
 
     use super::*;
     use crate::gmail::plugin_runtime::{
-        build_gmail_plugin_runtime, GMAIL_BOOKING_FINDER_INTERFACE, MLMAIL_APPLICATION_ID,
+        build_gmail_plugin_runtime, publish_test_generation, GMAIL_BOOKING_FINDER_INTERFACE,
+        MLMAIL_APPLICATION_ID,
     };
 
     const LOCK: &str = r#"
@@ -111,8 +120,12 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         let lock_path = temporary.path().join("wkg.lock");
         std::fs::write(&lock_path, LOCK)?;
         let runtime = build_gmail_plugin_runtime(&lock_path, "0.22.0").await?;
+        let (activation_registry, generation) =
+            publish_test_generation(&packaged, &lock_path, temporary.path()).await?;
         let results = invoke_booking_finder(
             &runtime,
+            &activation_registry,
+            generation,
             &packaged,
             format!("{}/messages", server.url()),
             "token",

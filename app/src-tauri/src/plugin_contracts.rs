@@ -29,6 +29,26 @@ pub const GMAIL_BOOKING_FINDER_INTERFACE: &str = "nitra:gmail/booking-finder@0.1
 pub const GMAIL_DRAFT_HELPER_INTERFACE: &str = "nitra:gmail/draft-helper@0.1.0";
 /// Public stable identity placed in plugin environment metadata.
 pub const MLMAIL_APPLICATION_ID: &str = "vitaliytv:mlmail";
+/// Exact WASI Preview2 interfaces emitted by the approved Rust `wasm32-wasip2` toolchain.
+///
+/// These imports are backed by an empty, non-inherited [`wasmtime_wasi::WasiCtx`]. They do not
+/// grant filesystem, sockets, random, wall-clock, process environment or terminal streams.
+pub const SAFE_WASI_PREVIEW2_INTERFACES: [&str; 14] = [
+    "wasi:io/poll@0.2.9",
+    "wasi:clocks/monotonic-clock@0.2.9",
+    "wasi:io/error@0.2.9",
+    "wasi:io/streams@0.2.9",
+    "wasi:cli/stdout@0.2.9",
+    "wasi:cli/stderr@0.2.9",
+    "wasi:cli/stdin@0.2.9",
+    "wasi:cli/environment@0.2.9",
+    "wasi:cli/exit@0.2.9",
+    "wasi:cli/terminal-input@0.2.9",
+    "wasi:cli/terminal-output@0.2.9",
+    "wasi:cli/terminal-stdin@0.2.9",
+    "wasi:cli/terminal-stdout@0.2.9",
+    "wasi:cli/terminal-stderr@0.2.9",
+];
 
 const MAIL_SEARCH_CAPABILITY: &str = "mail:search";
 const MAIL_DRAFT_CREATE_CAPABILITY: &str = "mail:draft.create";
@@ -143,6 +163,20 @@ impl MlmailPluginContractRegistry {
         HostInterfaceInventory::new(self.hosts.keys().cloned())
     }
 
+    /// Returns every exact interface available during activation compilation.
+    ///
+    /// Product interfaces carry explicit consent metadata. The measured WASI subset is available
+    /// without consent because invocation supplies only an empty, non-inherited WASI context.
+    #[must_use]
+    pub fn activation_host_inventory(&self) -> HostInterfaceInventory {
+        HostInterfaceInventory::new(
+            self.hosts
+                .keys()
+                .cloned()
+                .chain(safe_wasi_preview2_identities()),
+        )
+    }
+
     /// Returns the exact triggers accepted by installation preflight.
     #[must_use]
     pub fn trigger_inventory(&self) -> ApplicationTriggerInventory {
@@ -211,6 +245,10 @@ impl MlmailPluginContractRegistry {
                 hasher.update(requirement.capability.as_bytes());
                 hasher.update([u8::from(requirement.account_scoped)]);
             }
+        }
+        for identity in SAFE_WASI_PREVIEW2_INTERFACES {
+            hasher.update(b"runtime-host-no-consent\0");
+            hasher.update(identity.as_bytes());
         }
         for (identity, contract) in &self.triggers {
             hasher.update(b"trigger\0");
@@ -310,6 +348,18 @@ impl MlmailPluginContractRegistry {
         }
         Ok(registrations)
     }
+}
+
+/// Returns whether one exact runtime import belongs to the approved no-consent WASI subset.
+#[must_use]
+pub fn is_no_consent_runtime_interface(identity: &WitExportRef) -> bool {
+    SAFE_WASI_PREVIEW2_INTERFACES.contains(&identity.as_str())
+}
+
+fn safe_wasi_preview2_identities() -> impl Iterator<Item = WitExportRef> {
+    SAFE_WASI_PREVIEW2_INTERFACES.into_iter().map(|identity| {
+        WitExportRef::parse(identity).expect("approved WASI Preview2 identity must remain valid")
+    })
 }
 
 fn descriptor(identity: &str, digest: &str) -> Result<WitInterfaceDescriptor> {
@@ -424,6 +474,33 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
                 .as_slice()
             )
         );
+    }
+
+    #[tokio::test]
+    async fn activation_inventory_adds_only_the_measured_no_consent_wasi_subset() {
+        let registry = registry().await;
+        let product_inventory = registry.host_inventory();
+        let activation_inventory = registry.activation_host_inventory();
+
+        for identity in SAFE_WASI_PREVIEW2_INTERFACES {
+            let identity = WitExportRef::parse(identity).expect("measured WASI identity is valid");
+            assert!(!product_inventory.contains(&identity));
+            assert!(activation_inventory.contains(&identity));
+            assert!(is_no_consent_runtime_interface(&identity));
+            assert_eq!(registry.capability_requirements_for(&identity), None);
+        }
+
+        for denied in [
+            "wasi:filesystem/types@0.2.9",
+            "wasi:sockets/tcp@0.2.9",
+            "wasi:random/random@0.2.9",
+            "wasi:clocks/wall-clock@0.2.9",
+            "wasi:cli/environment@0.2.10",
+        ] {
+            let denied = WitExportRef::parse(denied).expect("denied WASI identity is valid");
+            assert!(!activation_inventory.contains(&denied));
+            assert!(!is_no_consent_runtime_interface(&denied));
+        }
     }
 
     #[test]

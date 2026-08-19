@@ -8,12 +8,14 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex as StdMutex;
+use std::time::Duration;
 
 use n_plugin_compatibility::GraphLifecycleState;
-use n_plugin_oci::{ResolvedNode, ResolvedPluginGraph};
-use n_plugin_package::{inspect_component, ReleaseIdentity};
+use n_plugin_oci::{DirectOciResolutionBackend, DEFAULT_REGISTRY};
+use n_plugin_package::{inspect_component, ReleaseIdentity, WitExportRef};
 use n_plugin_runtime::{ActivationCompiler, ActivationGeneration, ActivationRegistry};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, State};
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -26,16 +28,19 @@ use crate::{
     },
     plugin_context::{self, PluginContextCoordinator},
     plugin_contracts::{
-        MlmailPluginContractRegistry, GMAIL_BOOKING_FINDER_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE,
+        is_no_consent_runtime_interface, MlmailPluginContractRegistry,
+        GMAIL_BOOKING_FINDER_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE,
     },
     plugin_dispatch::{dispatch_component_at, publish_context_at, require_dispatch_grants},
     plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantStore},
     plugin_install::{
-        action_preview, preflight_component_for_account, PluginActionPreview, PluginInstallPreview,
+        action_preview, activation_policy_for_grants, preflight_resolved_graph_for_account,
+        PluginActionPreview, PluginDeploymentLock, PluginInstallPreview,
     },
 };
 
 const GMAIL_WKG_LOCK: &str = include_str!("../wkg.lock");
+const CAS_GC_GRACE: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 
 /// One installed root Component shown by the Vue Plugin Manager.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -49,6 +54,12 @@ pub struct InstalledPlugin {
     pub enabled: bool,
     /// Exact registry generation committed for this installed projection.
     pub activation_generation: u64,
+    /// Exact deployment lock retained for offline graph reconstruction.
+    pub deployment_lock: PluginDeploymentLock,
+    /// Exact approved root and dependency capability grants for this release.
+    pub grants: Vec<PluginGrantKey>,
+    /// Product host imports used directly by the root Component.
+    pub root_host_interfaces: Vec<String>,
 }
 
 /// Output-only product projection for one exact installed Component.
@@ -67,6 +78,10 @@ pub struct InstalledPluginDto {
     pub lifecycle: GraphLifecycleState,
     /// Exact immutable activation generation used to derive this projection.
     pub activation_generation: u64,
+    /// Exact dependency releases retained by this generation.
+    pub dependencies: Vec<ReleaseIdentity>,
+    /// Content-bound server-owned deployment lock.
+    pub deployment_lock: PluginDeploymentLock,
 }
 
 /// Opaque user response to one exact server-generated grant requirement.
@@ -147,6 +162,7 @@ struct PendingActivation {
     target_release: ReleaseIdentity,
     target_generation: u64,
     staged_index_file: String,
+    deployment_lock: PluginDeploymentLock,
     grants: Vec<PluginGrantKey>,
 }
 
@@ -158,6 +174,49 @@ fn app_data(app: &AppHandle) -> Result<PathBuf, String> {
 
 fn plugin_root(app_data: &Path) -> PathBuf {
     app_data.join("n-plugin")
+}
+
+fn oci_cache_path(app_data: &Path) -> PathBuf {
+    plugin_root(app_data).join("oci").join("cache")
+}
+
+fn deployment_lock_relative(release: &ReleaseIdentity) -> anyhow::Result<String> {
+    let digest = release
+        .digest
+        .strip_prefix("sha256:")
+        .ok_or_else(|| anyhow::anyhow!("plugin release digest must use sha256"))?;
+    if digest.len() != 64
+        || !digest
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+    {
+        anyhow::bail!("plugin release digest must contain 64 lowercase hexadecimal characters");
+    }
+    Ok(format!("locks/{digest}.n-plugin.lock"))
+}
+
+fn deployment_lock_path(app_data: &Path, release: &ReleaseIdentity) -> anyhow::Result<PathBuf> {
+    Ok(plugin_root(app_data).join(deployment_lock_relative(release)?))
+}
+
+fn deployment_lock_metadata(
+    app_data: &Path,
+    release: &ReleaseIdentity,
+) -> anyhow::Result<PluginDeploymentLock> {
+    let relative_path = deployment_lock_relative(release)?;
+    let source = fs::read(plugin_root(app_data).join(&relative_path))?;
+    Ok(PluginDeploymentLock {
+        relative_path,
+        digest: format!("sha256:{:x}", Sha256::digest(source)),
+    })
+}
+
+fn finalize_retirements_and_collect(registry: &ActivationRegistry) -> anyhow::Result<()> {
+    for retirement in registry.pending_retirements()? {
+        registry.finalize_retirement(&retirement)?;
+    }
+    registry.collect_cas_garbage(CAS_GC_GRACE)?;
+    Ok(())
 }
 
 pub(crate) fn registry(app_data: &Path) -> anyhow::Result<ActivationRegistry> {
@@ -265,8 +324,20 @@ async fn preflight_plugin_at(
     account_id: Option<&str>,
 ) -> anyhow::Result<PluginInstallPreview> {
     let component = fs::read(path)?;
+    let embedded = inspect_component(&component)?;
     let contracts = contract_registry(app_data).await?;
-    preflight_component_for_account(&component, &contracts, account_id)
+    let lock_path = deployment_lock_path(app_data, &embedded.release)?;
+    let graph = DirectOciResolutionBackend::online(DEFAULT_REGISTRY, oci_cache_path(app_data))?
+        .collect_graph(&component, &lock_path)
+        .await?;
+    let deployment_lock = deployment_lock_metadata(app_data, &embedded.release)?;
+    preflight_resolved_graph_for_account(
+        &component,
+        &graph,
+        deployment_lock,
+        &contracts,
+        account_id,
+    )
 }
 
 async fn confirm_plugin_at(
@@ -279,8 +350,23 @@ async fn confirm_plugin_at(
     }
     reconcile_pending_at(app_data)?;
     let component = fs::read(&confirmation.path)?;
+    let embedded = inspect_component(&component)?;
+    if embedded.release != confirmation.expected_release {
+        anyhow::bail!("installation preview is stale: plugin release changed after review");
+    }
     let contracts = contract_registry(app_data).await?;
-    let preview = preflight_component_for_account(&component, &contracts, Some(account_id))?;
+    let lock_path = deployment_lock_path(app_data, &embedded.release)?;
+    let graph = DirectOciResolutionBackend::offline(DEFAULT_REGISTRY, oci_cache_path(app_data))?
+        .collect_graph(&component, &lock_path)
+        .await?;
+    let deployment_lock = deployment_lock_metadata(app_data, &embedded.release)?;
+    let preview = preflight_resolved_graph_for_account(
+        &component,
+        &graph,
+        deployment_lock.clone(),
+        &contracts,
+        Some(account_id),
+    )?;
     if preview.preview_id != confirmation.preview_id {
         anyhow::bail!("installation preview is stale; run preflight and review consent again");
     }
@@ -297,49 +383,67 @@ async fn confirm_plugin_at(
         );
     }
     let approved_grants = approved_grants(&preview, &confirmation.grants)?;
-    PluginGrantStore::open(grant_store_path(app_data))?.grant_all(approved_grants.clone())?;
-
-    let embedded = inspect_component(&component)?;
     if embedded.release != preview.release {
         anyhow::bail!("plugin release changed during installation preflight");
     }
     let mut index = load_index(app_data)?;
-    let next_generation = index
-        .next_generation
-        .checked_add(1)
-        .ok_or_else(|| anyhow::anyhow!("plugin activation generation overflow"))?;
-    let generation = ActivationGeneration::new(next_generation)?;
-    let graph = ResolvedPluginGraph {
-        root: embedded.release.clone(),
-        nodes: vec![ResolvedNode {
-            release: embedded.release.clone(),
-            manifest: embedded.manifest.clone(),
-            reference: "local-install".to_owned(),
-            component,
-        }],
-        edges: Vec::new(),
-        lock_file: PathBuf::new(),
-    };
+    let activation_registry = registry(app_data)?;
+    let generation = activation_registry.reserve_generation()?;
     let plan = ActivationCompiler::new()?.compile(
         &graph,
         generation,
-        &contracts.host_inventory(),
+        &contracts.activation_host_inventory(),
         &contracts.trigger_inventory(),
     )?;
+    let required_grants = preview
+        .required_capabilities
+        .iter()
+        .map(|requirement| requirement.grant_key(preview.release.clone()))
+        .collect::<anyhow::Result<Vec<_>>>()?;
+    let policy = activation_policy_for_grants(&plan, &graph, &required_grants, &approved_grants)?;
+    let host_interfaces = plan
+        .host_interfaces
+        .iter()
+        .map(String::as_str)
+        .collect::<std::collections::BTreeSet<_>>();
+    let root_component = plan
+        .components
+        .iter()
+        .find(|component| component.release == graph.root)
+        .ok_or_else(|| anyhow::anyhow!("activation plan is missing its exact root Component"))?;
+    let mut root_host_interfaces = root_component
+        .imports
+        .iter()
+        .filter(|interface| host_interfaces.contains(interface.as_str()))
+        .map(|interface| {
+            let identity = WitExportRef::parse(interface)?;
+            Ok((identity, interface.clone()))
+        })
+        .collect::<anyhow::Result<Vec<_>>>()?
+        .into_iter()
+        .filter(|(identity, _)| !is_no_consent_runtime_interface(identity))
+        .map(|(_, interface)| interface)
+        .collect::<Vec<_>>();
+    root_host_interfaces.sort();
+    root_host_interfaces.dedup();
 
     let installed = InstalledPlugin {
         release: embedded.release,
         triggers: graph
             .nodes
-            .first()
-            .expect("one root node was constructed")
+            .iter()
+            .find(|node| node.release == graph.root)
+            .expect("resolved graph contains its root node")
             .manifest
             .triggers
             .iter()
             .map(|trigger| trigger.as_str().to_owned())
             .collect(),
         enabled: true,
-        activation_generation: next_generation,
+        activation_generation: generation.get(),
+        deployment_lock: deployment_lock.clone(),
+        grants: approved_grants.clone(),
+        root_host_interfaces,
     };
     index
         .plugins
@@ -348,16 +452,17 @@ async fn confirm_plugin_at(
     index
         .plugins
         .sort_by(|left, right| left.release.package.cmp(&right.release.package));
-    index.next_generation = next_generation;
+    index.next_generation = index.next_generation.max(generation.get());
     let staged_path = staged_index_path(app_data);
     let pending = PendingActivation {
         target_release: installed.release.clone(),
-        target_generation: next_generation,
+        target_generation: generation.get(),
         staged_index_file: staged_path
             .file_name()
             .and_then(|name| name.to_str())
             .ok_or_else(|| anyhow::anyhow!("staged plugin index has no UTF-8 file name"))?
             .to_owned(),
+        deployment_lock,
         grants: approved_grants,
     };
     write_json_atomically(&pending_activation_path(app_data), &pending)?;
@@ -366,7 +471,7 @@ async fn confirm_plugin_at(
         return Err(error);
     }
 
-    if let Err(error) = registry(app_data)?.publish(&plan, &graph) {
+    if let Err(error) = activation_registry.publish_with_policy(&plan, &graph, &policy) {
         discard_pending_activation(app_data)?;
         return Err(error);
     }
@@ -374,7 +479,7 @@ async fn confirm_plugin_at(
         anyhow::anyhow!(
             "activation committed, reconciliation pending for `{}` generation {}: {error:#}",
             installed.release.package,
-            next_generation
+            generation.get()
         )
     })?;
     Ok(installed)
@@ -422,7 +527,7 @@ fn approved_grants(
     Ok(grants)
 }
 
-fn reconcile_pending_at(app_data: &Path) -> anyhow::Result<()> {
+fn reconcile_activation_at(app_data: &Path) -> anyhow::Result<()> {
     let Some(pending) = load_pending_activation(app_data)? else {
         return Ok(());
     };
@@ -462,6 +567,8 @@ fn reconcile_pending_at(app_data: &Path) -> anyhow::Result<()> {
     let exact = index.plugins.iter().any(|plugin| {
         plugin.release == pending.target_release
             && plugin.activation_generation == pending.target_generation
+            && plugin.deployment_lock == pending.deployment_lock
+            && plugin.grants == pending.grants
     });
     if !exact || index.next_generation < pending.target_generation {
         anyhow::bail!("committed plugin projection does not match pending activation");
@@ -469,6 +576,28 @@ fn reconcile_pending_at(app_data: &Path) -> anyhow::Result<()> {
     PluginGrantStore::open(grant_store_path(app_data))?.grant_all(pending.grants)?;
     publish_context_at(app_data)?;
     discard_pending_activation(app_data)
+}
+
+fn reconcile_pending_at(app_data: &Path) -> anyhow::Result<()> {
+    reconcile_activation_at(app_data)?;
+    let activation_registry = registry(app_data)?;
+    let retirements = activation_registry.pending_retirements()?;
+    if retirements.is_empty() {
+        return Ok(());
+    }
+    let mut index = load_index(app_data)?;
+    let previous_len = index.plugins.len();
+    index.plugins.retain(|plugin| {
+        !retirements.iter().any(|retirement| {
+            plugin.release == *retirement.root()
+                && plugin.activation_generation == retirement.generation().get()
+        })
+    });
+    if index.plugins.len() != previous_len {
+        write_index(app_data, &index)?;
+    }
+    publish_context_at(app_data)?;
+    finalize_retirements_and_collect(&activation_registry)
 }
 
 fn current_account(state: &StdMutex<AuthState>) -> anyhow::Result<String> {
@@ -531,6 +660,13 @@ fn installed_projection(
                 enabled: plugin.enabled,
                 lifecycle,
                 activation_generation: plugin.activation_generation,
+                dependencies: stored
+                    .nodes
+                    .iter()
+                    .filter(|node| node.release != plugin.release)
+                    .map(|node| node.release.clone())
+                    .collect(),
+                deployment_lock: plugin.deployment_lock.clone(),
             })
         })
         .collect()
@@ -670,14 +806,21 @@ pub async fn plugin_manager_uninstall(
         .iter()
         .position(|plugin| plugin.release == target)
         .ok_or_else(|| format!("exact plugin release `{}` is not installed", target.digest))?;
-    let plugin = index.plugins.remove(position);
-    registry(&app_data)
-        .and_then(|registry| {
-            registry.set_graph_lifecycle(&plugin.release, GraphLifecycleState::manually_disabled())
-        })
+    let plugin = index.plugins[position].clone();
+    let activation_registry = registry(&app_data).map_err(|error| error.to_string())?;
+    let retirement = activation_registry
+        .begin_retirement(&plugin.release)
         .map_err(|error| error.to_string())?;
+    index.plugins.remove(position);
     write_index(&app_data, &index).map_err(|error| error.to_string())?;
-    publish_context_at(&app_data).map_err(|error| error.to_string())
+    publish_context_at(&app_data).map_err(|error| error.to_string())?;
+    activation_registry
+        .finalize_retirement(&retirement)
+        .map_err(|error| error.to_string())?;
+    activation_registry
+        .collect_cas_garbage(CAS_GC_GRACE)
+        .map_err(|error| error.to_string())?;
+    Ok(())
 }
 
 /// Runs the enabled Draft Helper Component with the current account's app-owned OAuth token.
@@ -703,6 +846,9 @@ pub async fn plugin_draft_helper_create(
     let account = current_account(state.inner()).map_err(|error| error.to_string())?;
     require_dispatch_grants(&app_data, &selection, &contracts, &account)
         .map_err(|error| error.to_string())?;
+    let activation_registry = registry(&app_data).map_err(|error| error.to_string())?;
+    let generation =
+        ActivationGeneration::new(selection.generation).map_err(|error| error.to_string())?;
     let lock_path = ensure_gmail_wkg_lock(&app_data).map_err(|error| error.to_string())?;
     let runtime = build_gmail_plugin_runtime(&lock_path, env!("CARGO_PKG_VERSION"))
         .await
@@ -720,6 +866,8 @@ pub async fn plugin_draft_helper_create(
             .await?;
             invoke_draft_helper(
                 &runtime,
+                &activation_registry,
+                generation,
                 &selection.component,
                 &endpoints.gmail_messages_list,
                 token,
@@ -766,6 +914,9 @@ pub async fn plugin_booking_finder_find(
     let account = current_account(state.inner()).map_err(|error| error.to_string())?;
     require_dispatch_grants(&app_data, &selection, &contracts, &account)
         .map_err(|error| error.to_string())?;
+    let activation_registry = registry(&app_data).map_err(|error| error.to_string())?;
+    let generation =
+        ActivationGeneration::new(selection.generation).map_err(|error| error.to_string())?;
     let lock_path = ensure_gmail_wkg_lock(&app_data).map_err(|error| error.to_string())?;
     let runtime = build_gmail_plugin_runtime(&lock_path, env!("CARGO_PKG_VERSION"))
         .await
@@ -783,6 +934,8 @@ pub async fn plugin_booking_finder_find(
             .await?;
             invoke_booking_finder(
                 &runtime,
+                &activation_registry,
+                generation,
                 &selection.component,
                 &endpoints.gmail_messages_list,
                 token,
@@ -817,15 +970,16 @@ mod tests {
 
     use anyhow::Result;
     use n_plugin_compatibility::GraphLifecycleState;
+    use n_plugin_oci::{OciLockEntry, OciPluginLock};
     use n_plugin_package::{embed_manifest, PluginManifest, ReleaseIdentity};
     use n_plugin_runtime::ActivationGeneration;
 
     use super::{
-        confirm_plugin_at, contract_registry, discard_pending_activation, installed_projection,
-        load_index, pending_activation_path, plugin_root, preflight_plugin_at,
-        reconcile_pending_at, registry, staged_index_path, write_index, write_json_atomically,
-        InstalledPlugin, PendingActivation, PluginGrantDecisionDto, PluginIndex,
-        PluginInstallConfirmationDto,
+        confirm_plugin_at, contract_registry, deployment_lock_path, discard_pending_activation,
+        installed_projection, load_index, oci_cache_path, pending_activation_path, plugin_root,
+        preflight_plugin_at, reconcile_pending_at, registry, staged_index_path, write_index,
+        write_json_atomically, InstalledPlugin, PendingActivation, PluginDeploymentLock,
+        PluginGrantDecisionDto, PluginIndex, PluginInstallConfirmationDto,
     };
     use crate::{
         plugin_context::{self, PluginContextCoordinator},
@@ -855,6 +1009,9 @@ mod tests {
                 triggers: vec!["nitra:gmail/draft-helper@0.1.0".to_owned()],
                 enabled: false,
                 activation_generation: 3,
+                deployment_lock: test_deployment_lock(),
+                grants: Vec::new(),
+                root_host_interfaces: Vec::new(),
             }],
         };
 
@@ -949,6 +1106,68 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
     }
 
     #[tokio::test]
+    async fn confirms_an_exact_dependency_graph_and_rejects_tampered_offline_cache() -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let dependency = packaged_provider()?;
+        let first_path = temporary.path().join("dependent-v1.n-plugin");
+        let first_component = packaged_dependent_draft("0.1.0")?;
+        fs::write(&first_path, &first_component)?;
+        seed_dependency_lock(temporary.path(), &first_component, &dependency)?;
+
+        let first_preview =
+            preflight_plugin_at(temporary.path(), &first_path, Some("person@example.com")).await?;
+        assert!(
+            first_preview.compatible,
+            "unexpected: {:?}",
+            first_preview.reason
+        );
+        assert_eq!(first_preview.dependencies.len(), 1);
+        assert_eq!(first_preview.required_capabilities.len(), 1);
+        assert_eq!(
+            first_preview.required_capabilities[0].subject.package,
+            "third:provider"
+        );
+        let first = confirm_plugin_at(
+            temporary.path(),
+            &confirmation(&first_path, &first_preview),
+            "person@example.com",
+        )
+        .await?;
+        let active = registry(temporary.path())?
+            .active(&first.release)?
+            .expect("dependency graph should activate");
+        assert_eq!(active.nodes.len(), 2);
+        assert_eq!(active.edges.len(), 1);
+        assert_eq!(active.policy.edges[&active.edges[0].id].grants.len(), 1);
+
+        let second_path = temporary.path().join("dependent-v2.n-plugin");
+        let second_component = packaged_dependent_draft("0.2.0")?;
+        fs::write(&second_path, &second_component)?;
+        let cache_component =
+            seed_dependency_lock(temporary.path(), &second_component, &dependency)?;
+        let second_preview =
+            preflight_plugin_at(temporary.path(), &second_path, Some("person@example.com")).await?;
+        fs::write(cache_component, b"tampered")?;
+
+        confirm_plugin_at(
+            temporary.path(),
+            &confirmation(&second_path, &second_preview),
+            "person@example.com",
+        )
+        .await
+        .expect_err("offline confirmation must verify every cached dependency");
+        let still_active = registry(temporary.path())?
+            .active(&first.release)?
+            .expect("failed replacement must preserve the prior generation");
+        assert_eq!(still_active.root, first.release);
+        assert_eq!(
+            load_index(temporary.path())?.plugins[0].release,
+            first.release
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn dispatches_two_draft_helpers_by_exact_release_and_fails_closed() -> Result<()> {
         let temporary = tempfile::tempdir()?;
         let first_path = temporary.path().join("first.n-plugin");
@@ -1030,6 +1249,9 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
             context_id: "plugin:zeta:booking-finder".to_owned(),
             generation: second.activation_generation,
             host_interfaces: vec![GMAIL_SEARCH_INTERFACE.to_owned()],
+            grants: Vec::new(),
+            root_host_interfaces: vec![GMAIL_SEARCH_INTERFACE.to_owned()],
+            edge_ids: Vec::new(),
         };
         let denied = require_dispatch_grants(
             temporary.path(),
@@ -1157,9 +1379,9 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
             .expect_err("changed bytes must require a new preview");
 
         assert!(error.to_string().contains("preview is stale"));
-        assert!(!plugin_root(temporary.path())
-            .join("registry.sqlite3")
-            .exists());
+        assert!(registry(temporary.path())?
+            .active(&preview.release)?
+            .is_none());
         assert!(load_index(temporary.path())?.plugins.is_empty());
         Ok(())
     }
@@ -1182,6 +1404,7 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
             target_release: installed.release.clone(),
             target_generation: installed.activation_generation,
             staged_index_file: "installed.pending.json".to_owned(),
+            deployment_lock: installed.deployment_lock.clone(),
             grants: preview
                 .required_capabilities
                 .iter()
@@ -1208,6 +1431,9 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
                 triggers: vec![GMAIL_DRAFT_HELPER_INTERFACE.to_owned()],
                 enabled: true,
                 activation_generation: 1,
+                deployment_lock: test_deployment_lock(),
+                grants: Vec::new(),
+                root_host_interfaces: Vec::new(),
             }],
         };
         write_json_atomically(&staged_index_path(temporary.path()), &index)?;
@@ -1217,6 +1443,7 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
                 target_release: index.plugins[0].release.clone(),
                 target_generation: 1,
                 staged_index_file: "installed.pending.json".to_owned(),
+                deployment_lock: test_deployment_lock(),
                 grants: Vec::new(),
             },
         )?;
@@ -1249,6 +1476,14 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
         }
     }
 
+    fn test_deployment_lock() -> PluginDeploymentLock {
+        PluginDeploymentLock {
+            relative_path: "locks/test.n-plugin.lock".to_owned(),
+            digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                .to_owned(),
+        }
+    }
+
     fn packaged_draft(publisher: &str, package: &str, version: &str) -> Result<Vec<u8>> {
         let manifest = PluginManifest::from_toml(&format!(
             r#"
@@ -1275,6 +1510,100 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
 "#,
         ))?;
         Ok(embed_manifest(&raw, &manifest)?)
+    }
+
+    fn packaged_dependent_draft(version: &str) -> Result<Vec<u8>> {
+        let provider = "third:provider/api@0.1.0";
+        let manifest = PluginManifest::from_toml(&format!(
+            r#"
+schema = "nitra.plugin-manifest/v1"
+publisher_id = "other"
+package = "dependent"
+version = "{version}"
+triggers = ["{GMAIL_DRAFT_HELPER_INTERFACE}"]
+
+[entrypoints]
+create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
+
+[dependencies.provider]
+package = "third:provider"
+requirement = "=0.1.0"
+imports = ["{provider}"]
+"#,
+        ))?;
+        let raw = wat::parse_str(format!(
+            r#"
+(component
+  (type $provider (instance))
+  (import "{provider}" (instance (type $provider)))
+  (core module $module)
+  (core instance $core (instantiate $module))
+  (instance $action)
+  (export "{GMAIL_DRAFT_HELPER_INTERFACE}" (instance $action))
+)
+"#,
+        ))?;
+        Ok(embed_manifest(&raw, &manifest)?)
+    }
+
+    fn packaged_provider() -> Result<Vec<u8>> {
+        let provider = "third:provider/api@0.1.0";
+        let manifest = PluginManifest::from_toml(&format!(
+            r#"
+schema = "nitra.plugin-manifest/v1"
+publisher_id = "third"
+package = "provider"
+version = "0.1.0"
+triggers = []
+
+[entrypoints]
+provide = "{provider}"
+"#,
+        ))?;
+        let raw = wat::parse_str(format!(
+            r#"
+(component
+  (type $gmail (instance))
+  (import "{GMAIL_DRAFTS_INTERFACE}" (instance (type $gmail)))
+  (core module $module)
+  (core instance $core (instantiate $module))
+  (instance $api)
+  (export "{provider}" (instance $api))
+)
+"#,
+        ))?;
+        Ok(embed_manifest(&raw, &manifest)?)
+    }
+
+    fn seed_dependency_lock(
+        app_data: &Path,
+        root_component: &[u8],
+        dependency: &[u8],
+    ) -> Result<std::path::PathBuf> {
+        let root = n_plugin_package::inspect_component(root_component)?;
+        let dependency_release = n_plugin_package::inspect_component(dependency)?;
+        let mut lock = OciPluginLock {
+            schema: "nitra.plugin-lock/v1".to_owned(),
+            packages: vec![OciLockEntry {
+                package: dependency_release.release.package.clone(),
+                requirement: "=0.1.0".to_owned(),
+                version: dependency_release.release.version.clone(),
+                digest: dependency_release.release.digest.clone(),
+                reference: "git.7n.ai/third/provider:0.1.0".to_owned(),
+            }],
+        };
+        lock.write(&deployment_lock_path(app_data, &root.release)?)?;
+        let hash = dependency_release
+            .release
+            .digest
+            .strip_prefix("sha256:")
+            .expect("inspected release digest uses sha256");
+        let cache = oci_cache_path(app_data)
+            .join("components")
+            .join(format!("{hash}.n-plugin"));
+        fs::create_dir_all(cache.parent().expect("cache Component has a parent"))?;
+        fs::write(&cache, dependency)?;
+        Ok(cache)
     }
 
     fn release(package: &str, version: &str, digest: &str) -> ReleaseIdentity {

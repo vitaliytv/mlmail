@@ -1,17 +1,22 @@
 //! Pure product-local preflight for typed n-plugin Components.
 
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use n_plugin_oci::{ResolvedNode, ResolvedPluginGraph};
+use n_plugin_oci::{ResolvedEdge, ResolvedNode, ResolvedPluginGraph};
 use n_plugin_package::{inspect_component, ReleaseIdentity, WitExportRef};
-use n_plugin_runtime::{ActivationCompiler, ActivationGeneration};
-use serde::Serialize;
+use n_plugin_runtime::{
+    ActivationCompiler, ActivationGeneration, ActivationPlan, ActivationPolicy, CapabilityAccess,
+    EdgeCapabilityPolicy,
+};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::{
     plugin_contracts::{
-        MlmailPluginActionKind, MlmailPluginContractRegistry, PluginCapabilityRequirement,
+        is_no_consent_runtime_interface, MlmailPluginActionKind, MlmailPluginContractRegistry,
+        PluginCapabilityRequirement,
     },
     plugin_grants::{PluginGrantKey, PluginGrantScope},
 };
@@ -40,6 +45,20 @@ pub struct PluginDependencyPreview {
     pub requirement: String,
     /// Typed imports that the dependency must provide.
     pub imports: Vec<String>,
+    /// Exact caller release that declares this resolved edge.
+    pub caller: ReleaseIdentity,
+    /// Exact dependency release selected by the approved deployment lock.
+    pub release: ReleaseIdentity,
+}
+
+/// Content-bound deployment lock retained for offline confirmation and restart diagnostics.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginDeploymentLock {
+    /// Path below the product-owned `n-plugin` data directory.
+    pub relative_path: String,
+    /// SHA-256 digest of the exact normalized lock bytes reviewed by preflight.
+    pub digest: String,
 }
 
 /// Consent scope attached to one product capability requirement.
@@ -109,6 +128,8 @@ pub struct PluginInstallPreview {
     pub actions: Vec<PluginActionPreview>,
     /// Required dependency declarations awaiting graph resolution.
     pub dependencies: Vec<PluginDependencyPreview>,
+    /// Exact deployment lock used to resolve this complete graph, when resolution was available.
+    pub deployment_lock: Option<PluginDeploymentLock>,
     /// Consent requirements derived from imports accepted by the host inventory.
     pub required_capabilities: Vec<PluginCapabilityPreview>,
     /// Whether the exact Component can be activated by the current dependency-free installer.
@@ -162,7 +183,7 @@ pub fn preflight_component_for_account(
                 .map(|action| action_preview(action, entrypoint))
         })
         .collect::<Vec<_>>();
-    let dependencies = embedded
+    let dependency_declarations = embedded
         .manifest
         .dependencies
         .iter()
@@ -175,6 +196,16 @@ pub fn preflight_component_for_account(
                 .iter()
                 .map(|interface| interface.as_str().to_owned())
                 .collect(),
+            caller: embedded.release.clone(),
+            release: ReleaseIdentity {
+                package: dependency.package.clone(),
+                version: dependency
+                    .requirement
+                    .strip_prefix('=')
+                    .unwrap_or(&dependency.requirement)
+                    .to_owned(),
+                digest: String::new(),
+            },
         })
         .collect::<Vec<_>>();
     let mut preview = PluginInstallPreview {
@@ -183,7 +214,8 @@ pub fn preflight_component_for_account(
         release: embedded.release.clone(),
         supported_triggers,
         actions,
-        dependencies,
+        dependencies: dependency_declarations,
+        deployment_lock: None,
         required_capabilities: Vec::new(),
         compatible: false,
         reason: None,
@@ -212,7 +244,7 @@ pub fn preflight_component_for_account(
     let plan = match compiler.compile(
         &graph,
         ActivationGeneration::new(1)?,
-        &contracts.host_inventory(),
+        &contracts.activation_host_inventory(),
         &contracts.trigger_inventory(),
     ) {
         Ok(plan) => plan,
@@ -236,6 +268,163 @@ pub fn preflight_component_for_account(
     )?;
     preview.compatible = true;
     finalize_preview(component, preview)
+}
+
+/// Builds a typed installation preview from a complete exact dependency graph.
+///
+/// # Errors
+///
+/// Returns an error when the graph root differs from the supplied Component, deployment lock
+/// evidence is absent, or the runtime compiler cannot be constructed. Compatibility failures are
+/// returned in the preview without publishing activation state.
+pub fn preflight_resolved_graph_for_account(
+    component: &[u8],
+    graph: &ResolvedPluginGraph,
+    deployment_lock: PluginDeploymentLock,
+    contracts: &MlmailPluginContractRegistry,
+    account_id: Option<&str>,
+) -> Result<PluginInstallPreview> {
+    n_plugin_runtime::ensure_component(component)?;
+    let embedded = inspect_component(component)?;
+    if graph.root != embedded.release {
+        anyhow::bail!("resolved dependency graph belongs to another exact root release");
+    }
+    let root = graph
+        .nodes
+        .iter()
+        .find(|node| node.release == graph.root)
+        .ok_or_else(|| anyhow::anyhow!("resolved dependency graph is missing its exact root"))?;
+    if root.component != component || root.manifest != embedded.manifest {
+        anyhow::bail!("resolved dependency graph root differs from preflight Component bytes");
+    }
+
+    let supported_triggers = embedded
+        .manifest
+        .triggers
+        .iter()
+        .filter(|trigger| contracts.action_for(trigger).is_some())
+        .map(|trigger| trigger.as_str().to_owned())
+        .collect::<Vec<_>>();
+    let actions = embedded
+        .manifest
+        .entrypoints
+        .values()
+        .filter(|entrypoint| embedded.manifest.triggers.contains(entrypoint))
+        .filter_map(|entrypoint| {
+            contracts
+                .action_for(entrypoint)
+                .map(|action| action_preview(action, entrypoint))
+        })
+        .collect::<Vec<_>>();
+    let dependencies = graph
+        .edges
+        .iter()
+        .map(|edge| PluginDependencyPreview {
+            name: edge.name.clone(),
+            package: edge.callee.package.clone(),
+            requirement: edge.requirement.clone(),
+            imports: edge
+                .imports
+                .iter()
+                .map(|interface| interface.as_str().to_owned())
+                .collect(),
+            caller: edge.caller.clone(),
+            release: edge.callee.clone(),
+        })
+        .collect::<Vec<_>>();
+    let mut preview = PluginInstallPreview {
+        preview_id: String::new(),
+        contract_fingerprint: contracts.fingerprint(),
+        release: embedded.release,
+        supported_triggers,
+        actions,
+        dependencies,
+        deployment_lock: Some(deployment_lock),
+        required_capabilities: Vec::new(),
+        compatible: false,
+        reason: None,
+    };
+    let compiler = ActivationCompiler::new()?;
+    let plan = match compiler.compile(
+        graph,
+        ActivationGeneration::new(1)?,
+        &contracts.activation_host_inventory(),
+        &contracts.trigger_inventory(),
+    ) {
+        Ok(plan) => plan,
+        Err(error) => {
+            preview.reason = Some(format!("{error:#}"));
+            return finalize_preview(component, preview);
+        }
+    };
+    if preview.actions.is_empty() {
+        preview.reason =
+            Some("plugin has no entrypoint supported by this mlmail release".to_owned());
+        return finalize_preview(component, preview);
+    }
+    preview.required_capabilities =
+        graph_capability_previews(&plan, graph, contracts, &preview.release, account_id)?;
+    preview.compatible = true;
+    finalize_preview(component, preview)
+}
+
+/// Builds the immutable runtime edge policy for the exact approved dependency grants.
+///
+/// # Errors
+///
+/// Returns an error when a dependency grant cannot be matched to one generated activation edge or
+/// when an unresolved product scope reaches confirmation.
+pub fn activation_policy_for_grants(
+    plan: &ActivationPlan,
+    graph: &ResolvedPluginGraph,
+    required: &[PluginGrantKey],
+    approved: &[PluginGrantKey],
+) -> Result<ActivationPolicy> {
+    let mut policy = ActivationPolicy::for_plan(plan);
+    let approved = approved.iter().cloned().collect::<BTreeSet<_>>();
+    let required = required.iter().cloned().collect::<BTreeSet<_>>();
+    if !approved.is_subset(&required) {
+        anyhow::bail!("approved grants contain a requirement outside the exact preview");
+    }
+    for grant in required.iter().filter(|grant| grant.subject != graph.root) {
+        let resolved_edge = graph
+            .edges
+            .iter()
+            .find(|edge| {
+                edge.callee == grant.subject
+                    && dependency_host_edge(edge, &grant.host_interface) == grant.logical_edge
+            })
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "approved dependency grant does not match an exact inbound graph edge"
+                )
+            })?;
+        let planned_edge = plan
+            .edges
+            .iter()
+            .find(|edge| {
+                edge.caller == resolved_edge.caller
+                    && edge.name == resolved_edge.name
+                    && edge.callee == resolved_edge.callee
+            })
+            .ok_or_else(|| anyhow::anyhow!("activation plan is missing an approved graph edge"))?;
+        let access = CapabilityAccess {
+            capability: grant.capability.clone(),
+            scope: grant.scope.to_runtime_scope()?,
+        };
+        let edge = policy
+            .edges
+            .get_mut(&planned_edge.id)
+            .expect("ActivationPolicy::for_plan creates every plan edge");
+        edge.requirements.push(access.clone());
+        if approved.contains(grant) {
+            edge.grants.push(access);
+        }
+    }
+    for edge in policy.edges.values_mut() {
+        normalize_edge_policy(edge);
+    }
+    Ok(policy)
 }
 
 pub(crate) fn action_preview(
@@ -281,10 +470,118 @@ fn capability_previews(
     Ok(requirements)
 }
 
+fn graph_capability_previews(
+    plan: &ActivationPlan,
+    graph: &ResolvedPluginGraph,
+    contracts: &MlmailPluginContractRegistry,
+    root: &ReleaseIdentity,
+    account_id: Option<&str>,
+) -> Result<Vec<PluginCapabilityPreview>> {
+    let host_interfaces = plan
+        .host_interfaces
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    let mut requirements = Vec::new();
+    for component in &plan.components {
+        for host_interface in component
+            .imports
+            .iter()
+            .filter(|name| host_interfaces.contains(name.as_str()))
+        {
+            let identity = WitExportRef::parse(host_interface)?;
+            if is_no_consent_runtime_interface(&identity) {
+                continue;
+            }
+            let capabilities = contracts
+                .capability_requirements_for(&identity)
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "compiled host interface `{host_interface}` has no capability mapping"
+                    )
+                })?;
+            let inbound = if component.release == *root {
+                Vec::new()
+            } else {
+                graph
+                    .edges
+                    .iter()
+                    .filter(|edge| edge.callee == component.release)
+                    .collect::<Vec<_>>()
+            };
+            if component.release != *root && inbound.is_empty() {
+                anyhow::bail!("dependency host import has no explicit inbound graph edge");
+            }
+            if component.release == *root {
+                requirements.extend(
+                    capabilities
+                        .iter()
+                        .map(|capability| {
+                            capability_preview_for_edge(
+                                host_interface,
+                                *capability,
+                                root,
+                                &component.release,
+                                format!("root-host:{host_interface}"),
+                                account_id,
+                            )
+                        })
+                        .collect::<Result<Vec<_>>>()?,
+                );
+            } else {
+                for edge in inbound {
+                    requirements.extend(
+                        capabilities
+                            .iter()
+                            .map(|capability| {
+                                capability_preview_for_edge(
+                                    host_interface,
+                                    *capability,
+                                    root,
+                                    &component.release,
+                                    dependency_host_edge(edge, host_interface),
+                                    account_id,
+                                )
+                            })
+                            .collect::<Result<Vec<_>>>()?,
+                    );
+                }
+            }
+        }
+    }
+    requirements.sort_by(|left, right| {
+        left.subject
+            .cmp(&right.subject)
+            .then_with(|| left.logical_edge.cmp(&right.logical_edge))
+            .then_with(|| left.capability.cmp(&right.capability))
+            .then_with(|| left.host_interface.cmp(&right.host_interface))
+    });
+    requirements.dedup();
+    Ok(requirements)
+}
+
 fn capability_preview(
     host_interface: &str,
     requirement: PluginCapabilityRequirement,
     release: &ReleaseIdentity,
+    account_id: Option<&str>,
+) -> Result<PluginCapabilityPreview> {
+    capability_preview_for_edge(
+        host_interface,
+        requirement,
+        release,
+        release,
+        format!("root-host:{host_interface}"),
+        account_id,
+    )
+}
+
+fn capability_preview_for_edge(
+    host_interface: &str,
+    requirement: PluginCapabilityRequirement,
+    root: &ReleaseIdentity,
+    subject: &ReleaseIdentity,
+    logical_edge: String,
     account_id: Option<&str>,
 ) -> Result<PluginCapabilityPreview> {
     let account_id = requirement
@@ -300,9 +597,9 @@ fn capability_preview(
     } else {
         PluginGrantScope::Application
     };
-    let logical_edge = format!("root-host:{host_interface}");
     let requirement_id = fingerprint(&serde_json::to_vec(&(
-        release,
+        root,
+        subject,
         &logical_edge,
         host_interface,
         requirement.capability,
@@ -311,7 +608,7 @@ fn capability_preview(
     ))?);
     Ok(PluginCapabilityPreview {
         requirement_id,
-        subject: release.clone(),
+        subject: subject.clone(),
         logical_edge,
         capability: requirement.capability.to_owned(),
         host_interface: host_interface.to_owned(),
@@ -323,6 +620,29 @@ fn capability_preview(
         account_id,
         scope,
     })
+}
+
+fn dependency_host_edge(edge: &ResolvedEdge, host_interface: &str) -> String {
+    format!(
+        "dependency-host:{}:{}:{}#{}->{}:{}:{}:{host_interface}",
+        edge.caller.package,
+        edge.caller.version,
+        edge.caller.digest,
+        edge.name,
+        edge.callee.package,
+        edge.callee.version,
+        edge.callee.digest,
+    )
+}
+
+fn normalize_edge_policy(policy: &mut EdgeCapabilityPolicy) {
+    let key = |access: &CapabilityAccess| {
+        serde_json::to_string(access).expect("CapabilityAccess serialization is infallible")
+    };
+    policy.requirements.sort_by_key(&key);
+    policy.requirements.dedup();
+    policy.grants.sort_by_key(&key);
+    policy.grants.dedup();
 }
 
 fn finalize_preview(
@@ -337,6 +657,7 @@ fn finalize_preview(
         &preview.supported_triggers,
         &preview.actions,
         &preview.dependencies,
+        &preview.deployment_lock,
         &preview.required_capabilities,
         preview.compatible,
         &preview.reason,
@@ -519,7 +840,7 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     }
 
     #[tokio::test]
-    async fn returns_incompatible_preview_for_unregistered_wasi_import() -> Result<()> {
+    async fn accepts_measured_wasi_without_adding_consent() -> Result<()> {
         let registry = registry().await?;
         let component = packaged_component(
             "other",
@@ -533,11 +854,31 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
         let preview = preflight_component(&component, &registry)?;
 
+        assert!(preview.compatible, "{:?}", preview.reason);
+        assert!(preview.required_capabilities.is_empty());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn rejects_wasi_outside_the_measured_subset() -> Result<()> {
+        let registry = registry().await?;
+        let component = packaged_component(
+            "other",
+            "wasi-filesystem-import",
+            "create",
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            Some("wasi:filesystem/types@0.2.9"),
+            &[GMAIL_DRAFT_HELPER_INTERFACE],
+            "",
+        )?;
+
+        let preview = preflight_component(&component, &registry)?;
+
         assert!(!preview.compatible);
         assert!(preview
             .reason
             .as_deref()
-            .is_some_and(|reason| reason.contains("wasi:cli/environment@0.2.9")));
+            .is_some_and(|reason| reason.contains("wasi:filesystem/types@0.2.9")));
         Ok(())
     }
 
@@ -610,6 +951,102 @@ imports = ["third:provider/api@1.0.0"]
             .reason
             .as_deref()
             .is_some_and(|reason| reason.contains("dependency graph")));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn binds_dependency_consent_to_one_exact_generated_edge() -> Result<()> {
+        let contracts = registry().await?;
+        let provider_interface = "third:provider/api@0.1.0";
+        let dependency = format!(
+            r#"
+[dependencies.provider]
+package = "third:provider"
+requirement = "=0.1.0"
+imports = ["{provider_interface}"]
+"#,
+        );
+        let root_component = packaged_component(
+            "other",
+            "dependent",
+            "create",
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            Some(provider_interface),
+            &[GMAIL_DRAFT_HELPER_INTERFACE],
+            &dependency,
+        )?;
+        let provider_component = packaged_component(
+            "third",
+            "provider",
+            "provide",
+            provider_interface,
+            Some(GMAIL_DRAFTS_INTERFACE),
+            &[],
+            "",
+        )?;
+        let root = inspect_component(&root_component)?;
+        let provider = inspect_component(&provider_component)?;
+        let graph = ResolvedPluginGraph {
+            root: root.release.clone(),
+            nodes: vec![
+                ResolvedNode {
+                    release: root.release.clone(),
+                    manifest: root.manifest,
+                    reference: "local:root".to_owned(),
+                    component: root_component.clone(),
+                },
+                ResolvedNode {
+                    release: provider.release.clone(),
+                    manifest: provider.manifest,
+                    reference: "local:provider".to_owned(),
+                    component: provider_component,
+                },
+            ],
+            edges: vec![ResolvedEdge {
+                caller: root.release.clone(),
+                name: "provider".to_owned(),
+                requirement: "=0.1.0".to_owned(),
+                imports: vec![WitExportRef::parse(provider_interface)?],
+                callee: provider.release.clone(),
+            }],
+            lock_file: PathBuf::from("fixture.n-plugin.lock"),
+        };
+        let preview = preflight_resolved_graph_for_account(
+            &root_component,
+            &graph,
+            PluginDeploymentLock {
+                relative_path: "locks/fixture.n-plugin.lock".to_owned(),
+                digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    .to_owned(),
+            },
+            &contracts,
+            Some("person@example.com"),
+        )?;
+
+        assert!(
+            preview.compatible,
+            "unexpected reason: {:?}",
+            preview.reason
+        );
+        assert_eq!(preview.required_capabilities.len(), 1);
+        assert_eq!(preview.required_capabilities[0].subject, provider.release);
+        let required = preview
+            .required_capabilities
+            .iter()
+            .map(|requirement| requirement.grant_key(preview.release.clone()))
+            .collect::<Result<Vec<_>>>()?;
+        let plan = ActivationCompiler::new()?.compile(
+            &graph,
+            ActivationGeneration::new(7)?,
+            &contracts.activation_host_inventory(),
+            &contracts.trigger_inventory(),
+        )?;
+        let denied = activation_policy_for_grants(&plan, &graph, &required, &[])?;
+        let allowed = activation_policy_for_grants(&plan, &graph, &required, &required)?;
+        let edge = &plan.edges[0].id;
+        assert_eq!(denied.edges[edge].requirements.len(), 1);
+        assert!(denied.edges[edge].grants.is_empty());
+        assert_eq!(allowed.edges[edge].requirements, allowed.edges[edge].grants);
         Ok(())
     }
 

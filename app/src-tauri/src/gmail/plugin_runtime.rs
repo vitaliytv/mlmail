@@ -127,6 +127,44 @@ pub async fn build_gmail_plugin_runtime(
 }
 
 #[cfg(test)]
+pub(crate) async fn publish_test_generation(
+    component: &[u8],
+    lock_path: &Path,
+    storage: &Path,
+) -> Result<(
+    n_plugin_runtime::ActivationRegistry,
+    n_plugin_runtime::ActivationGeneration,
+)> {
+    use n_plugin_oci::{ResolvedNode, ResolvedPluginGraph};
+    use n_plugin_package::inspect_component;
+    use n_plugin_runtime::{ActivationCompiler, ActivationRegistry};
+
+    let embedded = inspect_component(component)?;
+    let graph = ResolvedPluginGraph {
+        root: embedded.release.clone(),
+        nodes: vec![ResolvedNode {
+            release: embedded.release,
+            manifest: embedded.manifest,
+            reference: "local:test-fixture".to_owned(),
+            component: component.to_vec(),
+        }],
+        edges: Vec::new(),
+        lock_file: storage.join("fixture.n-plugin.lock"),
+    };
+    let contracts = MlmailPluginContractRegistry::load(lock_path).await?;
+    let registry = ActivationRegistry::open(storage.join("registry.sqlite3"), storage.join("cas"))?;
+    let generation = registry.reserve_generation()?;
+    let plan = ActivationCompiler::new()?.compile(
+        &graph,
+        generation,
+        &contracts.activation_host_inventory(),
+        &contracts.trigger_inventory(),
+    )?;
+    registry.publish(&plan, &graph)?;
+    Ok((registry, generation))
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

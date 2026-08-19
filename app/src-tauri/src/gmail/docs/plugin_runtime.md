@@ -3,7 +3,7 @@ type: Module
 title: plugin_runtime.rs
 resource: app/src-tauri/src/gmail/plugin_runtime.rs
 docgen:
-  crc: b1b5fe60
+  crc: 75e405c7
   model: manual
 ---
 
@@ -20,6 +20,9 @@ triggers вручну.
 runtime і генерує environment metadata з registry-owned application context. Descriptor
 helpers отримують identity через той самий registry, тому не утворюють другого package
 resolver або паралельного inventory.
+
+Test-only fixture helper публікує singleton Component у справжній activation registry, щоб
+ignored real-guest E2E використовували той самий generation guard path, що production invocation.
 
 ## Публічний API
 
