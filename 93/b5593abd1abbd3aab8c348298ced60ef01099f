@@ -1,0 +1,40 @@
+app/src-tauri/src/docs/index.md
+  s_0287eb07cb0df4::t_7333d88751b4aa 7-14
+app/src-tauri/src/plugin_contracts.rs
+  s_0287eb07cb0df4::t_56d629432aee5e 72,203,206
+  s_0287eb07cb0df4::t_285051f600ba15 6,236-239,261-262,267-270,275-276,295-296,407,420-421,425-427,434-435
+  s_0287eb07cb0df4::t_65a11042421db6 3-5,7-71,73-202,204-205,207-235,240-260,263-266,271-274,277-290
+  s_0287eb07cb0df4::t_b446b53f661276 369-396
+  s_0287eb07cb0df4::t_67853868971f29 1-2,291-294,297-368,397-406,408-419,422-424,428-433,436-445
+app/src-tauri/src/docs/lib.md
+  s_0287eb07cb0df4::t_07d698b2001f89 6,12
+app/src-tauri/src/gmail/plugin_runtime.rs
+  s_0287eb07cb0df4::t_b446b53f661276 12
+  s_0287eb07cb0df4::t_b1009e67f45a7e 121
+  s_0287eb07cb0df4::t_8f1d97c89d6ac2 9-10,13-20,52,64,93-105,118-120
+app/.changes/260819-0800.md
+  s_0287eb07cb0df4::t_5b41ea8c4be7eb 1-5
+app/src-tauri/src/lib.rs
+  s_0287eb07cb0df4::t_67853868971f29 18-19
+app/src-tauri/src/gmail/docs/plugin_runtime.md
+  s_0287eb07cb0df4::t_baf0e52bcadbee 21
+  s_0287eb07cb0df4::t_07d698b2001f89 1-20,22-35
+app/src-tauri/src/docs/plugin_contracts.md
+  s_0287eb07cb0df4::t_07d698b2001f89 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "93b5593abd1abbd3aab8c348298ced60ef01099f",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
