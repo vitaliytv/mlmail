@@ -15,6 +15,8 @@ pub mod llm;
 pub mod newsletter_template;
 /// Durable lifecycle coordinator for product plugin instances.
 pub mod plugin_context;
+/// Product-owned typed plugin contract registry.
+pub mod plugin_contracts;
 /// Component-only installed plugin commands.
 pub mod plugins;
 
