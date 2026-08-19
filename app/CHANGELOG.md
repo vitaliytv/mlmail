@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.30.0] - 2026-08-19
+
+### Added
+
+- Додано generic preflight для typed plugin Components
+- Додано account-bound consent і crash-recoverable activation confirm для плагінів
+- Додано exact typed invocation для встановлених Draft Helper і Booking Finder Components
+- Додано preflight consent flow і exact typed actions у менеджері плагінів
+- Додано exact OCI dependency graph, edge grants, offline confirm і quarantine GC для плагінів
+- Додано локальну E2E matrix і посібник для авторів плагінів mlmail
+
 ## [0.29.0] - 2026-08-19
 
 ### Added
