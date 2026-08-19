@@ -1,0 +1,19 @@
+.oxlintrc.json
+  s_0287eb07cb0df4::t_bd1ad90fe85a36 3-14,25-32,166-172,242,422-427
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "219d7970c3233d7e0f5043dd2d216da6f28188b1",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
