@@ -1,0 +1,49 @@
+app/src-tauri/src/plugins.rs
+  s_0287eb07cb0df4::t_32633ba1e65b50 33-35,54-69
+  s_0287eb07cb0df4::t_55a82f6b50369b 825-828,938-944
+  s_0287eb07cb0df4::t_45a9d2ed27d9c9 71,484-538,553,557-561
+  s_0287eb07cb0df4::t_f71ec33e1358da 70,483,819,824
+app/src/components/PluginManagerPanel.vue
+  s_0287eb07cb0df4::t_ba291263c716a1 179-182,187-193,196-199,205,215,239,272,278-284,293,300-303,316-319,328-331,340-343
+  s_0287eb07cb0df4::t_b7b06ae753c0a8 13,18-25,28-29,34-42,55-75,77,79-82,90-93,97-116,122-123,128-129,132,137
+  s_0287eb07cb0df4::t_6286a71499f48c 43-53,211-212
+  s_0287eb07cb0df4::t_0d367a8461a0ac 145-146,157-161,163,165-178,194-195,200,203,209-210,216-224,231-237,240,242,246-254,257-267,269-270,274,285-287,289,291,295-297,304-315,320-327,332-339,344-349,356-357
+  s_0287eb07cb0df4::t_dffb0ca1e534e8 54
+app/src-tauri/src/docs/plugin_install.md
+  s_0287eb07cb0df4::t_b74d1b81c6e855 6
+app/.changes/260819-1750.md
+  s_0287eb07cb0df4::t_7acf79f01a10c3 1-5
+app/src-tauri/src/docs/plugins.md
+  s_0287eb07cb0df4::t_b74d1b81c6e855 6,27-28
+app/src-tauri/src/plugin_install.rs
+  s_0287eb07cb0df4::t_32633ba1e65b50 241-244
+app/src/components/tests/PluginManagerPanel.test.mjs
+  s_0287eb07cb0df4::t_f989cca00b5099 220
+  s_0287eb07cb0df4::t_da8ad13c75bb57 13-14,84-87,99-104
+  s_0287eb07cb0df4::t_d94cbe875e61b1 3,89
+  s_0287eb07cb0df4::t_e440f9a48adcf0 63-70,142-143,270-275
+  s_0287eb07cb0df4::t_ba291263c716a1 26,109-110,121,132,138,158,162-163,169,190,218,240,263
+  s_0287eb07cb0df4::t_ec0931b9c4f0da 90
+  s_0287eb07cb0df4::t_55a82f6b50369b 52-53
+  s_0287eb07cb0df4::t_e796d8906b6a53 1-2,4-12,15-25,27-51,54-62,71-83,88,91-98,105-108,111-120,122-131,133-137,139-141,144-157,159-161,164-168,170-189,191-217,219,221-239,241-262,264-269,276-277
+app/src/components/docs/PluginManagerPanel.md
+  s_0287eb07cb0df4::t_6286a71499f48c 19-22
+  s_0287eb07cb0df4::t_b74d1b81c6e855 1-5,7-18,23-40
+  s_0287eb07cb0df4::t_a59a010bb6e6b1 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3d3f99830640600fb9606686a8cca90fe8cc1bdf",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
