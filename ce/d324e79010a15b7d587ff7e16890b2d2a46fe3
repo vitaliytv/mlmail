@@ -1,0 +1,94 @@
+app/src-tauri/src/plugin_install.rs
+  s_0287eb07cb0df4::t_79e53707d6c41e 957-1050
+  s_0287eb07cb0df4::t_b341ff6577e6b0 843,857-876,881,1052
+  s_0287eb07cb0df4::t_4bca679c242a04 247,351
+  s_0287eb07cb0df4::t_1c56a6b9066057 3
+  s_0287eb07cb0df4::t_4fecd36cd058f9 7,9-13,48-61,131-132,186,199-208,217-218,273-350,352-364,369-379,381-383,390-419,423-429,473-492,496-562,568-585,601-602,611,625-626,635-647,660
+  s_0287eb07cb0df4::t_f99253ea87049c 18-19,493-495
+  s_0287eb07cb0df4::t_686a55cab97aba 365-366,380,384-389,420-422,627-634
+  s_0287eb07cb0df4::t_a13969021c643f 367-368,1051
+app/src-tauri/src/gmail/plugin_draft_helper.rs
+  s_0287eb07cb0df4::t_55dc4de2098b2e 23
+  s_0287eb07cb0df4::t_519749f09c971c 64-65,114-115,118-119
+  s_0287eb07cb0df4::t_caf1059e0b057b 4,25-26,34-38
+app/src-tauri/src/docs/plugin_install.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,19,21-22,24-25,34-35,48
+app/src-tauri/src/gmail/plugin_booking_finder.rs
+  s_0287eb07cb0df4::t_55dc4de2098b2e 23
+  s_0287eb07cb0df4::t_519749f09c971c 64-65,123-124,127-128
+  s_0287eb07cb0df4::t_caf1059e0b057b 4,25-26,34-38
+app/src-tauri/src/docs/plugin_grants.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,21-22,27
+app/src-tauri/src/docs/plugins.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,16-19,24,28-29,43,51
+app/src-tauri/src/gmail/docs/plugin_runtime.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,24-25
+  s_0287eb07cb0df4::t_d2582f027001ca 26
+app/src-tauri/src/docs/plugin_dispatch.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,18,22,31
+app/src-tauri/src/gmail/docs/plugin_booking_finder.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,16,27
+app/src-tauri/src/gmail/plugin_runtime.rs
+  s_0287eb07cb0df4::t_519749f09c971c 129-164
+  s_0287eb07cb0df4::t_fc2bac0c7fbd8d 165-166
+app/.changes/260819-1927.md
+  s_0287eb07cb0df4::t_e3c440f2d46467 1-5
+app/src-tauri/src/plugin_dispatch.rs
+  s_0287eb07cb0df4::t_fda1ea49f4ccac 183-185,190
+  s_0287eb07cb0df4::t_caf1059e0b057b 29-34,94-96,160-182,186-189,191-194,197,229-235
+  s_0287eb07cb0df4::t_81eb1721a580bb 12,196,198
+  s_0287eb07cb0df4::t_83754485fb178f 128-131
+app/src-tauri/src/docs/plugin_contracts.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,20-22,29-31,44
+app/src-tauri/src/gmail/docs/plugin_draft_helper.md
+  s_0287eb07cb0df4::t_e3dc00534bed7a 6,16,27
+app/src-tauri/Cargo.toml
+  s_0287eb07cb0df4::t_5c16c6a8177ee3 44-48
+app/src-tauri/src/plugins.rs
+  s_0287eb07cb0df4::t_99ad6b80b9cf57 11,14,18,31-32,37-38,43
+  s_0287eb07cb0df4::t_346aed4a6e0743 1485,1515-1583,1585-1587,1589,1592-1595,1597-1604,1606-1608
+  s_0287eb07cb0df4::t_e1bdb5a32b28d2 327,329-340
+  s_0287eb07cb0df4::t_4c833219739c8a 530,570-571,581-600
+  s_0287eb07cb0df4::t_f2d462c075b807 1119-1123,1163-1166,1584,1588,1590-1591,1596,1605
+  s_0287eb07cb0df4::t_8a1ba8df211325 1109-1118,1124-1162,1167-1169
+  s_0287eb07cb0df4::t_3a4ef2ade3065f 1382-1384
+  s_0287eb07cb0df4::t_681511a1419223 198,403,850-851,918-919,1012-1014,1252-1254,1407,1434-1436,1446,1479-1483
+  s_0287eb07cb0df4::t_caf1059e0b057b 663-669,809-812,814,816-823,849,869-870,917,937-938
+  s_0287eb07cb0df4::t_476273c1e77f22 973,978-982
+  s_0287eb07cb0df4::t_fda1ea49f4ccac 355
+  s_0287eb07cb0df4::t_5a7ef51b2a624b 57-62,81-84
+  s_0287eb07cb0df4::t_4b1780d7ecce34 353-354,356,358-369,390-391,398-402,404-428,434-436,443-446,455,459,465,474,482
+  s_0287eb07cb0df4::t_12ba77b14f86ba 179-197,199-221,601
+  s_0287eb07cb0df4::t_4bca679c242a04 395
+  s_0287eb07cb0df4::t_0044a131682759 15
+  s_0287eb07cb0df4::t_1186d474144e98 165
+  s_0287eb07cb0df4::t_0920c9e85d930b 602
+  s_0287eb07cb0df4::t_e015fede3eeb97 1108
+  s_0287eb07cb0df4::t_0fb4d22f7754c3 1484
+  s_0287eb07cb0df4::t_f62db4b451d0b4 1486
+app/src-tauri/src/plugin_grants.rs
+  s_0287eb07cb0df4::t_4fecd36cd058f9 11,29-50
+  s_0287eb07cb0df4::t_cb5ff8df7c02bb 51-52
+app/src-tauri/src/plugin_contracts.rs
+  s_0287eb07cb0df4::t_2fc997cb344544 32-51,166-179,249-252,353-363
+  s_0287eb07cb0df4::t_9e1a311ac4e8ce 479-505
+  s_0287eb07cb0df4::t_4d36b3d60eebac 364
+Cargo.lock
+  s_0287eb07cb0df4::t_d283459d070666 3391-3392,3403-3404,3411-3412,3419-3420,3434-3435,3449-3450,3475-3476
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ced324e79010a15b7d587ff7e16890b2d2a46fe3",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
