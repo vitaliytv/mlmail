@@ -16,6 +16,8 @@
     "test:rust:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
     "test:booking-finder-component": "./scripts/test-booking-finder-component.sh",
     "test:draft-helper-component": "./scripts/test-draft-helper-component.sh",
+    "test:installed-plugin-matrix": "./scripts/test-installed-plugin-matrix.sh",
+    "test:installed-plugin-matrix:oci": "MLMAIL_PLUGIN_E2E_ONLINE=1 ./scripts/test-installed-plugin-matrix.sh",
     "test:all": "bun run test && bun run test:rust"
   },
   "dependencies": {

@@ -1,5 +1,8 @@
 # Durable context плагінів у mlmail
 
+Інструкції для авторів нових Components, supported contracts і локальна E2E matrix описані в
+[посібнику з розробки плагінів](./plugin-authoring.md).
+
 ## Призначення
 
 `mlmail` використовує `n-plugin-runtime` як durable lifecycle coordinator між

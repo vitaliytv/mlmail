@@ -1,5 +1,11 @@
 # General-purpose plugin installer для mlmail — implementation plan
 
+**Статус: реалізацію Tasks 1–8 завершено 2026-08-19.** Local deterministic E2E
+matrix пройшла повністю; opt-in OCI smoke лишається окремим network gate з pinned
+public fixture. Повний `test:rust` wrapper у цьому runner обмежений вільним місцем під
+час linking desktop binary, тоді як `cargo test --lib` (168 tests), real Component
+matrix і Vue suite пройшли.
+
 > **Для agentic workers:** реалізовувати послідовно, по одному task на PR. Кожен task
 > завершується власними тестами, `n-doc-files`, delta-lint і change-файлом. Не переносити
 > domain contracts назад у `n-plugin`.
