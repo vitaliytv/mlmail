@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.29.0] - 2026-08-19
+
+### Added
+
+- Додано product-owned typed registry контрактів плагінів mlmail
+
 ## [0.28.0] - 2026-08-17
 
 ### Added
