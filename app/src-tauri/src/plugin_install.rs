@@ -7,9 +7,13 @@ use n_plugin_oci::{ResolvedNode, ResolvedPluginGraph};
 use n_plugin_package::{inspect_component, ReleaseIdentity, WitExportRef};
 use n_plugin_runtime::{ActivationCompiler, ActivationGeneration};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 
-use crate::plugin_contracts::{
-    MlmailPluginActionKind, MlmailPluginContractRegistry, PluginCapabilityRequirement,
+use crate::{
+    plugin_contracts::{
+        MlmailPluginActionKind, MlmailPluginContractRegistry, PluginCapabilityRequirement,
+    },
+    plugin_grants::{PluginGrantKey, PluginGrantScope},
 };
 
 /// One product action that can deliver a supported plugin trigger.
@@ -52,18 +56,51 @@ pub enum PluginCapabilityAccountScope {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginCapabilityPreview {
+    /// Opaque deterministic identifier returned unchanged by the consent UI.
+    pub requirement_id: String,
+    /// Exact Component node that imports the host interface.
+    pub subject: ReleaseIdentity,
+    /// Stable product-owned logical host edge independent from activation generation.
+    pub logical_edge: String,
     /// Stable product capability identifier shown in consent UI.
     pub capability: String,
     /// Exact typed host interface that requires this capability.
     pub host_interface: String,
     /// Account or application scope for the eventual consent grant.
     pub account_scope: PluginCapabilityAccountScope,
+    /// Exact public account identity covered by account-scoped consent.
+    pub account_id: Option<String>,
+    /// Structured payload-free capability scope.
+    pub scope: PluginGrantScope,
+}
+
+impl PluginCapabilityPreview {
+    /// Reconstructs the authoritative exact grant key represented by this preview row.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when preview fields no longer form a valid product grant key.
+    pub fn grant_key(&self, root: ReleaseIdentity) -> Result<PluginGrantKey> {
+        PluginGrantKey::new(
+            root,
+            self.subject.clone(),
+            self.logical_edge.clone(),
+            self.host_interface.clone(),
+            self.capability.clone(),
+            self.account_id.clone(),
+            self.scope.clone(),
+        )
+    }
 }
 
 /// Read-only installation preview for one manifest-bearing WebAssembly Component.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginInstallPreview {
+    /// Digest-bound fingerprint of bytes, account, contracts, actions, and consent requirements.
+    pub preview_id: String,
+    /// Exact product contract registry fingerprint used for this compatibility decision.
+    pub contract_fingerprint: String,
     /// Exact content-addressed plugin release inspected from the Component.
     pub release: ReleaseIdentity,
     /// Manifest triggers registered by this mlmail release.
@@ -90,6 +127,20 @@ pub struct PluginInstallPreview {
 pub fn preflight_component(
     component: &[u8],
     contracts: &MlmailPluginContractRegistry,
+) -> Result<PluginInstallPreview> {
+    preflight_component_for_account(component, contracts, None)
+}
+
+/// Inspects one Component for an exact authenticated account without persistent writes.
+///
+/// # Errors
+///
+/// Returns the same structural failures as [`preflight_component`]. Account identity only enters
+/// consent scope and the preview fingerprint; it never enters Component bytes or runtime metadata.
+pub fn preflight_component_for_account(
+    component: &[u8],
+    contracts: &MlmailPluginContractRegistry,
+    account_id: Option<&str>,
 ) -> Result<PluginInstallPreview> {
     n_plugin_runtime::ensure_component(component)?;
     let embedded = inspect_component(component)?;
@@ -127,6 +178,8 @@ pub fn preflight_component(
         })
         .collect::<Vec<_>>();
     let mut preview = PluginInstallPreview {
+        preview_id: String::new(),
+        contract_fingerprint: contracts.fingerprint(),
         release: embedded.release.clone(),
         supported_triggers,
         actions,
@@ -141,7 +194,7 @@ pub fn preflight_component(
             "required dependency graph installation is not supported by this mlmail release yet"
                 .to_owned(),
         );
-        return Ok(preview);
+        return finalize_preview(component, preview);
     }
 
     let graph = ResolvedPluginGraph {
@@ -165,19 +218,24 @@ pub fn preflight_component(
         Ok(plan) => plan,
         Err(error) => {
             preview.reason = Some(format!("{error:#}"));
-            return Ok(preview);
+            return finalize_preview(component, preview);
         }
     };
 
     if preview.actions.is_empty() {
         preview.reason =
             Some("plugin has no entrypoint supported by this mlmail release".to_owned());
-        return Ok(preview);
+        return finalize_preview(component, preview);
     }
 
-    preview.required_capabilities = capability_previews(&plan.host_interfaces, contracts)?;
+    preview.required_capabilities = capability_previews(
+        &plan.host_interfaces,
+        contracts,
+        &preview.release,
+        account_id,
+    )?;
     preview.compatible = true;
-    Ok(preview)
+    finalize_preview(component, preview)
 }
 
 fn action_preview(action: MlmailPluginActionKind, trigger: &WitExportRef) -> PluginActionPreview {
@@ -195,6 +253,8 @@ fn action_preview(action: MlmailPluginActionKind, trigger: &WitExportRef) -> Plu
 fn capability_previews(
     host_interfaces: &[String],
     contracts: &MlmailPluginContractRegistry,
+    release: &ReleaseIdentity,
+    account_id: Option<&str>,
 ) -> Result<Vec<PluginCapabilityPreview>> {
     let mut requirements = Vec::new();
     for host_interface in host_interfaces {
@@ -203,7 +263,10 @@ fn capability_previews(
             requirements.extend(
                 capabilities
                     .iter()
-                    .map(|capability| capability_preview(host_interface, *capability)),
+                    .map(|capability| {
+                        capability_preview(host_interface, *capability, release, account_id)
+                    })
+                    .collect::<Result<Vec<_>>>()?,
             );
         }
     }
@@ -218,8 +281,35 @@ fn capability_previews(
 fn capability_preview(
     host_interface: &str,
     requirement: PluginCapabilityRequirement,
-) -> PluginCapabilityPreview {
-    PluginCapabilityPreview {
+    release: &ReleaseIdentity,
+    account_id: Option<&str>,
+) -> Result<PluginCapabilityPreview> {
+    let account_id = requirement
+        .account_scoped
+        .then(|| account_id.map(str::to_owned))
+        .flatten();
+    let scope = if requirement.account_scoped {
+        account_id
+            .clone()
+            .map_or(PluginGrantScope::UnresolvedMailAccount, |account_id| {
+                PluginGrantScope::MailAccount { account_id }
+            })
+    } else {
+        PluginGrantScope::Application
+    };
+    let logical_edge = format!("root-host:{host_interface}");
+    let requirement_id = fingerprint(&serde_json::to_vec(&(
+        release,
+        &logical_edge,
+        host_interface,
+        requirement.capability,
+        &account_id,
+        &scope,
+    ))?);
+    Ok(PluginCapabilityPreview {
+        requirement_id,
+        subject: release.clone(),
+        logical_edge,
         capability: requirement.capability.to_owned(),
         host_interface: host_interface.to_owned(),
         account_scope: if requirement.account_scoped {
@@ -227,7 +317,35 @@ fn capability_preview(
         } else {
             PluginCapabilityAccountScope::Application
         },
-    }
+        account_id,
+        scope,
+    })
+}
+
+fn finalize_preview(
+    component: &[u8],
+    mut preview: PluginInstallPreview,
+) -> Result<PluginInstallPreview> {
+    let component_digest = fingerprint(component);
+    let canonical = serde_json::to_vec(&(
+        component_digest,
+        &preview.contract_fingerprint,
+        &preview.release,
+        &preview.supported_triggers,
+        &preview.actions,
+        &preview.dependencies,
+        &preview.required_capabilities,
+        preview.compatible,
+        &preview.reason,
+    ))?;
+    preview.preview_id = fingerprint(&canonical);
+    Ok(preview)
+}
+
+fn fingerprint(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    format!("sha256:{:x}", hasher.finalize())
 }
 
 #[cfg(test)]
@@ -298,6 +416,55 @@ digest = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
             "mail:draft.create"
         );
         assert_eq!(booking.required_capabilities[0].capability, "mail:search");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn never_downgrades_an_unresolved_account_requirement_to_application_scope() -> Result<()>
+    {
+        let registry = registry().await?;
+        let component = packaged_component(
+            "other",
+            "booking-finder",
+            "find",
+            GMAIL_BOOKING_FINDER_INTERFACE,
+            Some(GMAIL_SEARCH_INTERFACE),
+            &[GMAIL_BOOKING_FINDER_INTERFACE],
+            "",
+        )?;
+
+        let preview = preflight_component(&component, &registry)?;
+        let requirement = &preview.required_capabilities[0];
+
+        assert_eq!(requirement.account_id, None);
+        assert_eq!(requirement.scope, PluginGrantScope::UnresolvedMailAccount);
+        assert!(requirement.grant_key(preview.release).is_err());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn binds_the_preview_to_the_exact_account_identity() -> Result<()> {
+        let registry = registry().await?;
+        let component = packaged_component(
+            "other",
+            "booking-finder",
+            "find",
+            GMAIL_BOOKING_FINDER_INTERFACE,
+            Some(GMAIL_SEARCH_INTERFACE),
+            &[GMAIL_BOOKING_FINDER_INTERFACE],
+            "",
+        )?;
+
+        let first =
+            preflight_component_for_account(&component, &registry, Some("first@example.com"))?;
+        let second =
+            preflight_component_for_account(&component, &registry, Some("second@example.com"))?;
+
+        assert_ne!(first.preview_id, second.preview_id);
+        assert_ne!(
+            first.required_capabilities[0].requirement_id,
+            second.required_capabilities[0].requirement_id
+        );
         Ok(())
     }
 

@@ -4,12 +4,16 @@
 //! `nitra:gmail/search` host interface to `mail:search` and records approval for
 //! one exact Component release and authenticated Gmail account.
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use n_plugin_package::ReleaseIdentity;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    plugin_contracts::GMAIL_SEARCH_INTERFACE,
+    plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantStore},
+};
 
 /// Product-defined capability required by the Gmail search host interface.
 pub const MAIL_SEARCH_CAPABILITY: &str = "mail:search";
@@ -25,8 +29,7 @@ pub struct GmailSearchConsent {
 
 /// Product-local store for exact `mail:search` approvals.
 pub struct GmailSearchConsentStore {
-    path: PathBuf,
-    consents: Vec<GmailSearchConsent>,
+    grants: PluginGrantStore,
 }
 
 impl GmailSearchConsentStore {
@@ -37,18 +40,34 @@ impl GmailSearchConsentStore {
     /// Returns an error when the existing JSON store cannot be read or decoded.
     pub fn open(path: impl Into<PathBuf>) -> Result<Self> {
         let path = path.into();
-        let consents = match fs::read_to_string(&path) {
-            Ok(json) => serde_json::from_str(&json).with_context(|| {
-                format!("failed to parse Gmail plugin consent `{}`", path.display())
-            })?,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
-            Err(error) => {
-                return Err(error).with_context(|| {
+        let grants = match PluginGrantStore::open(&path) {
+            Ok(grants) => grants,
+            Err(generic_error) => {
+                let source = std::fs::read(&path).with_context(|| {
                     format!("failed to read Gmail plugin consent `{}`", path.display())
-                });
+                })?;
+                let legacy = serde_json::from_slice::<Vec<GmailSearchConsent>>(&source)
+                    .with_context(|| {
+                        format!(
+                            "failed to parse Gmail plugin consent `{}` after generic grant error: {generic_error:#}",
+                            path.display()
+                        )
+                    })?;
+                let exact = legacy
+                    .into_iter()
+                    .map(|consent| {
+                        PluginGrantKey::root_host(
+                            consent.release,
+                            GMAIL_SEARCH_INTERFACE,
+                            MAIL_SEARCH_CAPABILITY,
+                            consent.account_id,
+                        )
+                    })
+                    .collect::<Result<Vec<_>>>()?;
+                PluginGrantStore::migrate_exact(&path, exact)?
             }
         };
-        Ok(Self { path, consents })
+        Ok(Self { grants })
     }
 
     /// Persists `mail:search` consent for one exact Component and Gmail account.
@@ -57,26 +76,24 @@ impl GmailSearchConsentStore {
     ///
     /// Returns an error when `account_id` is empty or the updated store cannot be written.
     pub fn grant(&mut self, release: ReleaseIdentity, account_id: impl Into<String>) -> Result<()> {
-        let account_id = account_id.into();
-        if account_id.trim().is_empty() {
-            bail!("Gmail consent account identity cannot be empty");
-        }
-        if !self.allows(&release, &account_id) {
-            self.consents.push(GmailSearchConsent {
-                release,
-                account_id,
-            });
-            self.save()?;
-        }
-        Ok(())
+        self.grants.grant(PluginGrantKey::root_host(
+            release,
+            GMAIL_SEARCH_INTERFACE,
+            MAIL_SEARCH_CAPABILITY,
+            account_id,
+        )?)
     }
 
     /// Reports whether this exact release may search the selected Gmail account.
     #[must_use]
     pub fn allows(&self, release: &ReleaseIdentity, account_id: &str) -> bool {
-        self.consents
-            .iter()
-            .any(|consent| consent.release == *release && consent.account_id == account_id)
+        PluginGrantKey::root_host(
+            release.clone(),
+            GMAIL_SEARCH_INTERFACE,
+            MAIL_SEARCH_CAPABILITY,
+            account_id,
+        )
+        .is_ok_and(|key| self.grants.allows(&key))
     }
 
     /// Rejects a host call unless exact `mail:search` consent exists.
@@ -85,52 +102,19 @@ impl GmailSearchConsentStore {
     ///
     /// Returns a stable `grant-required` error without exposing tokens, query text, or message data.
     pub fn require(&self, release: &ReleaseIdentity, account_id: &str) -> Result<()> {
-        if self.allows(release, account_id) {
-            return Ok(());
-        }
-        bail!(
-            "grant-required: `{MAIL_SEARCH_CAPABILITY}` is not approved for `{}` on account `{account_id}`",
-            release.package
-        );
-    }
-
-    fn save(&self) -> Result<()> {
-        let parent = self
-            .path
-            .parent()
-            .context("Gmail plugin consent path must have a parent directory")?;
-        fs::create_dir_all(parent).with_context(|| {
-            format!(
-                "failed to create Gmail plugin consent directory `{}`",
-                parent.display()
-            )
-        })?;
-        let file_name = self
-            .path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .context("Gmail plugin consent path must have a UTF-8 file name")?;
-        let temporary = parent.join(format!(".{file_name}.{}.tmp", std::process::id()));
-        let json = serde_json::to_vec_pretty(&self.consents)?;
-        fs::write(&temporary, json).with_context(|| {
-            format!(
-                "failed to write Gmail plugin consent `{}`",
-                temporary.display()
-            )
-        })?;
-        fs::rename(&temporary, &self.path).with_context(|| {
-            format!(
-                "failed to publish Gmail plugin consent `{}`",
-                self.path.display()
-            )
-        })
+        self.grants.require(&PluginGrantKey::root_host(
+            release.clone(),
+            GMAIL_SEARCH_INTERFACE,
+            MAIL_SEARCH_CAPABILITY,
+            account_id,
+        )?)
     }
 }
 
 /// Returns the standard per-application path for persistent Gmail search consent.
 #[must_use]
 pub fn consent_store_path(app_data: &Path) -> PathBuf {
-    app_data.join("plugins").join("gmail-search-consents.json")
+    grant_store_path(app_data)
 }
 
 #[cfg(test)]

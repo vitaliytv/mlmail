@@ -3,7 +3,7 @@ type: Module
 title: plugin_contracts.rs
 resource: app/src-tauri/src/plugin_contracts.rs
 docgen:
-  crc: c9abd538
+  crc: 87132c4f
   model: manual
 ---
 
@@ -29,6 +29,7 @@ product-local consent metadata: Gmail search вимагає account-scoped `mail
 - `capability_requirements_for` повертає consent requirements exact host interface.
 - `build_runtime` створює runtime з того самого набору contracts.
 - `environment_context` повертає public compatibility metadata поточного application release.
+- `fingerprint` зв’язує preview із точним набором contracts, actions і capability mappings.
 
 ## Гарантії поведінки
 

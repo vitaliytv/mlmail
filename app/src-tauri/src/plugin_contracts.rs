@@ -10,6 +10,8 @@ use n_plugin_runtime::{
     PluginHostInterfaceRegistry, PluginRuntime, PluginRuntimeBuilder,
 };
 use n_plugin_wkg::load_locked_package;
+use serde::Serialize;
+use sha2::{Digest, Sha256};
 
 use crate::gmail::plugin_bindings::{self, GmailSearchHost};
 
@@ -32,7 +34,8 @@ const MAIL_SEARCH_CAPABILITY: &str = "mail:search";
 const MAIL_DRAFT_CREATE_CAPABILITY: &str = "mail:draft.create";
 
 /// Product command family that can deliver one registered plugin trigger.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum MlmailPluginActionKind {
     /// Invoke the typed Booking Finder search adapter.
     BookingFinderFind,
@@ -192,6 +195,35 @@ impl MlmailPluginContractRegistry {
                     .get(identity)
                     .map(|contract| contract.descriptor.clone())
             })
+    }
+
+    /// Returns a deterministic fingerprint of contracts, actions, and consent mappings.
+    #[must_use]
+    pub fn fingerprint(&self) -> String {
+        let mut hasher = Sha256::new();
+        for (identity, contract) in &self.hosts {
+            hasher.update(b"host\0");
+            hasher.update(identity.as_str().as_bytes());
+            hasher.update(b"\0");
+            hasher.update(contract.descriptor.package_digest.as_bytes());
+            for requirement in &contract.capabilities {
+                hasher.update(b"\0capability\0");
+                hasher.update(requirement.capability.as_bytes());
+                hasher.update([u8::from(requirement.account_scoped)]);
+            }
+        }
+        for (identity, contract) in &self.triggers {
+            hasher.update(b"trigger\0");
+            hasher.update(identity.as_str().as_bytes());
+            hasher.update(b"\0");
+            hasher.update(contract.descriptor.package_digest.as_bytes());
+            hasher.update(b"\0");
+            hasher.update(match contract.action {
+                MlmailPluginActionKind::BookingFinderFind => b"booking-finder-find".as_slice(),
+                MlmailPluginActionKind::DraftHelperCreate => b"draft-helper-create".as_slice(),
+            });
+        }
+        format!("sha256:{:x}", hasher.finalize())
     }
 
     /// Builds the runtime from the same typed registrations represented by this inventory.

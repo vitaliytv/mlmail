@@ -3,7 +3,7 @@ type: Rust Module
 title: plugin_install.rs
 resource: app/src-tauri/src/plugin_install.rs
 docgen:
-  crc: 6200a11d
+  crc: 4376d4a1
   model: manual
 ---
 
@@ -21,8 +21,10 @@ imports із product-owned registry, а dependency-free candidate пропуск
 entrypoint повертає incompatible preview з причиною. Required dependency declarations
 відображаються у preview, але лишають candidate incompatible до graph resolver task.
 
-Preflight будує singleton graph лише в пам’яті. Він не відкриває activation registry, не записує
-CAS, SQLite, installed projection, context або `.n-plugin.lock`.
+Preflight будує singleton graph лише в пам’яті. Account-aware варіант додає до preview exact
+public account identity, sealed grant scope, opaque requirement identifiers та `preview_id`, що
+зв’язує Component bytes, contract fingerprint і весь consent set. Він не відкриває activation
+registry, не записує CAS, SQLite, installed projection, context або `.n-plugin.lock`.
 
 ## Публічний API
 
@@ -32,6 +34,7 @@ CAS, SQLite, installed projection, context або `.n-plugin.lock`.
 - `PluginCapabilityPreview` — capability, exact host interface та consent scope.
 - `PluginCapabilityAccountScope` — account-scoped або application-scoped consent.
 - `preflight_component` — pure validation і dry composition для одного Component.
+- `preflight_component_for_account` — формує authoritative account-bound consent preview.
 
 ## Гарантії поведінки
 
@@ -40,3 +43,4 @@ CAS, SQLite, installed projection, context або `.n-plugin.lock`.
 - Незареєстровані WASI imports fail closed так само, як інші unknown host interfaces.
 - Compatibility mismatch не створює persistent plugin state.
 - Dependency graph не активується частково.
+- Відсутній account identity ніколи не розширює account-scoped requirement до application scope.

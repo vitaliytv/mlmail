@@ -5,8 +5,9 @@
 //! in the generic n-plugin registry; OAuth credentials never enter plugin files.
 
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::Mutex as StdMutex;
 
 use n_plugin_compatibility::GraphLifecycleState;
 use n_plugin_oci::{ResolvedNode, ResolvedPluginGraph};
@@ -14,6 +15,7 @@ use n_plugin_package::{inspect_component, ReleaseIdentity};
 use n_plugin_runtime::{ActivationCompiler, ActivationGeneration, ActivationRegistry};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
+use tokio::sync::Mutex as AsyncMutex;
 
 use crate::{
     auth::{self, state::AuthState, storage::SharedStorage},
@@ -21,7 +23,8 @@ use crate::{
     gmail::{plugin_draft_helper::invoke_draft_helper, plugin_runtime::build_gmail_plugin_runtime},
     plugin_context::{self, PluginContextCoordinator},
     plugin_contracts::MlmailPluginContractRegistry,
-    plugin_install::{preflight_component, PluginInstallPreview},
+    plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantStore},
+    plugin_install::{preflight_component_for_account, PluginInstallPreview},
 };
 
 const DRAFT_HELPER_TRIGGER: &str = "nitra:gmail/draft-helper@0.1.0";
@@ -37,6 +40,38 @@ pub struct InstalledPlugin {
     pub triggers: Vec<String>,
     /// Explicit user intent; disabled Components cannot be invoked.
     pub enabled: bool,
+    /// Exact registry generation committed for this installed projection.
+    pub activation_generation: u64,
+}
+
+/// Opaque user response to one exact server-generated grant requirement.
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginGrantDecisionDto {
+    /// Requirement identifier copied unchanged from installation preview.
+    pub requirement_id: String,
+    /// Explicit user choice; denied required capabilities prevent activation.
+    pub allow: bool,
+}
+
+/// Exact confirmation of one previously previewed local Component.
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginInstallConfirmationDto {
+    /// Local Component path selected by the native file picker.
+    pub path: String,
+    /// Digest-bound preview identifier returned by the backend.
+    pub preview_id: String,
+    /// Exact release the user reviewed before confirming.
+    pub expected_release: ReleaseIdentity,
+    /// Opaque decisions for the exact grant requirement identifiers.
+    pub grants: Vec<PluginGrantDecisionDto>,
+}
+
+/// Application-scoped serialization boundary for plugin installation and recovery.
+#[derive(Default)]
+pub struct PluginInstallState {
+    mutex: AsyncMutex<()>,
 }
 
 /// Result returned after the installed Draft Helper creates a native Gmail draft.
@@ -53,6 +88,15 @@ pub struct PluginDraftActionDto {
 struct PluginIndex {
     next_generation: u64,
     plugins: Vec<InstalledPlugin>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PendingActivation {
+    target_release: ReleaseIdentity,
+    target_generation: u64,
+    staged_index_file: String,
+    grants: Vec<PluginGrantKey>,
 }
 
 fn app_data(app: &AppHandle) -> Result<PathBuf, String> {
@@ -74,6 +118,14 @@ fn index_path(app_data: &Path) -> PathBuf {
     plugin_root(app_data).join("installed.json")
 }
 
+fn staged_index_path(app_data: &Path) -> PathBuf {
+    plugin_root(app_data).join("installed.pending.json")
+}
+
+fn pending_activation_path(app_data: &Path) -> PathBuf {
+    plugin_root(app_data).join("pending-activation.json")
+}
+
 fn load_index(app_data: &Path) -> anyhow::Result<PluginIndex> {
     let path = index_path(app_data);
     match fs::read(&path) {
@@ -92,6 +144,46 @@ fn write_index(app_data: &Path, index: &PluginIndex) -> anyhow::Result<()> {
     let temporary = parent.join(format!(".installed-{}.tmp", std::process::id()));
     fs::write(&temporary, serde_json::to_vec_pretty(index)?)?;
     fs::rename(temporary, path)?;
+    Ok(())
+}
+
+fn write_json_atomically(path: &Path, value: &impl Serialize) -> anyhow::Result<()> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("plugin state path has no parent directory"))?;
+    fs::create_dir_all(parent)?;
+    let file_name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow::anyhow!("plugin state path has no UTF-8 file name"))?;
+    let temporary = parent.join(format!(".{file_name}.{}.tmp", std::process::id()));
+    let mut file = fs::File::create(&temporary)?;
+    file.write_all(&serde_json::to_vec_pretty(value)?)?;
+    file.sync_all()?;
+    drop(file);
+    fs::rename(temporary, path)?;
+    Ok(())
+}
+
+fn load_pending_activation(app_data: &Path) -> anyhow::Result<Option<PendingActivation>> {
+    match fs::read(pending_activation_path(app_data)) {
+        Ok(source) => Ok(Some(serde_json::from_slice(&source)?)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn discard_pending_activation(app_data: &Path) -> anyhow::Result<()> {
+    for path in [
+        pending_activation_path(app_data),
+        staged_index_path(app_data),
+    ] {
+        match fs::remove_file(path) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
+    }
     Ok(())
 }
 
@@ -116,16 +208,34 @@ async fn contract_registry(app_data: &Path) -> anyhow::Result<MlmailPluginContra
     MlmailPluginContractRegistry::load(lock_path).await
 }
 
-async fn preflight_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<PluginInstallPreview> {
+async fn preflight_plugin_at(
+    app_data: &Path,
+    path: &Path,
+    account_id: Option<&str>,
+) -> anyhow::Result<PluginInstallPreview> {
     let component = fs::read(path)?;
     let contracts = contract_registry(app_data).await?;
-    preflight_component(&component, &contracts)
+    preflight_component_for_account(&component, &contracts, account_id)
 }
 
-async fn install_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<InstalledPlugin> {
-    let component = fs::read(path)?;
+async fn confirm_plugin_at(
+    app_data: &Path,
+    confirmation: &PluginInstallConfirmationDto,
+    account_id: &str,
+) -> anyhow::Result<InstalledPlugin> {
+    if account_id.trim().is_empty() {
+        anyhow::bail!("authenticate a mail account before plugin consent");
+    }
+    reconcile_pending_at(app_data)?;
+    let component = fs::read(&confirmation.path)?;
     let contracts = contract_registry(app_data).await?;
-    let preview = preflight_component(&component, &contracts)?;
+    let preview = preflight_component_for_account(&component, &contracts, Some(account_id))?;
+    if preview.preview_id != confirmation.preview_id {
+        anyhow::bail!("installation preview is stale; run preflight and review consent again");
+    }
+    if preview.release != confirmation.expected_release {
+        anyhow::bail!("plugin release changed after installation preview");
+    }
     if !preview.compatible {
         anyhow::bail!(
             "plugin is incompatible with this mlmail release: {}",
@@ -135,6 +245,9 @@ async fn install_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<Insta
                 .unwrap_or("installation preflight did not provide a reason")
         );
     }
+    let approved_grants = approved_grants(&preview, &confirmation.grants)?;
+    PluginGrantStore::open(grant_store_path(app_data))?.grant_all(approved_grants.clone())?;
+
     let embedded = inspect_component(&component)?;
     if embedded.release != preview.release {
         anyhow::bail!("plugin release changed during installation preflight");
@@ -162,7 +275,6 @@ async fn install_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<Insta
         &contracts.host_inventory(),
         &contracts.trigger_inventory(),
     )?;
-    registry(app_data)?.publish(&plan, &graph)?;
 
     let installed = InstalledPlugin {
         release: embedded.release,
@@ -176,6 +288,7 @@ async fn install_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<Insta
             .map(|trigger| trigger.as_str().to_owned())
             .collect(),
         enabled: true,
+        activation_generation: next_generation,
     };
     index
         .plugins
@@ -185,9 +298,126 @@ async fn install_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<Insta
         .plugins
         .sort_by(|left, right| left.release.package.cmp(&right.release.package));
     index.next_generation = next_generation;
-    publish_plugin_context(app_data, &index)?;
-    write_index(app_data, &index)?;
+    let staged_path = staged_index_path(app_data);
+    let pending = PendingActivation {
+        target_release: installed.release.clone(),
+        target_generation: next_generation,
+        staged_index_file: staged_path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| anyhow::anyhow!("staged plugin index has no UTF-8 file name"))?
+            .to_owned(),
+        grants: approved_grants,
+    };
+    write_json_atomically(&pending_activation_path(app_data), &pending)?;
+    if let Err(error) = write_json_atomically(&staged_path, &index) {
+        discard_pending_activation(app_data)?;
+        return Err(error);
+    }
+
+    if let Err(error) = registry(app_data)?.publish(&plan, &graph) {
+        discard_pending_activation(app_data)?;
+        return Err(error);
+    }
+    reconcile_pending_at(app_data).map_err(|error| {
+        anyhow::anyhow!(
+            "activation committed, reconciliation pending for `{}` generation {}: {error:#}",
+            installed.release.package,
+            next_generation
+        )
+    })?;
     Ok(installed)
+}
+
+fn approved_grants(
+    preview: &PluginInstallPreview,
+    decisions: &[PluginGrantDecisionDto],
+) -> anyhow::Result<Vec<PluginGrantKey>> {
+    let expected = preview
+        .required_capabilities
+        .iter()
+        .map(|requirement| requirement.requirement_id.as_str())
+        .collect::<std::collections::BTreeSet<_>>();
+    let mut received = std::collections::BTreeMap::new();
+    for decision in decisions {
+        if received
+            .insert(decision.requirement_id.as_str(), decision.allow)
+            .is_some()
+        {
+            anyhow::bail!(
+                "duplicate grant decision `{}` requires a new preview",
+                decision.requirement_id
+            );
+        }
+    }
+    if received
+        .keys()
+        .copied()
+        .collect::<std::collections::BTreeSet<_>>()
+        != expected
+    {
+        anyhow::bail!("grant decisions differ from the exact installation preview");
+    }
+    if let Some((requirement, _)) = received.iter().find(|(_, allow)| !**allow) {
+        anyhow::bail!("required capability `{requirement}` was not approved");
+    }
+    let mut grants = preview
+        .required_capabilities
+        .iter()
+        .map(|requirement| requirement.grant_key(preview.release.clone()))
+        .collect::<anyhow::Result<Vec<_>>>()?;
+    grants.sort();
+    grants.dedup();
+    Ok(grants)
+}
+
+fn reconcile_pending_at(app_data: &Path) -> anyhow::Result<()> {
+    let Some(pending) = load_pending_activation(app_data)? else {
+        return Ok(());
+    };
+    let generation = ActivationGeneration::new(pending.target_generation)?;
+    let registry = registry(app_data)?;
+    let Some(active) = registry.active(&pending.target_release)? else {
+        discard_pending_activation(app_data)?;
+        return Ok(());
+    };
+    if active.root != pending.target_release || active.generation != generation {
+        if active.generation.get() < pending.target_generation {
+            discard_pending_activation(app_data)?;
+            return Ok(());
+        }
+        anyhow::bail!(
+            "a different newer activation is active while generation {} remains pending",
+            pending.target_generation
+        );
+    }
+    let staged_path = staged_index_path(app_data);
+    let expected_staged_file = staged_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .expect("static staged index file name is UTF-8");
+    if pending.staged_index_file != expected_staged_file {
+        anyhow::bail!("pending activation references an unexpected staged projection");
+    }
+    let index = match fs::read(&staged_path) {
+        Ok(source) => {
+            let index = serde_json::from_slice::<PluginIndex>(&source)?;
+            fs::rename(&staged_path, index_path(app_data))?;
+            index
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => load_index(app_data)?,
+        Err(error) => return Err(error.into()),
+    };
+    let exact = index.plugins.iter().any(|plugin| {
+        plugin.release == pending.target_release
+            && plugin.activation_generation == pending.target_generation
+    });
+    if !exact || index.next_generation < pending.target_generation {
+        anyhow::bail!("committed plugin projection does not match pending activation");
+    }
+    PluginGrantStore::open(grant_store_path(app_data))?.grant_all(pending.grants)?;
+    publish_plugin_context(app_data, &index)?;
+    discard_pending_activation(app_data)
 }
 
 fn find_draft_helper(app_data: &Path) -> anyhow::Result<InstalledPlugin> {
@@ -227,10 +457,34 @@ fn publish_plugin_context(app_data: &Path, index: &PluginIndex) -> anyhow::Resul
     Ok(())
 }
 
+fn current_account(state: &StdMutex<AuthState>) -> anyhow::Result<String> {
+    state
+        .lock()
+        .map_err(|_| anyhow::anyhow!("authentication state lock is poisoned"))?
+        .email
+        .clone()
+        .ok_or_else(|| anyhow::anyhow!("authenticate a mail account before plugin consent"))
+}
+
+/// Reconciles a registry-committed activation before the application accepts plugin work.
+///
+/// # Errors
+///
+/// Returns an error when pending state is corrupt or durable projection/context repair fails.
+pub fn reconcile_pending_installs(app: &AppHandle) -> Result<(), String> {
+    reconcile_pending_at(&app_data(app)?).map_err(|error| error.to_string())
+}
+
 /// Lists root Components installed through the n-plugin Component manager.
 #[tauri::command]
-pub fn plugin_manager_list(app: AppHandle) -> Result<Vec<InstalledPlugin>, String> {
-    load_index(&app_data(&app)?)
+pub async fn plugin_manager_list(
+    app: AppHandle,
+    install_state: State<'_, PluginInstallState>,
+) -> Result<Vec<InstalledPlugin>, String> {
+    let _guard = install_state.mutex.lock().await;
+    let app_data = app_data(&app)?;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
+    load_index(&app_data)
         .map(|index| index.plugins)
         .map_err(|error| error.to_string())
 }
@@ -240,31 +494,75 @@ pub fn plugin_manager_list(app: AppHandle) -> Result<Vec<InstalledPlugin>, Strin
 pub async fn plugin_manager_preflight(
     app: AppHandle,
     path: String,
+    install_state: State<'_, PluginInstallState>,
+    auth_state: State<'_, StdMutex<AuthState>>,
 ) -> Result<PluginInstallPreview, String> {
-    preflight_plugin_at(&app_data(&app)?, Path::new(&path))
+    let _guard = install_state.mutex.lock().await;
+    let app_data = app_data(&app)?;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
+    let account = current_account(auth_state.inner()).map_err(|error| error.to_string())?;
+    preflight_plugin_at(&app_data, Path::new(&path), Some(&account))
         .await
         .map_err(|error| error.to_string())
 }
 
-/// Compatibility wrapper that validates, composes, and atomically activates one local Component.
+/// Confirms one exact preview and publishes the activation before durable reconciliation.
+#[tauri::command]
+pub async fn plugin_manager_confirm_install(
+    app: AppHandle,
+    confirmation: PluginInstallConfirmationDto,
+    install_state: State<'_, PluginInstallState>,
+    auth_state: State<'_, StdMutex<AuthState>>,
+) -> Result<InstalledPlugin, String> {
+    let _guard = install_state.mutex.lock().await;
+    let account = current_account(auth_state.inner()).map_err(|error| error.to_string())?;
+    confirm_plugin_at(&app_data(&app)?, &confirmation, &account)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+/// Compatibility wrapper that accepts only Components requiring no new consent.
 #[tauri::command]
 pub async fn plugin_manager_install(
     app: AppHandle,
     path: String,
+    install_state: State<'_, PluginInstallState>,
+    auth_state: State<'_, StdMutex<AuthState>>,
 ) -> Result<InstalledPlugin, String> {
-    install_plugin_at(&app_data(&app)?, Path::new(&path))
+    let _guard = install_state.mutex.lock().await;
+    let app_data = app_data(&app)?;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
+    let account = current_account(auth_state.inner()).map_err(|error| error.to_string())?;
+    let preview = preflight_plugin_at(&app_data, Path::new(&path), Some(&account))
+        .await
+        .map_err(|error| error.to_string())?;
+    if !preview.required_capabilities.is_empty() {
+        return Err(
+            "plugin requires explicit consent; use preflight and confirm installation".to_owned(),
+        );
+    }
+    let confirmation = PluginInstallConfirmationDto {
+        path,
+        preview_id: preview.preview_id,
+        expected_release: preview.release,
+        grants: Vec::new(),
+    };
+    confirm_plugin_at(&app_data, &confirmation, &account)
         .await
         .map_err(|error| error.to_string())
 }
 
 /// Changes explicit user enablement without deleting the immutable Component generation.
 #[tauri::command]
-pub fn plugin_manager_set_disabled(
+pub async fn plugin_manager_set_disabled(
     app: AppHandle,
     package: String,
     disabled: bool,
+    install_state: State<'_, PluginInstallState>,
 ) -> Result<(), String> {
+    let _guard = install_state.mutex.lock().await;
     let app_data = app_data(&app)?;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
     let mut index = load_index(&app_data).map_err(|error| error.to_string())?;
     let plugin = index
         .plugins
@@ -286,8 +584,14 @@ pub fn plugin_manager_set_disabled(
 
 /// Disables and forgets one installed root Component; unreachable CAS data is collected later.
 #[tauri::command]
-pub fn plugin_manager_uninstall(app: AppHandle, package: String) -> Result<(), String> {
+pub async fn plugin_manager_uninstall(
+    app: AppHandle,
+    package: String,
+    install_state: State<'_, PluginInstallState>,
+) -> Result<(), String> {
+    let _guard = install_state.mutex.lock().await;
     let app_data = app_data(&app)?;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
     let mut index = load_index(&app_data).map_err(|error| error.to_string())?;
     let position = index
         .plugins
@@ -310,9 +614,14 @@ pub async fn plugin_draft_helper_create(
     app: AppHandle,
     endpoints: State<'_, Endpoints>,
     storage: State<'_, SharedStorage>,
-    state: State<'_, Mutex<AuthState>>,
+    state: State<'_, StdMutex<AuthState>>,
+    install_state: State<'_, PluginInstallState>,
 ) -> Result<PluginDraftActionDto, String> {
     let app_data = app_data(&app)?;
+    {
+        let _guard = install_state.mutex.lock().await;
+        reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
+    }
     let plugin = find_draft_helper(&app_data).map_err(|error| error.to_string())?;
     let index = load_index(&app_data).map_err(|error| error.to_string())?;
     publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
@@ -363,16 +672,21 @@ pub async fn plugin_draft_helper_create(
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::path::Path;
 
-    use anyhow::{Context, Result};
+    use anyhow::Result;
     use n_plugin_package::{embed_manifest, PluginManifest, ReleaseIdentity};
-    use n_plugin_runtime::ensure_component;
 
     use super::{
-        install_plugin_at, load_index, plugin_root, preflight_plugin_at, registry, write_index,
-        InstalledPlugin, PluginIndex,
+        confirm_plugin_at, discard_pending_activation, load_index, pending_activation_path,
+        plugin_root, preflight_plugin_at, reconcile_pending_at, registry, staged_index_path,
+        write_index, write_json_atomically, InstalledPlugin, PendingActivation,
+        PluginGrantDecisionDto, PluginIndex, PluginInstallConfirmationDto,
     };
-    use crate::plugin_contracts::{GMAIL_DRAFTS_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE};
+    use crate::{
+        plugin_contracts::{GMAIL_DRAFTS_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE},
+        plugin_grants::{grant_store_path, PluginGrantStore},
+    };
 
     #[test]
     fn persists_exact_component_identity_and_user_enablement() {
@@ -389,6 +703,7 @@ mod tests {
                 },
                 triggers: vec!["nitra:gmail/draft-helper@0.1.0".to_owned()],
                 enabled: false,
+                activation_generation: 3,
             }],
         };
 
@@ -429,7 +744,8 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
         let path = temporary.path().join("draft-helper.n-plugin");
         fs::write(&path, embed_manifest(&raw, &manifest)?)?;
 
-        let preview = preflight_plugin_at(temporary.path(), &path).await?;
+        let preview =
+            preflight_plugin_at(temporary.path(), &path, Some("person@example.com")).await?;
 
         assert!(
             preview.compatible,
@@ -450,23 +766,170 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
     }
 
     #[tokio::test]
-    #[ignore = "requires MLMAIL_DRAFT_HELPER_COMPONENT to point to a packaged .n-plugin"]
-    async fn installs_packaged_component_into_the_activation_registry() -> Result<()> {
-        let component = std::env::var_os("MLMAIL_DRAFT_HELPER_COMPONENT")
-            .context("MLMAIL_DRAFT_HELPER_COMPONENT must point to a packaged .n-plugin")?;
+    async fn confirms_only_the_exact_account_scoped_preview() -> Result<()> {
         let temporary = tempfile::tempdir()?;
-        let installed =
-            install_plugin_at(temporary.path(), std::path::Path::new(&component)).await?;
-        let registry = registry(temporary.path())?;
-        let active = registry
-            .active(&installed.release)?
-            .context("installed Component must have an active generation")?;
+        let path = temporary.path().join("draft-helper.n-plugin");
+        fs::write(&path, packaged_draft("other", "draft-helper", "0.1.0")?)?;
+        let preview =
+            preflight_plugin_at(temporary.path(), &path, Some("person@example.com")).await?;
+        let confirmation = confirmation(&path, &preview);
 
-        assert_eq!(
-            registry.graph_lifecycle(&installed.release)?.state,
-            n_plugin_compatibility::GraphLifecycleState::active()
-        );
-        ensure_component(&registry.cas().read(&active.composed_digest)?)?;
+        let installed =
+            confirm_plugin_at(temporary.path(), &confirmation, "person@example.com").await?;
+
+        assert_eq!(installed.release, preview.release);
+        assert_eq!(installed.activation_generation, 1);
+        let active = registry(temporary.path())?
+            .active(&installed.release)?
+            .expect("confirmed plugin should have an active generation");
+        assert_eq!(active.root, installed.release);
+        assert_eq!(active.generation.get(), installed.activation_generation);
+        let key = preview.required_capabilities[0].grant_key(preview.release)?;
+        assert!(PluginGrantStore::open(grant_store_path(temporary.path()))?.allows(&key));
+        assert!(!pending_activation_path(temporary.path()).exists());
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn rejects_stale_preview_before_activation_publication() -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let path = temporary.path().join("draft-helper.n-plugin");
+        fs::write(&path, packaged_draft("other", "draft-helper", "0.1.0")?)?;
+        let preview =
+            preflight_plugin_at(temporary.path(), &path, Some("person@example.com")).await?;
+        let confirmation = confirmation(&path, &preview);
+        fs::write(&path, packaged_draft("other", "draft-helper", "0.2.0")?)?;
+
+        let error = confirm_plugin_at(temporary.path(), &confirmation, "person@example.com")
+            .await
+            .expect_err("changed bytes must require a new preview");
+
+        assert!(error.to_string().contains("preview is stale"));
+        assert!(!plugin_root(temporary.path())
+            .join("registry.sqlite3")
+            .exists());
+        assert!(load_index(temporary.path())?.plugins.is_empty());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn rolls_forward_a_registry_committed_pending_projection() -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let path = temporary.path().join("draft-helper.n-plugin");
+        fs::write(&path, packaged_draft("other", "draft-helper", "0.1.0")?)?;
+        let preview =
+            preflight_plugin_at(temporary.path(), &path, Some("person@example.com")).await?;
+        let confirmation = confirmation(&path, &preview);
+        let installed =
+            confirm_plugin_at(temporary.path(), &confirmation, "person@example.com").await?;
+        let index = load_index(temporary.path())?;
+        let staged = staged_index_path(temporary.path());
+        write_json_atomically(&staged, &index)?;
+        fs::remove_file(super::index_path(temporary.path()))?;
+        let pending = PendingActivation {
+            target_release: installed.release.clone(),
+            target_generation: installed.activation_generation,
+            staged_index_file: "installed.pending.json".to_owned(),
+            grants: preview
+                .required_capabilities
+                .iter()
+                .map(|requirement| requirement.grant_key(preview.release.clone()))
+                .collect::<Result<Vec<_>>>()?,
+        };
+        write_json_atomically(&pending_activation_path(temporary.path()), &pending)?;
+
+        reconcile_pending_at(temporary.path())?;
+
+        assert_eq!(load_index(temporary.path())?, index);
+        assert!(!pending_activation_path(temporary.path()).exists());
+        assert!(!staged.exists());
+        Ok(())
+    }
+
+    #[test]
+    fn discards_a_journal_that_never_reached_registry_commit() -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let index = PluginIndex {
+            next_generation: 1,
+            plugins: vec![InstalledPlugin {
+                release: release("other:draft-helper", "0.1.0", "sha256:pending"),
+                triggers: vec![GMAIL_DRAFT_HELPER_INTERFACE.to_owned()],
+                enabled: true,
+                activation_generation: 1,
+            }],
+        };
+        write_json_atomically(&staged_index_path(temporary.path()), &index)?;
+        write_json_atomically(
+            &pending_activation_path(temporary.path()),
+            &PendingActivation {
+                target_release: index.plugins[0].release.clone(),
+                target_generation: 1,
+                staged_index_file: "installed.pending.json".to_owned(),
+                grants: Vec::new(),
+            },
+        )?;
+
+        reconcile_pending_at(temporary.path())?;
+
+        assert!(load_index(temporary.path())?.plugins.is_empty());
+        assert!(!pending_activation_path(temporary.path()).exists());
+        assert!(!staged_index_path(temporary.path()).exists());
+        discard_pending_activation(temporary.path())?;
+        Ok(())
+    }
+
+    fn confirmation(
+        path: &Path,
+        preview: &crate::plugin_install::PluginInstallPreview,
+    ) -> PluginInstallConfirmationDto {
+        PluginInstallConfirmationDto {
+            path: path.display().to_string(),
+            preview_id: preview.preview_id.clone(),
+            expected_release: preview.release.clone(),
+            grants: preview
+                .required_capabilities
+                .iter()
+                .map(|requirement| PluginGrantDecisionDto {
+                    requirement_id: requirement.requirement_id.clone(),
+                    allow: true,
+                })
+                .collect(),
+        }
+    }
+
+    fn packaged_draft(publisher: &str, package: &str, version: &str) -> Result<Vec<u8>> {
+        let manifest = PluginManifest::from_toml(&format!(
+            r#"
+schema = "nitra.plugin-manifest/v1"
+publisher_id = "{publisher}"
+package = "{package}"
+version = "{version}"
+triggers = ["{GMAIL_DRAFT_HELPER_INTERFACE}"]
+
+[entrypoints]
+create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
+"#,
+        ))?;
+        let raw = wat::parse_str(format!(
+            r#"
+(component
+  (type $host-contract (instance))
+  (import "{GMAIL_DRAFTS_INTERFACE}" (instance (type $host-contract)))
+  (core module $module)
+  (core instance $core (instantiate $module))
+  (instance $api)
+  (export "{GMAIL_DRAFT_HELPER_INTERFACE}" (instance $api))
+)
+"#,
+        ))?;
+        Ok(embed_manifest(&raw, &manifest)?)
+    }
+
+    fn release(package: &str, version: &str, digest: &str) -> ReleaseIdentity {
+        ReleaseIdentity {
+            package: package.to_owned(),
+            version: version.to_owned(),
+            digest: digest.to_owned(),
+        }
     }
 }

@@ -17,6 +17,8 @@ pub mod newsletter_template;
 pub mod plugin_context;
 /// Product-owned typed plugin contract registry.
 pub mod plugin_contracts;
+/// Product-owned exact plugin capability grants.
+pub mod plugin_grants;
 /// Pure installation preflight for typed plugin Components.
 pub mod plugin_install;
 /// Component-only installed plugin commands.
@@ -71,12 +73,14 @@ pub fn run() {
 
     builder
         .manage(Mutex::new(auth::state::AuthState::default()))
+        .manage(plugins::PluginInstallState::default())
         .manage(endpoints::Endpoints::default())
         .setup(|app| {
             let handle = app.handle();
             let storage = auth::make_storage(handle);
             auth::on_startup(handle, storage.as_ref())?;
             app.manage(storage);
+            plugins::reconcile_pending_installs(handle)?;
             // Maximize after window-state plugin finishes restoring geometry.
             #[cfg(desktop)]
             {
@@ -127,6 +131,7 @@ pub fn run() {
                     llm::llm_chat,
                     plugins::plugin_manager_list,
                     plugins::plugin_manager_preflight,
+                    plugins::plugin_manager_confirm_install,
                     plugins::plugin_manager_install,
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
@@ -170,6 +175,7 @@ pub fn run() {
                     llm::llm_chat,
                     plugins::plugin_manager_list,
                     plugins::plugin_manager_preflight,
+                    plugins::plugin_manager_confirm_install,
                     plugins::plugin_manager_install,
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
