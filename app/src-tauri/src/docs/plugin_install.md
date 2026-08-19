@@ -3,7 +3,7 @@ type: Rust Module
 title: plugin_install.rs
 resource: app/src-tauri/src/plugin_install.rs
 docgen:
-  crc: 4376d4a1
+  crc: d6232cee
   model: manual
 ---
 

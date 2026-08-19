@@ -30,7 +30,9 @@ use crate::{
     },
     plugin_dispatch::{dispatch_component_at, publish_context_at, require_dispatch_grants},
     plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantStore},
-    plugin_install::{preflight_component_for_account, PluginInstallPreview},
+    plugin_install::{
+        action_preview, preflight_component_for_account, PluginActionPreview, PluginInstallPreview,
+    },
 };
 
 const GMAIL_WKG_LOCK: &str = include_str!("../wkg.lock");
@@ -46,6 +48,24 @@ pub struct InstalledPlugin {
     /// Explicit user intent; disabled Components cannot be invoked.
     pub enabled: bool,
     /// Exact registry generation committed for this installed projection.
+    pub activation_generation: u64,
+}
+
+/// Output-only product projection for one exact installed Component.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstalledPluginDto {
+    /// Exact immutable release selected at installation time.
+    pub release: ReleaseIdentity,
+    /// Exact typed triggers committed in this activation generation.
+    pub triggers: Vec<String>,
+    /// Product-owned actions derived from the typed contract registry.
+    pub actions: Vec<PluginActionPreview>,
+    /// Explicit user intent retained by the product index.
+    pub enabled: bool,
+    /// Durable runtime lifecycle for the root graph.
+    pub lifecycle: GraphLifecycleState,
+    /// Exact immutable activation generation used to derive this projection.
     pub activation_generation: u64,
 }
 
@@ -460,6 +480,62 @@ fn current_account(state: &StdMutex<AuthState>) -> anyhow::Result<String> {
         .ok_or_else(|| anyhow::anyhow!("authenticate a mail account before plugin consent"))
 }
 
+fn installed_projection(
+    app_data: &Path,
+    index: &PluginIndex,
+    contracts: &MlmailPluginContractRegistry,
+) -> anyhow::Result<Vec<InstalledPluginDto>> {
+    let registry = registry(app_data)?;
+    index
+        .plugins
+        .iter()
+        .map(|plugin| {
+            let generation = ActivationGeneration::new(plugin.activation_generation)?;
+            let stored = registry.generation(generation)?;
+            if stored.root != plugin.release {
+                anyhow::bail!(
+                    "installed projection generation {} belongs to another exact release",
+                    plugin.activation_generation
+                );
+            }
+            let active = registry.active(&plugin.release)?.ok_or_else(|| {
+                anyhow::anyhow!(
+                    "installed release `{}` has no active activation generation",
+                    plugin.release.digest
+                )
+            })?;
+            if active.root != plugin.release || active.generation != generation {
+                anyhow::bail!(
+                    "installed release `{}` does not match its exact active generation",
+                    plugin.release.digest
+                );
+            }
+            let lifecycle = registry.graph_lifecycle(&plugin.release)?.state;
+            let actions = stored
+                .triggers
+                .iter()
+                .filter_map(|trigger| {
+                    contracts
+                        .action_for(trigger)
+                        .map(|action| action_preview(action, trigger))
+                })
+                .collect();
+            Ok(InstalledPluginDto {
+                release: plugin.release.clone(),
+                triggers: stored
+                    .triggers
+                    .iter()
+                    .map(|trigger| trigger.as_str().to_owned())
+                    .collect(),
+                actions,
+                enabled: plugin.enabled,
+                lifecycle,
+                activation_generation: plugin.activation_generation,
+            })
+        })
+        .collect()
+}
+
 /// Reconciles a registry-committed activation before the application accepts plugin work.
 ///
 /// # Errors
@@ -474,13 +550,15 @@ pub fn reconcile_pending_installs(app: &AppHandle) -> Result<(), String> {
 pub async fn plugin_manager_list(
     app: AppHandle,
     install_state: State<'_, PluginInstallState>,
-) -> Result<Vec<InstalledPlugin>, String> {
+) -> Result<Vec<InstalledPluginDto>, String> {
     let _guard = install_state.mutex.lock().await;
     let app_data = app_data(&app)?;
     reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
-    load_index(&app_data)
-        .map(|index| index.plugins)
-        .map_err(|error| error.to_string())
+    let index = load_index(&app_data).map_err(|error| error.to_string())?;
+    let contracts = contract_registry(&app_data)
+        .await
+        .map_err(|error| error.to_string())?;
+    installed_projection(&app_data, &index, &contracts).map_err(|error| error.to_string())
 }
 
 /// Returns a read-only compatibility and consent preview for one local Component.
@@ -738,14 +816,16 @@ mod tests {
     use std::path::Path;
 
     use anyhow::Result;
+    use n_plugin_compatibility::GraphLifecycleState;
     use n_plugin_package::{embed_manifest, PluginManifest, ReleaseIdentity};
     use n_plugin_runtime::ActivationGeneration;
 
     use super::{
-        confirm_plugin_at, contract_registry, discard_pending_activation, load_index,
-        pending_activation_path, plugin_root, preflight_plugin_at, reconcile_pending_at, registry,
-        staged_index_path, write_index, write_json_atomically, InstalledPlugin, PendingActivation,
-        PluginGrantDecisionDto, PluginIndex, PluginInstallConfirmationDto,
+        confirm_plugin_at, contract_registry, discard_pending_activation, installed_projection,
+        load_index, pending_activation_path, plugin_root, preflight_plugin_at,
+        reconcile_pending_at, registry, staged_index_path, write_index, write_json_atomically,
+        InstalledPlugin, PendingActivation, PluginGrantDecisionDto, PluginIndex,
+        PluginInstallConfirmationDto,
     };
     use crate::{
         plugin_context::{self, PluginContextCoordinator},
@@ -855,6 +935,13 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
             .expect("confirmed plugin should have an active generation");
         assert_eq!(active.root, installed.release);
         assert_eq!(active.generation.get(), installed.activation_generation);
+        let contracts = contract_registry(temporary.path()).await?;
+        let projection =
+            installed_projection(temporary.path(), &load_index(temporary.path())?, &contracts)?;
+        assert_eq!(projection.len(), 1);
+        assert_eq!(projection[0].release, installed.release);
+        assert_eq!(projection[0].actions[0].kind, "draft-helper-create");
+        assert_eq!(projection[0].lifecycle, GraphLifecycleState::active());
         let key = preview.required_capabilities[0].grant_key(preview.release)?;
         assert!(PluginGrantStore::open(grant_store_path(temporary.path()))?.allows(&key));
         assert!(!pending_activation_path(temporary.path()).exists());

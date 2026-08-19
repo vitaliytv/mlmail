@@ -3,7 +3,7 @@ type: Rust Module
 title: plugins.rs
 resource: app/src-tauri/src/plugins.rs
 docgen:
-  crc: e8599642
+  crc: 9806ab07
   model: manual
 ---
 
@@ -24,7 +24,8 @@ Disable та uninstall приймають exact `ReleaseIdentity`, тому upda
 
 ## Публічний API
 
-- `InstalledPlugin` — UI projection exact release, triggers і manual enablement.
+- `InstalledPlugin` — durable product index exact release, triggers і manual enablement.
+- `InstalledPluginDto` — output-only UI projection exact generation, registry lifecycle і product-owned actions.
 - `PluginDraftActionDto` — повертає opaque Gmail draft id, exact plugin release та generation.
 - `PluginBookingActionDto` — повертає typed booking query, message references, exact release та generation.
 - `plugin_manager_list` — читає встановлені root Components.

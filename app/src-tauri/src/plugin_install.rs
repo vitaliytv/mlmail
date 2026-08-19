@@ -238,7 +238,10 @@ pub fn preflight_component_for_account(
     finalize_preview(component, preview)
 }
 
-fn action_preview(action: MlmailPluginActionKind, trigger: &WitExportRef) -> PluginActionPreview {
+pub(crate) fn action_preview(
+    action: MlmailPluginActionKind,
+    trigger: &WitExportRef,
+) -> PluginActionPreview {
     let (kind, label) = match action {
         MlmailPluginActionKind::BookingFinderFind => ("booking-finder-find", "Find bookings"),
         MlmailPluginActionKind::DraftHelperCreate => ("draft-helper-create", "Create draft"),

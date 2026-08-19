@@ -10,24 +10,67 @@
       <q-card-section class="column q-gutter-sm">
         <div class="row q-gutter-sm items-center">
           <q-btn
-            @click="pickAndInstall"
+            @click="pickAndPreflight"
             color="primary"
             no-caps
             icon="sym_o_folder_open"
             label="Встановити .n-plugin"
-            :loading="busy" />
-          <q-btn @click="reload" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="busy" />
+            :loading="installBusy" />
+          <q-btn @click="reload()" flat no-caps icon="sym_o_refresh" label="Оновити" :disable="installBusy" />
         </div>
         <div class="text-caption text-grey-7">
-          Можна встановити тільки typed Draft Helper WebAssembly Component. ZIP/core-Wasm пакети не підтримуються.
+          Менеджер приймає typed WebAssembly Components із contracts, які підтримує поточна версія mlmail. ZIP,
+          core-Wasm і невідомі host interfaces не активуються.
         </div>
         <div v-if="error" class="text-negative text-caption">{{ error }}</div>
       </q-card-section>
 
+      <q-card-section v-if="installPreview" class="q-pt-none">
+        <q-card flat bordered>
+          <q-card-section class="column q-gutter-xs">
+            <div class="text-subtitle1">Перевірка перед встановленням</div>
+            <div>{{ installPreview.release.package }} @ {{ installPreview.release.version }}</div>
+            <div class="text-caption text-grey-7">{{ installPreview.release.digest }}</div>
+            <div v-if="!installPreview.compatible" class="text-negative">
+              {{ installPreview.reason }}
+            </div>
+            <div v-if="installPreview.actions.length" class="text-caption">
+              Дії: {{ installPreview.actions.map(action => action.label).join(', ') }}
+            </div>
+            <div v-if="installPreview.dependencies.length" class="text-caption">
+              Залежності:
+              {{
+                installPreview.dependencies
+                  .map(dependency => `${dependency.package} ${dependency.requirement}`)
+                  .join(', ')
+              }}
+            </div>
+            <div v-if="!installPreview.requiredCapabilities.length" class="text-positive">
+              Додаткові дозволи не потрібні.
+            </div>
+            <q-checkbox
+              v-for="requirement in installPreview.requiredCapabilities"
+              :key="requirement.requirementId"
+              v-model="grantDecisions[requirement.requirementId]"
+              :label="`${requirement.capability} · ${requirement.accountId || 'application'}`" />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn @click="cancelInstall" flat no-caps label="Скасувати" />
+            <q-btn
+              @click="confirmInstall"
+              color="primary"
+              no-caps
+              label="Підтвердити встановлення"
+              :loading="installBusy"
+              :disable="!canConfirmInstall" />
+          </q-card-actions>
+        </q-card>
+      </q-card-section>
+
       <q-card-section>
-        <div v-if="!plugins.length" class="text-grey-6">Плагінів ще немає.</div>
+        <div v-if="!pluginRows.length" class="text-grey-6">Плагінів ще немає.</div>
         <q-list v-else bordered separator rounded>
-          <q-item v-for="plugin in plugins" :key="plugin.release.digest">
+          <q-item v-for="plugin in pluginRows" :key="plugin.release.digest" data-plugin-row>
             <q-item-section>
               <q-item-label class="row items-center q-gutter-xs">
                 <span>{{ plugin.release.package }}</span>
@@ -35,37 +78,54 @@
                 <q-badge v-if="!plugin.enabled" color="orange" label="Вимкнено" />
               </q-item-label>
               <q-item-label caption>{{ plugin.release.digest }}</q-item-label>
-              <q-item-label caption>Triggers: {{ plugin.triggers.join(', ') }}</q-item-label>
+              <q-item-label caption>
+                Lifecycle: {{ plugin.lifecycle.effectiveState }} · {{ plugin.lifecycle.desiredState }}
+              </q-item-label>
+              <q-item-label caption>Generation: {{ plugin.activationGeneration }}</q-item-label>
             </q-item-section>
             <q-item-section side>
               <div class="row q-gutter-xs">
-                <q-btn
-                  v-if="canCreateDraft(plugin)"
-                  @click="createDraft"
-                  color="primary"
-                  dense
-                  no-caps
-                  label="Create draft"
-                  :loading="busy" />
+                <template v-for="action in plugin.actions" :key="`${plugin.release.digest}:${action.kind}`">
+                  <q-btn
+                    v-if="action.kind === 'draft-helper-create'"
+                    @click="createDraft(plugin)"
+                    color="primary"
+                    dense
+                    no-caps
+                    :label="action.label"
+                    :loading="plugin.itemBusy"
+                    :disable="!plugin.enabled" />
+                  <q-btn
+                    v-if="action.kind === 'booking-finder-find'"
+                    @click="findBookings(plugin)"
+                    color="primary"
+                    dense
+                    no-caps
+                    :label="action.label"
+                    :loading="plugin.itemBusy"
+                    :disable="!plugin.enabled" />
+                </template>
                 <q-btn
                   @click="toggleDisabled(plugin)"
                   flat
                   dense
                   no-caps
-                  :label="plugin.enabled ? 'Вимкнути' : 'Увімкнути'" />
+                  :label="plugin.enabled ? 'Вимкнути' : 'Увімкнути'"
+                  :loading="plugin.itemBusy" />
                 <q-btn
                   @click="uninstall(plugin)"
                   flat
                   dense
-                  round
+                  no-caps
+                  label="Видалити"
                   icon="sym_o_delete"
                   color="negative"
-                  aria-label="Видалити плагін" />
+                  :loading="plugin.itemBusy" />
               </div>
             </q-item-section>
           </q-item>
         </q-list>
-        <div v-if="lastDraft" class="text-positive text-caption q-mt-md">{{ lastDraft }}</div>
+        <div v-if="lastResult" class="text-positive text-caption q-mt-md">{{ lastResult }}</div>
       </q-card-section>
     </q-card>
   </q-dialog>
@@ -73,12 +133,11 @@
 
 <script setup>
 /**
- * Component-only Plugin Manager for installing and invoking the typed Draft Helper demo.
+ * General-purpose Plugin Manager that previews typed Components, collects opaque consent decisions,
+ * and invokes only product-owned typed actions against an exact backend-projected release.
  */
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
-
-const DRAFT_HELPER_TRIGGER = 'nitra:gmail/draft-helper@0.1.0'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false }
@@ -86,101 +145,204 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const plugins = ref([])
-const busy = ref(false)
+const installPreview = ref(null)
+const selectedPath = ref('')
+const grantDecisions = ref({})
+const installBusy = ref(false)
+const itemLoading = ref({})
 const error = ref('')
-const lastDraft = ref('')
+const lastResult = ref('')
 
-/** Синхронізує відкриття діалогу та одразу завантажує актуальний список. */
+const pluginRows = computed(() =>
+  plugins.value.map(plugin => ({
+    ...plugin,
+    itemBusy: Boolean(itemLoading.value[plugin.release.digest])
+  }))
+)
+const canConfirmInstall = computed(
+  () =>
+    installPreview.value?.compatible === true &&
+    installPreview.value.requiredCapabilities.every(
+      requirement => grantDecisions.value[requirement.requirementId] === true
+    )
+)
+
+/**
+ * Синхронізує modelValue; список завантажує єдиний watcher.
+ * @param {boolean} value нове значення видимості
+ */
 function onToggle(value) {
   emit('update:modelValue', value)
-  if (value) reload()
 }
 
-/** Завантажує локальну product projection встановлених Components. */
-async function reload() {
-  error.value = ''
+/**
+ * Нормалізує невідоме Tauri rejection для UI.
+ * @param {unknown} error отримана помилка
+ * @returns {string} повідомлення для користувача
+ */
+function errorMessage(error) {
+  return error?.message || String(error)
+}
+
+/**
+ * Читає committed projection без мутації поточного operation error.
+ * @returns {Promise<string>} порожній рядок або list error
+ */
+async function loadPlugins() {
   try {
     plugins.value = await invoke('plugin_manager_list')
+    return ''
   } catch (error) {
-    error.value = error?.message || String(error)
+    return errorMessage(error)
   }
 }
 
-/** Повертає, чи доступний цьому увімкненому Component Draft Helper trigger. */
-function canCreateDraft(plugin) {
-  return plugin.enabled && plugin.triggers.includes(DRAFT_HELPER_TRIGGER)
+/** Завантажує committed product projection і показує list error. */
+async function reload() {
+  const listError = await loadPlugins()
+  if (listError) error.value = listError
 }
 
-/** Відкриває нативний picker і передає вибраний Component у typed installer. */
-async function pickAndInstall() {
-  busy.value = true
+/** Очищає лише локальний installation candidate і consent choices. */
+function clearInstallPreview() {
+  installPreview.value = null
+  selectedPath.value = ''
+  grantDecisions.value = {}
+}
+
+/** Відкриває native picker і показує compatibility/consent preview без activation writes. */
+async function pickAndPreflight() {
+  installBusy.value = true
   error.value = ''
   try {
     const path = await open({
       multiple: false,
       filters: [{ name: 'n-plugin Component', extensions: ['n-plugin'] }]
     })
-    if (path) {
-      await invoke('plugin_manager_install', { path })
-      await reload()
-    }
+    if (!path) return
+    const preview = await invoke('plugin_manager_preflight', { path })
+    selectedPath.value = path
+    installPreview.value = preview
+    grantDecisions.value = Object.fromEntries(
+      preview.requiredCapabilities.map(requirement => [requirement.requirementId, false])
+    )
   } catch (error) {
-    error.value = error?.message || String(error)
+    error.value = errorMessage(error)
+    clearInstallPreview()
   } finally {
-    busy.value = false
+    installBusy.value = false
   }
 }
 
-/** Змінює явний user enablement без зміни immutable Component bytes. */
-async function toggleDisabled(plugin) {
-  busy.value = true
+/** Скасовує candidate preview без виклику activation command. */
+function cancelInstall() {
+  clearInstallPreview()
+}
+
+/** Підтверджує exact preview, передаючи backend лише opaque requirement decisions. */
+async function confirmInstall() {
+  if (!canConfirmInstall.value) return
+  installBusy.value = true
   error.value = ''
   try {
-    await invoke('plugin_manager_set_disabled', {
-      package: plugin.release.package,
-      disabled: plugin.enabled
+    const preview = installPreview.value
+    await invoke('plugin_manager_confirm_install', {
+      confirmation: {
+        path: selectedPath.value,
+        previewId: preview.previewId,
+        expectedRelease: preview.release,
+        grants: preview.requiredCapabilities.map(requirement => ({
+          requirementId: requirement.requirementId,
+          allow: grantDecisions.value[requirement.requirementId] === true
+        }))
+      }
     })
-    await reload()
+    clearInstallPreview()
+    error.value = await loadPlugins()
   } catch (error) {
-    error.value = error?.message || String(error)
+    error.value = errorMessage(error)
   } finally {
-    busy.value = false
+    installBusy.value = false
   }
 }
 
-/** Вимикає Component generation та прибирає його з product projection. */
+/**
+ * Серіалізує loading/error UI одного exact plugin item.
+ * @param {object} plugin backend-projected plugin item
+ * @param {() => Promise<void>} operation typed operation for this exact release
+ * @param {{ reloadAfter?: boolean }} options post-operation behavior
+ * @returns {Promise<void>} завершення operation та optional reload
+ */
+async function runItemOperation(plugin, operation, { reloadAfter = false } = {}) {
+  const digest = plugin.release.digest
+  itemLoading.value = { ...itemLoading.value, [digest]: true }
+  error.value = ''
+  let operationError = ''
+  try {
+    await operation()
+  } catch (error) {
+    operationError = errorMessage(error)
+  }
+  const reloadError = reloadAfter ? await loadPlugins() : ''
+  error.value = operationError || reloadError
+  itemLoading.value = { ...itemLoading.value, [digest]: false }
+}
+
+/**
+ * Змінює manual enablement тільки для exact backend release item.
+ * @param {object} plugin backend-projected plugin item
+ */
+async function toggleDisabled(plugin) {
+  await runItemOperation(
+    plugin,
+    () =>
+      invoke('plugin_manager_set_disabled', {
+        target: plugin.release,
+        disabled: plugin.enabled
+      }),
+    { reloadAfter: true }
+  )
+}
+
+/**
+ * Видаляє тільки exact backend release item і потім оновлює projection.
+ * @param {object} plugin backend-projected plugin item
+ */
 async function uninstall(plugin) {
-  busy.value = true
-  error.value = ''
-  try {
-    await invoke('plugin_manager_uninstall', { package: plugin.release.package })
-    await reload()
-  } catch (error) {
-    error.value = error?.message || String(error)
-  } finally {
-    busy.value = false
-  }
+  await runItemOperation(plugin, () => invoke('plugin_manager_uninstall', { target: plugin.release }), {
+    reloadAfter: true
+  })
 }
 
-/** Викликає typed Draft Helper trigger для поточного авторизованого акаунта. */
-async function createDraft() {
-  busy.value = true
-  error.value = ''
-  lastDraft.value = ''
-  try {
-    const result = await invoke('plugin_draft_helper_create')
-    lastDraft.value = `Чернетку ${result.draftId} створено через ${result.release.package}.`
-  } catch (error) {
-    error.value = error?.message || String(error)
-  } finally {
-    busy.value = false
-  }
+/**
+ * Викликає typed Draft Helper command з exact ReleaseIdentity вибраного item.
+ * @param {object} plugin backend-projected plugin item
+ */
+async function createDraft(plugin) {
+  lastResult.value = ''
+  await runItemOperation(plugin, async () => {
+    const result = await invoke('plugin_draft_helper_create', { target: plugin.release })
+    lastResult.value = `Чернетку ${result.draftId} створено через ${result.release.package}.`
+  })
+}
+
+/**
+ * Викликає typed Booking Finder command з exact ReleaseIdentity вибраного item.
+ * @param {object} plugin backend-projected plugin item
+ */
+async function findBookings(plugin) {
+  lastResult.value = ''
+  await runItemOperation(plugin, async () => {
+    const result = await invoke('plugin_booking_finder_find', { target: plugin.release })
+    lastResult.value = `Booking Finder знайшов ${result.messages.length} листів за запитом ${result.query}.`
+  })
 }
 
 watch(
   () => props.modelValue,
   value => {
     if (value) reload()
-  }
+  },
+  { immediate: true }
 )
 </script>
