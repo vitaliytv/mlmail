@@ -1,0 +1,61 @@
+app/src-tauri/src/plugins.rs
+  s_0287eb07cb0df4::t_55a82f6b50369b 825-828,938-944
+  s_0287eb07cb0df4::t_32633ba1e65b50 33-35,54-69
+  s_0287eb07cb0df4::t_f71ec33e1358da 70,483,819,824
+  s_0287eb07cb0df4::t_45a9d2ed27d9c9 71,484-538,553,557-561
+app/src-tauri/src/docs/plugin_install.md
+  s_0287eb07cb0df4::t_b74d1b81c6e855 6
+app/.changes/260819-1750.md
+  s_0287eb07cb0df4::t_7acf79f01a10c3 1-5
+app/src-tauri/src/docs/plugins.md
+  s_0287eb07cb0df4::t_b74d1b81c6e855 6,27-28
+app/src/components/tests/PluginManagerPanel.test.mjs
+  s_0287eb07cb0df4::t_e796d8906b6a53 1-2,4-12,15-25,27-51,54-62,71-83,88,91-98,105-108,111-120,122-124,126-131,133-137,139-141,145-154,156-158,161-165,167-186,188-194,196-211,213,215-233,235-256,258-263,270-271
+  s_0287eb07cb0df4::t_e440f9a48adcf0 63-70,142-143,264-269
+  s_0287eb07cb0df4::t_55a82f6b50369b 52-53
+  s_0287eb07cb0df4::t_ec0931b9c4f0da 90
+  s_0287eb07cb0df4::t_ba291263c716a1 26,109-110,121,132,138,155,159-160,166,187,212,234,257
+  s_0287eb07cb0df4::t_d94cbe875e61b1 3,89
+  s_0287eb07cb0df4::t_f989cca00b5099 214
+  s_0287eb07cb0df4::t_da8ad13c75bb57 13-14,84-87,99-104
+  s_0287eb07cb0df4::t_a8c664e3a54a03 144,195
+  s_0287eb07cb0df4::t_70723f079687bf 125
+app/src-tauri/src/plugin_install.rs
+  s_0287eb07cb0df4::t_32633ba1e65b50 241-244
+app/src/components/docs/PluginManagerPanel.md
+  s_0287eb07cb0df4::t_6286a71499f48c 19-22
+  s_0287eb07cb0df4::t_b74d1b81c6e855 1-5,7-18,23-40
+  s_0287eb07cb0df4::t_59b569f4f7dc2d 6
+app/src/components/PluginManagerPanel.vue
+  s_0287eb07cb0df4::t_0d367a8461a0ac 136-137,148-152,154,156-168,185-186,191,194,200-201,207-210,213-215,222-228,231,233,237-245,248-258,260-261,265,276-278,280,282,286-288,295-306,311,315-316,321-328,333-338,345-346
+  s_0287eb07cb0df4::t_dffb0ca1e534e8 48
+  s_2d4dd99cab3e9c::t_df06950e5c0cb8 155,204-205
+  s_0287eb07cb0df4::t_a8c664e3a54a03 19,22-23,73,312-314
+  s_0287eb07cb0df4::t_ba291263c716a1 170-173,178-184,187-190,196,206,230,263,269-275,284,291-294,307-310,317-320,329-332
+  s_0287eb07cb0df4::t_b7b06ae753c0a8 13,18,28-36,49-69,71,81-84,88-107,113-114,119-120,123,128
+  s_0287eb07cb0df4::t_6286a71499f48c 37-47,202-203
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "66af44d938f45fd387875273e8de1123faa0e944",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    },
+    "s_2d4dd99cab3e9c": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "8aef7dcb-1cdc-4808-ab6c-dd14ead4ee44",
+        "model": "grok-4.5"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}

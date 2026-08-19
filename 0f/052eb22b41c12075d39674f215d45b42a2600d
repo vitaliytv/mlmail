@@ -1,0 +1,39 @@
+app/package.json
+  s_0287eb07cb0df4::t_89c4932528d9e6 19-20
+docs/plugin-authoring.md
+  s_0287eb07cb0df4::t_97a51f06af9173 156-158
+  s_0287eb07cb0df4::t_ed94ed6356bb8d 3-4
+  s_0287eb07cb0df4::t_8f941bc25a19f5 1-2,5-155,159-204
+docs/superpowers/plans/2026-08-19-general-purpose-plugin-installer.md
+  s_0287eb07cb0df4::t_a9188beed8b508 3-8
+docs/plugin-context-runtime.md
+  s_0287eb07cb0df4::t_8f941bc25a19f5 3-5
+app/scripts/test-installed-plugin-matrix.sh
+  s_0287eb07cb0df4::t_93ab2830b63503 1-83,85-96,98-135,137-199,203-210
+  s_0287eb07cb0df4::t_03f7564204ea99 84,97
+  s_0287eb07cb0df4::t_227b9a711ef3a7 136,200-202
+app/scripts/test-draft-helper-component.sh
+  s_0287eb07cb0df4::t_4f3dd26072068d 9-23,33-39
+  s_0287eb07cb0df4::t_03f7564204ea99 44
+app/scripts/test-booking-finder-component.sh
+  s_0287eb07cb0df4::t_03f7564204ea99 44
+  s_0287eb07cb0df4::t_4f3dd26072068d 6-22,28-41
+app/.changes/260819-1931.md
+  s_0287eb07cb0df4::t_4f8a0505ca872e 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0f052eb22b41c12075d39674f215d45b42a2600d",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
