@@ -1,0 +1,19 @@
+docs/superpowers/plans/2026-08-19-general-purpose-plugin-installer.md
+  s_0287eb07cb0df4::t_6450c98450479d 1-429
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "cfa013f98e9a561c22399f17196f8002d7edc6d2",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
