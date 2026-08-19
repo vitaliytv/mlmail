@@ -17,6 +17,8 @@ pub mod newsletter_template;
 pub mod plugin_context;
 /// Product-owned typed plugin contract registry.
 pub mod plugin_contracts;
+/// Pure installation preflight for typed plugin Components.
+pub mod plugin_install;
 /// Component-only installed plugin commands.
 pub mod plugins;
 
@@ -124,6 +126,7 @@ pub fn run() {
                     llm::llm_list_models,
                     llm::llm_chat,
                     plugins::plugin_manager_list,
+                    plugins::plugin_manager_preflight,
                     plugins::plugin_manager_install,
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
@@ -166,6 +169,7 @@ pub fn run() {
                     llm::llm_list_models,
                     llm::llm_chat,
                     plugins::plugin_manager_list,
+                    plugins::plugin_manager_preflight,
                     plugins::plugin_manager_install,
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,

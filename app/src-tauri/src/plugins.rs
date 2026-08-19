@@ -9,49 +9,23 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use n_plugin_compatibility::GraphLifecycleState;
-use n_plugin_oci::{OciPluginLock, ResolvedNode, ResolvedPluginGraph};
-use n_plugin_package::{inspect_component, ReleaseIdentity, WitExportRef};
-use n_plugin_runtime::{
-    ActivationCompiler, ActivationGeneration, ActivationRegistry, ApplicationTriggerInventory,
-    HostInterfaceInventory,
-};
+use n_plugin_oci::{ResolvedNode, ResolvedPluginGraph};
+use n_plugin_package::{inspect_component, ReleaseIdentity};
+use n_plugin_runtime::{ActivationCompiler, ActivationGeneration, ActivationRegistry};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
 
 use crate::{
     auth::{self, state::AuthState, storage::SharedStorage},
     endpoints::Endpoints,
-    gmail::{
-        plugin_draft_helper::invoke_draft_helper,
-        plugin_runtime::{
-            build_gmail_plugin_runtime, gmail_draft_helper_descriptor, GMAIL_DRAFTS_INTERFACE,
-        },
-    },
+    gmail::{plugin_draft_helper::invoke_draft_helper, plugin_runtime::build_gmail_plugin_runtime},
     plugin_context::{self, PluginContextCoordinator},
+    plugin_contracts::MlmailPluginContractRegistry,
+    plugin_install::{preflight_component, PluginInstallPreview},
 };
 
 const DRAFT_HELPER_TRIGGER: &str = "nitra:gmail/draft-helper@0.1.0";
 const GMAIL_WKG_LOCK: &str = include_str!("../wkg.lock");
-/// Non-sensitive WASI Preview 2 interfaces linked by mlmail's empty WASI context.
-///
-/// The compiler validates these names before activation. Interfaces such as filesystem,
-/// networking, random, and clocks beyond monotonic timers are deliberately not accepted.
-const DRAFT_HELPER_WASI_INTERFACES: &[&str] = &[
-    "wasi:io/poll@0.2.9",
-    "wasi:clocks/monotonic-clock@0.2.9",
-    "wasi:io/error@0.2.9",
-    "wasi:io/streams@0.2.9",
-    "wasi:cli/stdout@0.2.9",
-    "wasi:cli/stderr@0.2.9",
-    "wasi:cli/stdin@0.2.9",
-    "wasi:cli/environment@0.2.9",
-    "wasi:cli/exit@0.2.9",
-    "wasi:cli/terminal-input@0.2.9",
-    "wasi:cli/terminal-output@0.2.9",
-    "wasi:cli/terminal-stdin@0.2.9",
-    "wasi:cli/terminal-stdout@0.2.9",
-    "wasi:cli/terminal-stderr@0.2.9",
-];
 
 /// One installed root Component shown by the Vue Plugin Manager.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -137,52 +111,40 @@ fn ensure_gmail_wkg_lock(app_data: &Path) -> anyhow::Result<PathBuf> {
     Ok(path)
 }
 
-fn validate_draft_helper(component: &[u8]) -> anyhow::Result<n_plugin_package::EmbeddedPlugin> {
-    n_plugin_runtime::ensure_component(component)?;
-    let embedded = inspect_component(component)?;
-    if !embedded.manifest.dependencies.is_empty() {
-        anyhow::bail!("mlmail Draft Helper installer does not accept dependency graphs yet");
-    }
-    if embedded
-        .manifest
-        .entrypoints
-        .get("create")
-        .is_none_or(|entrypoint| entrypoint.as_str() != DRAFT_HELPER_TRIGGER)
-    {
-        anyhow::bail!("Component must expose the Draft Helper `create` entrypoint");
-    }
-    if !embedded
-        .manifest
-        .triggers
-        .iter()
-        .any(|trigger| trigger.as_str() == DRAFT_HELPER_TRIGGER)
-    {
-        anyhow::bail!("Component must declare the Draft Helper trigger");
-    }
-    Ok(embedded)
-}
-
-fn draft_helper_host_inventory() -> anyhow::Result<HostInterfaceInventory> {
-    let mut interfaces = vec![WitExportRef::parse(GMAIL_DRAFTS_INTERFACE)?];
-    for interface in DRAFT_HELPER_WASI_INTERFACES {
-        interfaces.push(WitExportRef::parse(*interface)?);
-    }
-    Ok(HostInterfaceInventory::new(interfaces))
-}
-
-async fn install_draft_helper_at(app_data: &Path, path: &Path) -> anyhow::Result<InstalledPlugin> {
-    let component = fs::read(path)?;
-    let embedded = validate_draft_helper(&component)?;
+async fn contract_registry(app_data: &Path) -> anyhow::Result<MlmailPluginContractRegistry> {
     let lock_path = ensure_gmail_wkg_lock(app_data)?;
+    MlmailPluginContractRegistry::load(lock_path).await
+}
+
+async fn preflight_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<PluginInstallPreview> {
+    let component = fs::read(path)?;
+    let contracts = contract_registry(app_data).await?;
+    preflight_component(&component, &contracts)
+}
+
+async fn install_plugin_at(app_data: &Path, path: &Path) -> anyhow::Result<InstalledPlugin> {
+    let component = fs::read(path)?;
+    let contracts = contract_registry(app_data).await?;
+    let preview = preflight_component(&component, &contracts)?;
+    if !preview.compatible {
+        anyhow::bail!(
+            "plugin is incompatible with this mlmail release: {}",
+            preview
+                .reason
+                .as_deref()
+                .unwrap_or("installation preflight did not provide a reason")
+        );
+    }
+    let embedded = inspect_component(&component)?;
+    if embedded.release != preview.release {
+        anyhow::bail!("plugin release changed during installation preflight");
+    }
     let mut index = load_index(app_data)?;
     let next_generation = index
         .next_generation
         .checked_add(1)
         .ok_or_else(|| anyhow::anyhow!("plugin activation generation overflow"))?;
     let generation = ActivationGeneration::new(next_generation)?;
-    let plugin_lock_path = plugin_root(app_data).join(".n-plugin.lock");
-    let mut plugin_lock = OciPluginLock::empty();
-    plugin_lock.write(&plugin_lock_path)?;
     let graph = ResolvedPluginGraph {
         root: embedded.release.clone(),
         nodes: vec![ResolvedNode {
@@ -192,14 +154,14 @@ async fn install_draft_helper_at(app_data: &Path, path: &Path) -> anyhow::Result
             component,
         }],
         edges: Vec::new(),
-        lock_file: plugin_lock_path,
+        lock_file: PathBuf::new(),
     };
-    let host = draft_helper_host_inventory()?;
-    let triggers =
-        ApplicationTriggerInventory::from_descriptors([
-            gmail_draft_helper_descriptor(&lock_path).await?
-        ]);
-    let plan = ActivationCompiler::new()?.compile(&graph, generation, &host, &triggers)?;
+    let plan = ActivationCompiler::new()?.compile(
+        &graph,
+        generation,
+        &contracts.host_inventory(),
+        &contracts.trigger_inventory(),
+    )?;
     registry(app_data)?.publish(&plan, &graph)?;
 
     let installed = InstalledPlugin {
@@ -273,13 +235,24 @@ pub fn plugin_manager_list(app: AppHandle) -> Result<Vec<InstalledPlugin>, Strin
         .map_err(|error| error.to_string())
 }
 
-/// Validates, composes, and atomically activates one local Draft Helper Component.
+/// Returns a read-only compatibility and consent preview for one local Component.
+#[tauri::command]
+pub async fn plugin_manager_preflight(
+    app: AppHandle,
+    path: String,
+) -> Result<PluginInstallPreview, String> {
+    preflight_plugin_at(&app_data(&app)?, Path::new(&path))
+        .await
+        .map_err(|error| error.to_string())
+}
+
+/// Compatibility wrapper that validates, composes, and atomically activates one local Component.
 #[tauri::command]
 pub async fn plugin_manager_install(
     app: AppHandle,
     path: String,
 ) -> Result<InstalledPlugin, String> {
-    install_draft_helper_at(&app_data(&app)?, Path::new(&path))
+    install_plugin_at(&app_data(&app)?, Path::new(&path))
         .await
         .map_err(|error| error.to_string())
 }
@@ -389,13 +362,17 @@ pub async fn plugin_draft_helper_create(
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use anyhow::{Context, Result};
+    use n_plugin_package::{embed_manifest, PluginManifest, ReleaseIdentity};
     use n_plugin_runtime::ensure_component;
 
     use super::{
-        install_draft_helper_at, load_index, registry, write_index, InstalledPlugin, PluginIndex,
+        install_plugin_at, load_index, plugin_root, preflight_plugin_at, registry, write_index,
+        InstalledPlugin, PluginIndex,
     };
-    use n_plugin_package::ReleaseIdentity;
+    use crate::plugin_contracts::{GMAIL_DRAFTS_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE};
 
     #[test]
     fn persists_exact_component_identity_and_user_enablement() {
@@ -423,13 +400,63 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn previews_a_local_component_without_activation_writes() -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let manifest = PluginManifest::from_toml(&format!(
+            r#"
+schema = "nitra.plugin-manifest/v1"
+publisher_id = "other"
+package = "draft-helper"
+version = "0.1.0"
+triggers = ["{GMAIL_DRAFT_HELPER_INTERFACE}"]
+
+[entrypoints]
+create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
+"#,
+        ))?;
+        let raw = wat::parse_str(format!(
+            r#"
+(component
+  (type $host-contract (instance))
+  (import "{GMAIL_DRAFTS_INTERFACE}" (instance (type $host-contract)))
+  (core module $module)
+  (core instance $core (instantiate $module))
+  (instance $api)
+  (export "{GMAIL_DRAFT_HELPER_INTERFACE}" (instance $api))
+)
+"#,
+        ))?;
+        let path = temporary.path().join("draft-helper.n-plugin");
+        fs::write(&path, embed_manifest(&raw, &manifest)?)?;
+
+        let preview = preflight_plugin_at(temporary.path(), &path).await?;
+
+        assert!(
+            preview.compatible,
+            "unexpected reason: {:?}",
+            preview.reason
+        );
+        let root = plugin_root(temporary.path());
+        for relative in [
+            "registry.sqlite3",
+            "cas",
+            "installed.json",
+            "context.sqlite3",
+            ".n-plugin.lock",
+        ] {
+            assert!(!root.join(relative).exists(), "unexpected {relative}");
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
     #[ignore = "requires MLMAIL_DRAFT_HELPER_COMPONENT to point to a packaged .n-plugin"]
     async fn installs_packaged_component_into_the_activation_registry() -> Result<()> {
         let component = std::env::var_os("MLMAIL_DRAFT_HELPER_COMPONENT")
             .context("MLMAIL_DRAFT_HELPER_COMPONENT must point to a packaged .n-plugin")?;
         let temporary = tempfile::tempdir()?;
         let installed =
-            install_draft_helper_at(temporary.path(), std::path::Path::new(&component)).await?;
+            install_plugin_at(temporary.path(), std::path::Path::new(&component)).await?;
         let registry = registry(temporary.path())?;
         let active = registry
             .active(&installed.release)?
