@@ -1,0 +1,42 @@
+app/src-tauri/src/docs/lib.md
+  s_0287eb07cb0df4::t_47770ea78c127a 6,12
+app/src-tauri/src/docs/plugins.md
+  s_0287eb07cb0df4::t_47770ea78c127a 6,12,16,25-26,33-35
+app/src-tauri/src/plugin_install.rs
+  s_0287eb07cb0df4::t_8d259fc78abdbd 3-6,8-172,175-202,208-232,301,465-471,476
+  s_0287eb07cb0df4::t_4de8007b77240c 1-2,233-237,239-241,244-284,290-295,300,302-319,324-336,360-366,373-407,412-440,445-464,477-533
+  s_0287eb07cb0df4::t_f2be5f6d54610a 7,173-174,203-207,238,242-243,285-289,296-299,320-323,337-359,367-372,408-411,441-444,472-475
+app/src-tauri/src/plugins.rs
+  s_0287eb07cb0df4::t_1aa3d61b673702 13,21,23-24,119,365-366,402,404-445
+  s_0287eb07cb0df4::t_9395dc7e764bcf 12,14,114-116,120-122,125,127-141,157,159-164,238-249,255,446
+  s_0287eb07cb0df4::t_40b1e9496f24ba 447-451,459
+  s_0287eb07cb0df4::t_96d7e1e15205b4 368,372-373,375,403
+app/src-tauri/src/lib.rs
+  s_0287eb07cb0df4::t_4de8007b77240c 20-21
+  s_0287eb07cb0df4::t_b4e5bde1c35125 129,172
+app/.changes/260819-0834.md
+  s_0287eb07cb0df4::t_11a11e90cb8213 1-5
+app/src-tauri/src/docs/plugin_install.md
+  s_0287eb07cb0df4::t_47770ea78c127a 1-5,7-39,41-42
+  s_0287eb07cb0df4::t_e814e5c6410b07 6,40
+Cargo.lock
+  s_0287eb07cb0df4::t_9f6c1d7677e9fe 3330
+app/src-tauri/Cargo.toml
+  s_0287eb07cb0df4::t_4de8007b77240c 67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0d31e2470564748c3a466b37376fe7a7f2ea76a4",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
