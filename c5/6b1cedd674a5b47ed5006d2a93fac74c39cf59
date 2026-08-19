@@ -1,0 +1,71 @@
+app/src-tauri/src/docs/plugin_dispatch.md
+  s_0287eb07cb0df4::t_0431d252428571 1-5,7-30
+  s_0287eb07cb0df4::t_d40ff11325245a 6
+app/src-tauri/src/lib.rs
+  s_0287eb07cb0df4::t_e753f896e13d82 20-21
+  s_0287eb07cb0df4::t_dbad2907552dde 141,186
+app/src-tauri/src/gmail/plugin_draft_helper.rs
+  s_0287eb07cb0df4::t_44cc4ee990caf0 20-21
+app/src-tauri/src/plugin_context.rs
+  s_0287eb07cb0df4::t_1bcbfd31a56efb 24,46-47,49,52-74,86,104-109,118-121,133-134,136-138,149-154,161-165,219,221-222,238,467
+  s_0287eb07cb0df4::t_de118486873f75 41-45,48,50-51
+  s_0287eb07cb0df4::t_7c344df729945d 1,34,141,500-507
+  s_0287eb07cb0df4::t_8d2edfd6727a59 166-167,208,211,216,223,226,242-243,373-374,405,408,414,429,461-462,469-470,476,491-492
+  s_0287eb07cb0df4::t_116accbb93327c 224,235-237,239-241,459-460,468,490,498
+  s_0287eb07cb0df4::t_939247026a22e0 359-372,488,509-511
+app/src-tauri/src/gmail/docs/plugin_booking_finder.md
+  s_0287eb07cb0df4::t_14f08c5e165f20 16
+  s_0287eb07cb0df4::t_0431d252428571 1-15,17-26
+app/src-tauri/src/gmail/docs/plugin_draft_helper.md
+  s_0287eb07cb0df4::t_14f08c5e165f20 16
+  s_0287eb07cb0df4::t_0431d252428571 1-15,17-26
+app/src-tauri/src/plugins.rs
+  s_0287eb07cb0df4::t_5f009df8c05f4e 1016,1020-1021,1031-1035
+  s_0287eb07cb0df4::t_4d74a3de99945c 575-576,601-602
+  s_0287eb07cb0df4::t_8c9e336e8d629a 745-746
+  s_0287eb07cb0df4::t_ad9b300918e7c1 23,25-26,28,30,90-115,119-121,143,160
+  s_0287eb07cb0df4::t_d48d0b0f615245 553,564-565,583,593-594,609,616-620,625-626,636,643-649,659-731
+  s_0287eb07cb0df4::t_b7309690fb7a6a 24,29,31,622-624,747,752-755,908,913,917,922
+  s_0287eb07cb0df4::t_f96d6dfd1f3f43 751,906-907,915-916,973-997
+  s_0287eb07cb0df4::t_778673fd4e540c 756-759,925-967,998-1005
+  s_0287eb07cb0df4::t_6d13f9e7a4b0aa 890,896,902,1011,1027,1043,1055
+  s_0287eb07cb0df4::t_e753f896e13d82 864-889,891-895,897-901,903-904,914,924,1006-1010,1012-1015,1017-1019,1022-1026,1028-1030,1036-1042,1044-1054,1056-1057
+  s_0287eb07cb0df4::t_a82cf21ac8c993 742,905,909-912,918-921,923
+  s_0287eb07cb0df4::t_051538799436a6 450
+  s_0287eb07cb0df4::t_782d569f00df96 968-972
+app/src-tauri/src/docs/index.md
+  s_0287eb07cb0df4::t_aab1e6b972e6af 13,15
+app/src-tauri/src/docs/lib.md
+  s_0287eb07cb0df4::t_0431d252428571 6,12
+app/src-tauri/src/docs/plugin_context.md
+  s_0287eb07cb0df4::t_0431d252428571 6,12,16,22-24,26,32-33
+app/src-tauri/src/gmail/plugin_booking_finder.rs
+  s_0287eb07cb0df4::t_abd785764ffe2b 55-56
+  s_0287eb07cb0df4::t_79e531d5770b7f 6,20-21
+app/src-tauri/src/docs/plugins.md
+  s_0287eb07cb0df4::t_0431d252428571 6,23,28-29,37,47-48
+app/.changes/260819-0935.md
+  s_0287eb07cb0df4::t_78c87a37e6d89b 1-5
+app/src-tauri/src/plugin_dispatch.rs
+  s_0287eb07cb0df4::t_e5a5794436996f 13-15,161-178
+  s_0287eb07cb0df4::t_e753f896e13d82 1-4,9,19-26,31-36,39,44
+  s_0287eb07cb0df4::t_865ce29cb350b7 77-79,120,126-131,152-156
+  s_0287eb07cb0df4::t_88664533e89f46 5-8,10-12,16-18,27-30,37-38,40-43,45-76,80-119,122-125,132-151,157-160,179-181
+  s_0287eb07cb0df4::t_e240900040b193 121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c56b1cedd674a5b47ed5006d2a93fac74c39cf59",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
