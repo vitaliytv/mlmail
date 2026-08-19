@@ -17,6 +17,8 @@ pub mod newsletter_template;
 pub mod plugin_context;
 /// Product-owned typed plugin contract registry.
 pub mod plugin_contracts;
+/// Exact installed Component selection for typed plugin commands.
+pub mod plugin_dispatch;
 /// Product-owned exact plugin capability grants.
 pub mod plugin_grants;
 /// Pure installation preflight for typed plugin Components.
@@ -136,6 +138,7 @@ pub fn run() {
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
                     plugins::plugin_draft_helper_create,
+                    plugins::plugin_booking_finder_find,
                     app_open_url,
                     app_set_title,
                 ]
@@ -180,6 +183,7 @@ pub fn run() {
                     plugins::plugin_manager_set_disabled,
                     plugins::plugin_manager_uninstall,
                     plugins::plugin_draft_helper_create,
+                    plugins::plugin_booking_finder_find,
                     app_open_url,
                     app_set_title,
                 ]

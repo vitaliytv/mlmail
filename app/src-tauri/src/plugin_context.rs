@@ -1,4 +1,4 @@
-//! Durable product context for the built-in Gmail provider and installed Draft Helper.
+//! Durable product context for the built-in Gmail provider and exact installed plugin roots.
 //!
 //! The native provider and guest plugin are distinct exact-release instances. The coordinator
 //! replays their desired state before Gmail side effects are allowed and keeps OAuth credentials
@@ -21,10 +21,9 @@ use n_plugin_runtime::{
     DurableContextStore, RevertibleEffectScope,
 };
 
-use crate::gmail::plugin_runtime::{GMAIL_DRAFTS_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE};
+use crate::gmail::plugin_runtime::{GMAIL_DRAFTS_INTERFACE, GMAIL_SEARCH_INTERFACE};
 
 const GMAIL_PROVIDER_INSTANCE: &str = "mlmail:gmail-provider";
-const DRAFT_HELPER_INSTANCE: &str = "plugin:draft-helper";
 const GMAIL_PROVIDER_PACKAGE: &str = "vitaliytv:mlmail-gmail-provider";
 const GMAIL_PROVIDER_VERSION: &str = "0.1.0";
 const GMAIL_PROVIDER_DIGEST: &str =
@@ -32,14 +31,47 @@ const GMAIL_PROVIDER_DIGEST: &str =
 
 type DriverFuture<'a> = Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>>;
 
-/// Complete durable desired context for one installed Draft Helper release.
+/// Compatibility helper for one installed Draft Helper release.
 ///
 /// The Gmail provider stays manually enabled. Disabling Draft Helper preserves its exact entry
 /// without allowing dependency availability to override the user's choice.
 pub fn draft_helper_context(
     draft_helper: Option<(ReleaseIdentity, bool)>,
 ) -> Result<Vec<DurableContextEntry>> {
-    context_entries(native_gmail_provider_release(), draft_helper)
+    let drafts = WitExportRef::parse(GMAIL_DRAFTS_INTERFACE)?;
+    plugin_context(
+        draft_helper
+            .into_iter()
+            .map(|(release, enabled)| PluginContextEntry {
+                context_id: "plugin:nitra:draft-helper".to_owned(),
+                release,
+                host_interfaces: vec![drafts.clone()],
+                enabled,
+            }),
+    )
+}
+
+/// One exact installed root represented in the durable product context.
+pub struct PluginContextEntry {
+    /// Stable package-scoped instance identity used by command dispatch.
+    pub context_id: String,
+    /// Exact immutable release expected at the context boundary.
+    pub release: ReleaseIdentity,
+    /// Exact product host interfaces required by this installed generation.
+    pub host_interfaces: Vec<WitExportRef>,
+    /// Explicit user enablement retained in durable desired state.
+    pub enabled: bool,
+}
+
+/// Builds the complete desired context for the native Gmail provider and installed roots.
+///
+/// # Errors
+///
+/// Returns an error when a durable component identity or compiled Gmail interface is invalid.
+pub fn plugin_context(
+    plugins: impl IntoIterator<Item = PluginContextEntry>,
+) -> Result<Vec<DurableContextEntry>> {
+    context_entries(native_gmail_provider_release(), plugins)
 }
 
 /// Path of the product context database below the application data directory.
@@ -51,6 +83,7 @@ pub fn context_database(app_data: &Path) -> std::path::PathBuf {
 /// Running mlmail coordinator that gates online plugin work on a settled durable context.
 pub struct PluginContextCoordinator {
     runtime: DurableContextRuntime,
+    desired_releases: BTreeMap<ContextComponentId, ReleaseIdentity>,
 }
 
 impl PluginContextCoordinator {
@@ -68,6 +101,12 @@ impl PluginContextCoordinator {
         driver: MlmailContextDriver,
     ) -> Result<Self> {
         let store = DurableContextStore::open(database)?;
+        let desired_releases = desired_release_map(
+            store
+                .active()?
+                .into_iter()
+                .flat_map(|desired| desired.entries),
+        );
         let runtime = DurableContextRuntime::start(
             store,
             driver.clone(),
@@ -76,7 +115,10 @@ impl PluginContextCoordinator {
             },
         )
         .await?;
-        Ok(Self { runtime })
+        Ok(Self {
+            runtime,
+            desired_releases,
+        })
     }
 
     /// Atomically replaces the complete desired context and waits for all runnable transitions.
@@ -88,11 +130,15 @@ impl PluginContextCoordinator {
         &mut self,
         entries: impl IntoIterator<Item = DurableContextEntry>,
     ) -> Result<ContextExecutorSnapshot> {
+        let entries = entries.into_iter().collect::<Vec<_>>();
+        let desired_releases = desired_release_map(entries.iter().cloned());
         let publication = self.runtime.publish_desired(entries)?;
-        self.wait_for_publication(publication).await
+        let snapshot = self.wait_for_publication(publication).await?;
+        self.desired_releases = desired_releases;
+        Ok(snapshot)
     }
 
-    /// Executes an online Draft Helper action only while both exact context instances are active.
+    /// Executes an online plugin action only while provider and exact target instances are active.
     ///
     /// Gmail draft creation is an emission, not a reversible lifecycle acquisition. The action is
     /// therefore delayed until activation commits and is never registered for automatic rollback.
@@ -100,14 +146,25 @@ impl PluginContextCoordinator {
     /// # Errors
     ///
     /// Returns an error when either instance is unavailable or the action itself fails.
-    pub async fn run_draft_helper<T, F, Fut>(&self, action: F) -> Result<T>
+    pub async fn run_plugin<T, F, Fut>(
+        &self,
+        context_id: &str,
+        target: &ReleaseIdentity,
+        action: F,
+    ) -> Result<T>
     where
         F: FnOnce() -> Fut,
         Fut: Future<Output = Result<T>>,
     {
         let snapshot = self.runtime.snapshot();
         require_active(&snapshot, &component_id(GMAIL_PROVIDER_INSTANCE)?)?;
-        require_active(&snapshot, &component_id(DRAFT_HELPER_INSTANCE)?)?;
+        let component = component_id(context_id)?;
+        require_active(&snapshot, &component)?;
+        if self.desired_releases.get(&component) != Some(target) {
+            bail!(
+                "Component context instance `{component}` does not match the exact target release"
+            )
+        }
         action().await
     }
 
@@ -148,31 +205,40 @@ fn native_gmail_provider_release() -> ReleaseIdentity {
 
 fn context_entries(
     provider_release: ReleaseIdentity,
-    draft_helper: Option<(ReleaseIdentity, bool)>,
+    plugins: impl IntoIterator<Item = PluginContextEntry>,
 ) -> Result<Vec<DurableContextEntry>> {
     let drafts = WitExportRef::parse(GMAIL_DRAFTS_INTERFACE)?;
-    let draft_helper_interface = WitExportRef::parse(GMAIL_DRAFT_HELPER_INTERFACE)?;
+    let search = WitExportRef::parse(GMAIL_SEARCH_INTERFACE)?;
     let provider = ContextComponent::new(
         component_id(GMAIL_PROVIDER_INSTANCE)?,
         provider_release,
         [],
-        [drafts.clone()],
+        [drafts, search],
     );
     let mut entries = vec![DurableContextEntry::enabled(provider)];
-    if let Some((release, enabled)) = draft_helper {
+    for plugin in plugins {
         let component = ContextComponent::new(
-            component_id(DRAFT_HELPER_INSTANCE)?,
-            release,
-            [drafts],
-            [draft_helper_interface],
+            component_id(&plugin.context_id)?,
+            plugin.release,
+            plugin.host_interfaces,
+            [],
         );
-        entries.push(if enabled {
+        entries.push(if plugin.enabled {
             DurableContextEntry::enabled(component)
         } else {
             DurableContextEntry::disabled(component)
         });
     }
     Ok(entries)
+}
+
+fn desired_release_map(
+    entries: impl IntoIterator<Item = DurableContextEntry>,
+) -> BTreeMap<ContextComponentId, ReleaseIdentity> {
+    entries
+        .into_iter()
+        .map(|entry| (entry.component.id, entry.component.release))
+        .collect()
 }
 
 fn component_id(value: &str) -> Result<ContextComponentId> {
@@ -290,6 +356,22 @@ impl ContextRestartRepair for MlmailRestartRepair {
 mod tests {
     use super::*;
 
+    fn draft_entries(
+        provider: ReleaseIdentity,
+        helper: ReleaseIdentity,
+        enabled: bool,
+    ) -> Result<Vec<DurableContextEntry>> {
+        context_entries(
+            provider,
+            [PluginContextEntry {
+                context_id: "plugin:nitra:draft-helper".to_owned(),
+                release: helper,
+                host_interfaces: vec![WitExportRef::parse(GMAIL_DRAFTS_INTERFACE)?],
+                enabled,
+            }],
+        )
+    }
+
     fn release(package: &str, digest: &str) -> ReleaseIdentity {
         ReleaseIdentity {
             package: package.to_owned(),
@@ -320,16 +402,16 @@ mod tests {
         let provider_v2 = release("vitaliytv:gmail-provider", "sha256:provider-v2");
 
         coordinator
-            .replace_desired(context_entries(provider_v1, Some((helper.clone(), true)))?)
+            .replace_desired(draft_entries(provider_v1, helper.clone(), true)?)
             .await?;
         coordinator
-            .replace_desired(context_entries(provider_v2, Some((helper, true)))?)
+            .replace_desired(draft_entries(provider_v2, helper, true)?)
             .await?;
 
         let events = recorded(&driver);
         let helper_drain = events
             .iter()
-            .position(|event| event.starts_with("drain:plugin:draft-helper"))
+            .position(|event| event.starts_with("drain:plugin:nitra:draft-helper"))
             .context("Draft Helper should drain for provider replacement")?;
         let provider_drain = events
             .iter()
@@ -344,7 +426,7 @@ mod tests {
             .enumerate()
             .rev()
             .find_map(|(index, event)| {
-                (event == "load:plugin:draft-helper:sha256:helper").then_some(index)
+                (event == "load:plugin:nitra:draft-helper:sha256:helper").then_some(index)
             })
             .context("Draft Helper should reload")?;
 
@@ -374,18 +456,24 @@ mod tests {
         let restarted =
             PluginContextCoordinator::start_with_driver(&database, restarted_driver.clone())
                 .await?;
-        restarted.run_draft_helper(|| async { Ok(()) }).await?;
+        let helper = release("nitra:draft-helper", "sha256:helper");
+        restarted
+            .run_plugin("plugin:nitra:draft-helper", &helper, || async { Ok(()) })
+            .await?;
 
         let events = recorded(&restarted_driver);
         assert_eq!(
             &events[..2],
-            &["repair:plugin:draft-helper", "repair:mlmail:gmail-provider"]
+            &[
+                "repair:plugin:nitra:draft-helper",
+                "repair:mlmail:gmail-provider",
+            ]
         );
         assert_eq!(
             &events[2..4],
             &[
                 format!("load:mlmail:gmail-provider:{GMAIL_PROVIDER_DIGEST}"),
-                "load:plugin:draft-helper:sha256:helper".to_owned(),
+                "load:plugin:nitra:draft-helper:sha256:helper".to_owned(),
             ]
         );
         restarted.shutdown().await?;
@@ -397,20 +485,30 @@ mod tests {
         let directory = tempfile::tempdir()?;
         let mut coordinator =
             PluginContextCoordinator::start(directory.path().join("context.sqlite3")).await?;
+        let helper = release("nitra:draft-helper", "sha256:helper");
         let blocked = coordinator
-            .run_draft_helper(|| async { Ok("emitted") })
+            .run_plugin("plugin:nitra:draft-helper", &helper, || async {
+                Ok("emitted")
+            })
             .await
             .expect_err("emission must be blocked without committed instances");
         assert!(blocked.to_string().contains("not active"));
 
         coordinator
-            .replace_desired(draft_helper_context(Some((
-                release("nitra:draft-helper", "sha256:helper"),
-                true,
-            )))?)
+            .replace_desired(draft_helper_context(Some((helper.clone(), true)))?)
             .await?;
+        let wrong_release = release("nitra:draft-helper", "sha256:other");
+        let mismatch = coordinator
+            .run_plugin("plugin:nitra:draft-helper", &wrong_release, || async {
+                Ok("must-not-run")
+            })
+            .await
+            .expect_err("exact release mismatch must block the action boundary");
+        assert!(mismatch.to_string().contains("exact target release"));
         let emitted = coordinator
-            .run_draft_helper(|| async { Ok("emitted") })
+            .run_plugin("plugin:nitra:draft-helper", &helper, || async {
+                Ok("emitted")
+            })
             .await?;
 
         assert_eq!(emitted, "emitted");

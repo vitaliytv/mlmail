@@ -10,7 +10,9 @@ resource: app/src-tauri/src/
 | [endpoints.rs](endpoints.md)                 | Rust Module |
 | [llm.rs](llm.md)                             | Rust Module |
 | [lib.rs](lib.md)                             | Module      |
+| [plugin_context.rs](plugin_context.md)       | Module      |
 | [plugin_contracts.rs](plugin_contracts.md)   | Module      |
+| [plugin_dispatch.rs](plugin_dispatch.md)     | Module      |
 | [plugin_grants.rs](plugin_grants.md)         | Module      |
 | [plugin_install.rs](plugin_install.md)       | Module      |
 | [plugins.rs](plugins.md)                     | Module      |

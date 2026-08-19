@@ -17,7 +17,8 @@ wasmtime::component::bindgen!({
 /// # Errors
 ///
 /// Returns an error when bytes are not a Component, required typed imports cannot be linked,
-/// Component instantiation fails, or Gmail rejects the draft creation request.
+/// Component instantiation fails, or Gmail rejects the draft creation request. The product
+/// command enforces the exact generic grant before passing Component bytes or OAuth credentials.
 pub async fn invoke_draft_helper(
     runtime: &GmailPluginRuntime,
     component_bytes: &[u8],

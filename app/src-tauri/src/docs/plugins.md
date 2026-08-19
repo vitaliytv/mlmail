@@ -3,7 +3,7 @@ type: Rust Module
 title: plugins.rs
 resource: app/src-tauri/src/plugins.rs
 docgen:
-  crc: c3639930
+  crc: e8599642
   model: manual
 ---
 
@@ -20,12 +20,13 @@ Activation registry є commit record; pending journal забезпечує idemp
 projection і durable context після restart. Це логічна recoverable операція, а не cross-store
 транзакція.
 
-Disable зберігає release у UI index і durable context як manually disabled. Uninstall вилучає Draft Helper entry. Invocation відновлює або replay-ить context, чекає active provider та consumer, і лише потім отримує app-owned OAuth token та створює Gmail draft. Cleanup failure після успішної emission пишеться в log і не перетворює вже створений draft на retryable command error.
+Disable та uninstall приймають exact `ReleaseIdentity`, тому update race не може змінити інший digest того самого package. Typed Draft Helper і Booking Finder commands отримують explicit exact target, звіряють immutable generation, durable context та generic account grant і лише після цього отримують app-owned OAuth token. Cleanup failure після успішної emission пишеться в log і не перетворює завершену операцію на retryable command error.
 
 ## Публічний API
 
 - `InstalledPlugin` — UI projection exact release, triggers і manual enablement.
-- `PluginDraftActionDto` — повертає opaque Gmail draft id та exact plugin release.
+- `PluginDraftActionDto` — повертає opaque Gmail draft id, exact plugin release та generation.
+- `PluginBookingActionDto` — повертає typed booking query, message references, exact release та generation.
 - `plugin_manager_list` — читає встановлені root Components.
 - `plugin_manager_preflight` — повертає read-only preview local `.n-plugin` Component.
 - `plugin_manager_confirm_install` — підтверджує exact preview та required grants.
@@ -33,6 +34,7 @@ Disable зберігає release у UI index і durable context як manually di
 - `plugin_manager_set_disabled` — змінює manual enablement без видалення release.
 - `plugin_manager_uninstall` — вилучає root plugin із desired context.
 - `plugin_draft_helper_create` — виконує typed Draft Helper call після durable activation gate.
+- `plugin_booking_finder_find` — виконує typed Booking Finder call без dynamic JSON broker.
 
 ## Гарантії поведінки
 
@@ -42,5 +44,6 @@ Disable зберігає release у UI index і durable context як manually di
 - Stale bytes, account або consent set вимагають нового preview.
 - Registry-committed activation із незавершеною projection відновлюється через pending journal.
 - Component bytes читаються тільки з verified active CAS generation.
-- Disabled або unavailable Draft Helper не виконує Gmail request.
+- Wrong digest, disabled, uninstalled або stale generation не виконують guest logic чи Gmail request.
+- Exact generic `mail:draft.create` або `mail:search` grant перевіряється до OAuth token.
 - Успішна Gmail emission не повторюється через подальшу lifecycle cleanup error.

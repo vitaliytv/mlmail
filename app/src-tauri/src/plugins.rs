@@ -20,14 +20,19 @@ use tokio::sync::Mutex as AsyncMutex;
 use crate::{
     auth::{self, state::AuthState, storage::SharedStorage},
     endpoints::Endpoints,
-    gmail::{plugin_draft_helper::invoke_draft_helper, plugin_runtime::build_gmail_plugin_runtime},
+    gmail::{
+        plugin_booking_finder::invoke_booking_finder, plugin_draft_helper::invoke_draft_helper,
+        plugin_runtime::build_gmail_plugin_runtime,
+    },
     plugin_context::{self, PluginContextCoordinator},
-    plugin_contracts::MlmailPluginContractRegistry,
+    plugin_contracts::{
+        MlmailPluginContractRegistry, GMAIL_BOOKING_FINDER_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE,
+    },
+    plugin_dispatch::{dispatch_component_at, publish_context_at, require_dispatch_grants},
     plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantStore},
     plugin_install::{preflight_component_for_account, PluginInstallPreview},
 };
 
-const DRAFT_HELPER_TRIGGER: &str = "nitra:gmail/draft-helper@0.1.0";
 const GMAIL_WKG_LOCK: &str = include_str!("../wkg.lock");
 
 /// One installed root Component shown by the Vue Plugin Manager.
@@ -82,12 +87,38 @@ pub struct PluginDraftActionDto {
     pub draft_id: String,
     /// Exact Component release that initiated the operation.
     pub release: ReleaseIdentity,
+    /// Exact activation generation that supplied Component bytes.
+    pub generation: u64,
+}
+
+/// One Gmail message reference returned by the typed Booking Finder action.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginBookingMessageDto {
+    /// Opaque Gmail message identifier.
+    pub id: String,
+    /// Opaque Gmail thread identifier when Gmail returned one.
+    pub thread_id: Option<String>,
+}
+
+/// Typed Booking Finder result projected onto mlmail's public command surface.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginBookingActionDto {
+    /// Exact Gmail search query chosen by the typed guest.
+    pub query: String,
+    /// Typed Gmail message references returned by the guest.
+    pub messages: Vec<PluginBookingMessageDto>,
+    /// Exact Component release that initiated the operation.
+    pub release: ReleaseIdentity,
+    /// Exact activation generation that supplied Component bytes.
+    pub generation: u64,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-struct PluginIndex {
-    next_generation: u64,
-    plugins: Vec<InstalledPlugin>,
+pub(crate) struct PluginIndex {
+    pub(crate) next_generation: u64,
+    pub(crate) plugins: Vec<InstalledPlugin>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -109,7 +140,7 @@ fn plugin_root(app_data: &Path) -> PathBuf {
     app_data.join("n-plugin")
 }
 
-fn registry(app_data: &Path) -> anyhow::Result<ActivationRegistry> {
+pub(crate) fn registry(app_data: &Path) -> anyhow::Result<ActivationRegistry> {
     let root = plugin_root(app_data);
     ActivationRegistry::open(root.join("registry.sqlite3"), root.join("cas"))
 }
@@ -126,7 +157,7 @@ fn pending_activation_path(app_data: &Path) -> PathBuf {
     plugin_root(app_data).join("pending-activation.json")
 }
 
-fn load_index(app_data: &Path) -> anyhow::Result<PluginIndex> {
+pub(crate) fn load_index(app_data: &Path) -> anyhow::Result<PluginIndex> {
     let path = index_path(app_data);
     match fs::read(&path) {
         Ok(source) => Ok(serde_json::from_slice(&source)?),
@@ -416,45 +447,8 @@ fn reconcile_pending_at(app_data: &Path) -> anyhow::Result<()> {
         anyhow::bail!("committed plugin projection does not match pending activation");
     }
     PluginGrantStore::open(grant_store_path(app_data))?.grant_all(pending.grants)?;
-    publish_plugin_context(app_data, &index)?;
+    publish_context_at(app_data)?;
     discard_pending_activation(app_data)
-}
-
-fn find_draft_helper(app_data: &Path) -> anyhow::Result<InstalledPlugin> {
-    load_index(app_data)?
-        .plugins
-        .into_iter()
-        .find(|plugin| {
-            plugin.enabled
-                && plugin
-                    .triggers
-                    .iter()
-                    .any(|trigger| trigger == DRAFT_HELPER_TRIGGER)
-        })
-        .ok_or_else(|| anyhow::anyhow!("install and enable a Draft Helper Component first"))
-}
-
-fn publish_plugin_context(app_data: &Path, index: &PluginIndex) -> anyhow::Result<()> {
-    let draft_helper = index
-        .plugins
-        .iter()
-        .find(|plugin| {
-            plugin
-                .triggers
-                .iter()
-                .any(|trigger| trigger == DRAFT_HELPER_TRIGGER)
-        })
-        .map(|plugin| (plugin.release.clone(), plugin.enabled));
-    let entries = plugin_context::draft_helper_context(draft_helper)?;
-    let store =
-        n_plugin_runtime::DurableContextStore::open(plugin_context::context_database(app_data))?;
-    if store
-        .active()?
-        .is_none_or(|desired| desired.entries != entries)
-    {
-        store.publish(entries)?;
-    }
-    Ok(())
 }
 
 fn current_account(state: &StdMutex<AuthState>) -> anyhow::Result<String> {
@@ -556,7 +550,7 @@ pub async fn plugin_manager_install(
 #[tauri::command]
 pub async fn plugin_manager_set_disabled(
     app: AppHandle,
-    package: String,
+    target: ReleaseIdentity,
     disabled: bool,
     install_state: State<'_, PluginInstallState>,
 ) -> Result<(), String> {
@@ -567,8 +561,8 @@ pub async fn plugin_manager_set_disabled(
     let plugin = index
         .plugins
         .iter_mut()
-        .find(|plugin| plugin.release.package == package)
-        .ok_or_else(|| format!("plugin `{package}` is not installed"))?;
+        .find(|plugin| plugin.release == target)
+        .ok_or_else(|| format!("exact plugin release `{}` is not installed", target.digest))?;
     plugin.enabled = !disabled;
     let lifecycle = if disabled {
         GraphLifecycleState::manually_disabled()
@@ -578,15 +572,15 @@ pub async fn plugin_manager_set_disabled(
     registry(&app_data)
         .and_then(|registry| registry.set_graph_lifecycle(&plugin.release, lifecycle))
         .map_err(|error| error.to_string())?;
-    publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
-    write_index(&app_data, &index).map_err(|error| error.to_string())
+    write_index(&app_data, &index).map_err(|error| error.to_string())?;
+    publish_context_at(&app_data).map_err(|error| error.to_string())
 }
 
 /// Disables and forgets one installed root Component; unreachable CAS data is collected later.
 #[tauri::command]
 pub async fn plugin_manager_uninstall(
     app: AppHandle,
-    package: String,
+    target: ReleaseIdentity,
     install_state: State<'_, PluginInstallState>,
 ) -> Result<(), String> {
     let _guard = install_state.mutex.lock().await;
@@ -596,49 +590,40 @@ pub async fn plugin_manager_uninstall(
     let position = index
         .plugins
         .iter()
-        .position(|plugin| plugin.release.package == package)
-        .ok_or_else(|| format!("plugin `{package}` is not installed"))?;
+        .position(|plugin| plugin.release == target)
+        .ok_or_else(|| format!("exact plugin release `{}` is not installed", target.digest))?;
     let plugin = index.plugins.remove(position);
     registry(&app_data)
         .and_then(|registry| {
             registry.set_graph_lifecycle(&plugin.release, GraphLifecycleState::manually_disabled())
         })
         .map_err(|error| error.to_string())?;
-    publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
-    write_index(&app_data, &index).map_err(|error| error.to_string())
+    write_index(&app_data, &index).map_err(|error| error.to_string())?;
+    publish_context_at(&app_data).map_err(|error| error.to_string())
 }
 
 /// Runs the enabled Draft Helper Component with the current account's app-owned OAuth token.
 #[tauri::command]
 pub async fn plugin_draft_helper_create(
     app: AppHandle,
+    target: ReleaseIdentity,
     endpoints: State<'_, Endpoints>,
     storage: State<'_, SharedStorage>,
     state: State<'_, StdMutex<AuthState>>,
     install_state: State<'_, PluginInstallState>,
 ) -> Result<PluginDraftActionDto, String> {
     let app_data = app_data(&app)?;
-    {
-        let _guard = install_state.mutex.lock().await;
-        reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
-    }
-    let plugin = find_draft_helper(&app_data).map_err(|error| error.to_string())?;
-    let index = load_index(&app_data).map_err(|error| error.to_string())?;
-    publish_plugin_context(&app_data, &index).map_err(|error| error.to_string())?;
-    let registry = registry(&app_data).map_err(|error| error.to_string())?;
-    let active = registry
-        .active(&plugin.release)
-        .map_err(|error| error.to_string())?
-        .ok_or_else(|| "installed Draft Helper has no active generation".to_owned())?;
-    let lifecycle = registry
-        .graph_lifecycle(&plugin.release)
+    let _guard = install_state.mutex.lock().await;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
+    publish_context_at(&app_data).map_err(|error| error.to_string())?;
+    let contracts = contract_registry(&app_data)
+        .await
         .map_err(|error| error.to_string())?;
-    if lifecycle.state != GraphLifecycleState::active() {
-        return Err("Draft Helper is disabled or unavailable".to_owned());
-    }
-    let component = registry
-        .cas()
-        .read(&active.composed_digest)
+    let selection =
+        dispatch_component_at(&app_data, &target, GMAIL_DRAFT_HELPER_INTERFACE, &contracts)
+            .map_err(|error| error.to_string())?;
+    let account = current_account(state.inner()).map_err(|error| error.to_string())?;
+    require_dispatch_grants(&app_data, &selection, &contracts, &account)
         .map_err(|error| error.to_string())?;
     let lock_path = ensure_gmail_wkg_lock(&app_data).map_err(|error| error.to_string())?;
     let runtime = build_gmail_plugin_runtime(&lock_path, env!("CARGO_PKG_VERSION"))
@@ -648,14 +633,20 @@ pub async fn plugin_draft_helper_create(
         .await
         .map_err(|error| error.to_string())?;
     let action = context
-        .run_draft_helper(|| async {
+        .run_plugin(&selection.context_id, &selection.release, || async {
             let token = auth::acquire_access_token(
                 &endpoints.google_token,
                 storage.inner().as_ref(),
                 state.inner(),
             )
             .await?;
-            invoke_draft_helper(&runtime, &component, &endpoints.gmail_messages_list, token).await
+            invoke_draft_helper(
+                &runtime,
+                &selection.component,
+                &endpoints.gmail_messages_list,
+                token,
+            )
+            .await
         })
         .await
         .map_err(|error| error.to_string());
@@ -665,7 +656,79 @@ pub async fn plugin_draft_helper_create(
     let draft = action?;
     Ok(PluginDraftActionDto {
         draft_id: draft.id,
-        release: plugin.release,
+        release: selection.release,
+        generation: selection.generation,
+    })
+}
+
+/// Runs one exact Booking Finder Component through the generated typed adapter.
+#[tauri::command]
+pub async fn plugin_booking_finder_find(
+    app: AppHandle,
+    target: ReleaseIdentity,
+    endpoints: State<'_, Endpoints>,
+    storage: State<'_, SharedStorage>,
+    state: State<'_, StdMutex<AuthState>>,
+    install_state: State<'_, PluginInstallState>,
+) -> Result<PluginBookingActionDto, String> {
+    let app_data = app_data(&app)?;
+    let _guard = install_state.mutex.lock().await;
+    reconcile_pending_at(&app_data).map_err(|error| error.to_string())?;
+    publish_context_at(&app_data).map_err(|error| error.to_string())?;
+    let contracts = contract_registry(&app_data)
+        .await
+        .map_err(|error| error.to_string())?;
+    let selection = dispatch_component_at(
+        &app_data,
+        &target,
+        GMAIL_BOOKING_FINDER_INTERFACE,
+        &contracts,
+    )
+    .map_err(|error| error.to_string())?;
+    let account = current_account(state.inner()).map_err(|error| error.to_string())?;
+    require_dispatch_grants(&app_data, &selection, &contracts, &account)
+        .map_err(|error| error.to_string())?;
+    let lock_path = ensure_gmail_wkg_lock(&app_data).map_err(|error| error.to_string())?;
+    let runtime = build_gmail_plugin_runtime(&lock_path, env!("CARGO_PKG_VERSION"))
+        .await
+        .map_err(|error| error.to_string())?;
+    let context = PluginContextCoordinator::start(plugin_context::context_database(&app_data))
+        .await
+        .map_err(|error| error.to_string())?;
+    let action = context
+        .run_plugin(&selection.context_id, &selection.release, || async {
+            let token = auth::acquire_access_token(
+                &endpoints.google_token,
+                storage.inner().as_ref(),
+                state.inner(),
+            )
+            .await?;
+            invoke_booking_finder(
+                &runtime,
+                &selection.component,
+                &endpoints.gmail_messages_list,
+                token,
+            )
+            .await
+        })
+        .await
+        .map_err(|error| error.to_string());
+    if let Err(error) = context.shutdown().await {
+        log::error!("Booking Finder context shutdown failed after emission boundary: {error}");
+    }
+    let results = action?;
+    Ok(PluginBookingActionDto {
+        query: results.query,
+        messages: results
+            .messages
+            .into_iter()
+            .map(|message| PluginBookingMessageDto {
+                id: message.id,
+                thread_id: message.thread_id,
+            })
+            .collect(),
+        release: selection.release,
+        generation: selection.generation,
     })
 }
 
@@ -676,16 +739,24 @@ mod tests {
 
     use anyhow::Result;
     use n_plugin_package::{embed_manifest, PluginManifest, ReleaseIdentity};
+    use n_plugin_runtime::ActivationGeneration;
 
     use super::{
-        confirm_plugin_at, discard_pending_activation, load_index, pending_activation_path,
-        plugin_root, preflight_plugin_at, reconcile_pending_at, registry, staged_index_path,
-        write_index, write_json_atomically, InstalledPlugin, PendingActivation,
+        confirm_plugin_at, contract_registry, discard_pending_activation, load_index,
+        pending_activation_path, plugin_root, preflight_plugin_at, reconcile_pending_at, registry,
+        staged_index_path, write_index, write_json_atomically, InstalledPlugin, PendingActivation,
         PluginGrantDecisionDto, PluginIndex, PluginInstallConfirmationDto,
     };
     use crate::{
-        plugin_contracts::{GMAIL_DRAFTS_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE},
-        plugin_grants::{grant_store_path, PluginGrantStore},
+        plugin_context::{self, PluginContextCoordinator},
+        plugin_contracts::{
+            GMAIL_BOOKING_FINDER_INTERFACE, GMAIL_DRAFTS_INTERFACE, GMAIL_DRAFT_HELPER_INTERFACE,
+            GMAIL_SEARCH_INTERFACE,
+        },
+        plugin_dispatch::{
+            dispatch_component_at, require_dispatch_grants, PluginDispatchSelection,
+        },
+        plugin_grants::{grant_store_path, PluginGrantKey, PluginGrantStore},
     };
 
     #[test]
@@ -787,6 +858,200 @@ create = "{GMAIL_DRAFT_HELPER_INTERFACE}"
         let key = preview.required_capabilities[0].grant_key(preview.release)?;
         assert!(PluginGrantStore::open(grant_store_path(temporary.path()))?.allows(&key));
         assert!(!pending_activation_path(temporary.path()).exists());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn dispatches_two_draft_helpers_by_exact_release_and_fails_closed() -> Result<()> {
+        let temporary = tempfile::tempdir()?;
+        let first_path = temporary.path().join("first.n-plugin");
+        let second_path = temporary.path().join("second.n-plugin");
+        let first_component = packaged_draft("alpha", "draft-helper", "0.1.0")?;
+        let second_component = packaged_draft("zeta", "draft-helper", "0.1.0")?;
+        fs::write(&first_path, &first_component)?;
+        fs::write(&second_path, &second_component)?;
+
+        let first_preview =
+            preflight_plugin_at(temporary.path(), &first_path, Some("person@example.com")).await?;
+        let first = confirm_plugin_at(
+            temporary.path(),
+            &confirmation(&first_path, &first_preview),
+            "person@example.com",
+        )
+        .await?;
+        let second_preview =
+            preflight_plugin_at(temporary.path(), &second_path, Some("person@example.com")).await?;
+        let second = confirm_plugin_at(
+            temporary.path(),
+            &confirmation(&second_path, &second_preview),
+            "person@example.com",
+        )
+        .await?;
+        let contracts = contract_registry(temporary.path()).await?;
+
+        let selected_second = dispatch_component_at(
+            temporary.path(),
+            &second.release,
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            &contracts,
+        )?;
+        let selected_first = dispatch_component_at(
+            temporary.path(),
+            &first.release,
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            &contracts,
+        )?;
+        assert_eq!(selected_second.release, second.release);
+        let activation_registry = registry(temporary.path())?;
+        let second_generation = activation_registry
+            .generation(ActivationGeneration::new(second.activation_generation)?)?;
+        assert_eq!(
+            selected_second.component,
+            activation_registry
+                .cas()
+                .read(&second_generation.composed_digest)?
+        );
+        assert_eq!(selected_first.release, first.release);
+        let first_generation = activation_registry
+            .generation(ActivationGeneration::new(first.activation_generation)?)?;
+        assert_eq!(
+            selected_first.component,
+            activation_registry
+                .cas()
+                .read(&first_generation.composed_digest)?
+        );
+        assert_ne!(selected_first.component, selected_second.component);
+        assert_ne!(selected_first.context_id, selected_second.context_id);
+        require_dispatch_grants(
+            temporary.path(),
+            &selected_first,
+            &contracts,
+            "person@example.com",
+        )?;
+        let denied = require_dispatch_grants(
+            temporary.path(),
+            &selected_first,
+            &contracts,
+            "other@example.com",
+        )
+        .expect_err("exact Draft grant must not cross account boundaries");
+        assert!(denied.to_string().contains("grant-required"));
+
+        let booking_selection = PluginDispatchSelection {
+            release: second.release.clone(),
+            component: Vec::new(),
+            context_id: "plugin:zeta:booking-finder".to_owned(),
+            generation: second.activation_generation,
+            host_interfaces: vec![GMAIL_SEARCH_INTERFACE.to_owned()],
+        };
+        let denied = require_dispatch_grants(
+            temporary.path(),
+            &booking_selection,
+            &contracts,
+            "person@example.com",
+        )
+        .expect_err("Booking search must fail closed without its exact generic grant");
+        assert!(denied.to_string().contains("mail:search"));
+        let mut grants = PluginGrantStore::open(grant_store_path(temporary.path()))?;
+        grants.grant(PluginGrantKey::root_host(
+            second.release.clone(),
+            GMAIL_SEARCH_INTERFACE,
+            "mail:search",
+            "person@example.com",
+        )?)?;
+        require_dispatch_grants(
+            temporary.path(),
+            &booking_selection,
+            &contracts,
+            "person@example.com",
+        )?;
+        let wrong_digest = release(
+            &first.release.package,
+            &first.release.version,
+            "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        );
+
+        let context =
+            PluginContextCoordinator::start(plugin_context::context_database(temporary.path()))
+                .await?;
+        assert_eq!(
+            context
+                .run_plugin(
+                    &selected_second.context_id,
+                    &selected_second.release,
+                    || async { Ok("second") },
+                )
+                .await?,
+            "second"
+        );
+        let mismatch = context
+            .run_plugin(&selected_first.context_id, &wrong_digest, || async {
+                Ok("must-not-run")
+            })
+            .await
+            .expect_err("durable context must bind the package slot to the exact release");
+        assert!(mismatch.to_string().contains("exact target release"));
+        context.shutdown().await?;
+
+        assert!(dispatch_component_at(
+            temporary.path(),
+            &first.release,
+            GMAIL_BOOKING_FINDER_INTERFACE,
+            &contracts,
+        )
+        .is_err());
+
+        assert!(dispatch_component_at(
+            temporary.path(),
+            &wrong_digest,
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            &contracts,
+        )
+        .is_err());
+
+        let mut index = load_index(temporary.path())?;
+        index
+            .plugins
+            .iter_mut()
+            .find(|plugin| plugin.release == first.release)
+            .expect("first exact release should remain installed")
+            .enabled = false;
+        write_index(temporary.path(), &index)?;
+        assert!(dispatch_component_at(
+            temporary.path(),
+            &first.release,
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            &contracts,
+        )
+        .is_err());
+
+        let first_index = index
+            .plugins
+            .iter_mut()
+            .find(|plugin| plugin.release == first.release)
+            .expect("first exact release should remain installed");
+        first_index.enabled = true;
+        first_index.activation_generation += 1;
+        write_index(temporary.path(), &index)?;
+        assert!(dispatch_component_at(
+            temporary.path(),
+            &first.release,
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            &contracts,
+        )
+        .is_err());
+
+        index
+            .plugins
+            .retain(|plugin| plugin.release != second.release);
+        write_index(temporary.path(), &index)?;
+        assert!(dispatch_component_at(
+            temporary.path(),
+            &second.release,
+            GMAIL_DRAFT_HELPER_INTERFACE,
+            &contracts,
+        )
+        .is_err());
         Ok(())
     }
 
