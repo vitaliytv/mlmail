@@ -6,6 +6,8 @@ WORKSPACE_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 SRC_TAURI="${WORKSPACE_ROOT}/app/src-tauri"
 N_PLUGIN_BIN="${N_PLUGIN_BIN:-n-plugin}"
 PLUGIN_E2E_REGISTRY="${MLMAIL_PLUGIN_E2E_REGISTRY:-git.7n.ai}"
+PLUGIN_E2E_RELEASE="${MLMAIL_PLUGIN_E2E_RELEASE:-vitaliytv:mlmail-e2e-root@0.1.0}"
+PLUGIN_E2E_DIGEST="${MLMAIL_PLUGIN_E2E_DIGEST:-sha256:5272fe568bbe2f6a816f4ea64c32e61b3d6c2af6c7d53a11b136ad59798c70a7}"
 ARTIFACT_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mlmail-plugin-matrix.XXXXXX")"
 
 cleanup() {
@@ -100,8 +102,8 @@ run_ignored_component_test() {
 }
 
 run_oci_smoke() {
-  local release="${MLMAIL_PLUGIN_E2E_RELEASE:-}"
-  local expected_digest="${MLMAIL_PLUGIN_E2E_DIGEST:-}"
+  local release="${PLUGIN_E2E_RELEASE}"
+  local expected_digest="${PLUGIN_E2E_DIGEST}"
   local package
   local version
   local fetched="${ARTIFACT_DIR}/oci-root.n-plugin"

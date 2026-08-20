@@ -178,15 +178,22 @@ N_PLUGIN_BIN=/path/to/n-plugin \
   bun run --cwd app test:installed-plugin-matrix
 ```
 
-Справжній OCI smoke test є окремим opt-in. Він тільки fetch/lock-ить заздалегідь опублікований
-public fixture, вимагає exact digest і не виконує publish:
+Справжній OCI smoke test є окремим opt-in. За замовчуванням він fetch/lock-ить immutable public
+fixture `vitaliytv:mlmail-e2e-root@0.1.0`, який exact-залежить від
+`vitaliytv:mlmail-e2e-provider@0.1.0`, перевіряє pinned root digest, а потім повторює resolution
+offline з отриманого lock/cache. Smoke test не виконує publish:
 
 ```bash
-MLMAIL_PLUGIN_E2E_RELEASE='vitaliytv:mlmail-e2e-root@0.1.0' \
-MLMAIL_PLUGIN_E2E_DIGEST='sha256:<64-hex-digest>' \
 N_PLUGIN_BIN=/path/to/n-plugin \
   bun run --cwd app test:installed-plugin-matrix:oci
 ```
+
+Pinned root digest:
+`sha256:5272fe568bbe2f6a816f4ea64c32e61b3d6c2af6c7d53a11b136ad59798c70a7`.
+Pinned provider digest:
+`sha256:d07e0cf8bedba7b96f1f69ca4e971eec325cc37db407304753d1d8d2daf5e659`.
+`MLMAIL_PLUGIN_E2E_RELEASE` і `MLMAIL_PLUGIN_E2E_DIGEST` можна перевизначити для нового fixture;
+будь-який tag drift завершує перевірку помилкою digest mismatch.
 
 ## Діагностика
 
