@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.30.1] - 2026-08-20
+
+### Changed
+
+- Закріплено public OCI fixtures для повторюваної online/offline перевірки dependency graph.
+
 ## [0.30.0] - 2026-08-19
 
 ### Added
