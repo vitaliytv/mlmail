@@ -1,0 +1,24 @@
+docs/plugin-authoring.md
+  s_0287eb07cb0df4::t_68494ff69b6237 181-184,191-196
+  s_0287eb07cb0df4::t_da455525d780ba 197
+app/scripts/test-installed-plugin-matrix.sh
+  s_0287eb07cb0df4::t_68494ff69b6237 9-10,105-106
+app/.changes/260820-0736.md
+  s_0287eb07cb0df4::t_b554791786a5c0 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5f35b8fc0188f0c0727cf128df0ecf9c73dd51fa",
+  "prompts": {},
+  "sessions": {
+    "s_0287eb07cb0df4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda26-ff72-7890-b460-dff35d815a4b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Vitalii Tverdokhlib <v@nitra.ai>"
+    }
+  }
+}
